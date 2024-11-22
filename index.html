@@ -35,7 +35,7 @@
 
         .header {
             text-align: center;
-            padding: 100px 0;
+            padding: 50px 0, 0px;
         }
 
         .title {
@@ -54,15 +54,20 @@
         .intro {
             max-width: 800px;
             margin: 0 auto;
-            height: 200px;
-            overflow: hidden;
+            min-height: 100px;
             position: relative;
+            padding: 0px, 20px, 20px;
         }
 
         .intro p {
             opacity: 0;
             transform: translateY(20px);
-            transition: all 0.5s ease;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .intro p.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .section {
@@ -84,7 +89,7 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(112, 198, 255, 0.4);
             border-radius: 10px;
             padding: 20px;
             text-align: center;
@@ -154,10 +159,11 @@
         <header class="header">
             <h1 class="title">BK Lab</h1>
             <h2 class="subtitle">AI-Powered Patterning Research in Systems Biology</h2>
+        </header>
             <div class="intro">
                 <p>我們的實驗室專注於利用人工智慧技術來研究系統生物學中的模式形成問。通過整合最新的深度學習方法與傳統的生物學研究，我們致力於解開生系統中複雜的調控網絡。我們的研究涉及從分子層面到組織層面的多個尺度，並開發創新的計算工具來預測和理解生物系統的行為。們特別關注於如何將AI技術應用於生物圖像分析、基因調控網絡重建以及細胞命運決定的研究中。通過跨學科的方法，我們期望能為生命科學研究帶來新的見解和突破。</p>
             </div>
-        </header>
+
 
         <section class="section">
             <h2 class="section-title">kAI - our open-source AI projects</h2>
@@ -173,7 +179,7 @@
                     <div class="card-description">基因調控網絡分析工具</div>
                 </div>
                 <div class="card">
-                    <div class="card-icon"></div>
+                    <div class="card-icon">📊</div>
                     <h3 class="card-title">Data Visualization</h3>
                     <div class="card-description">生物數據可視化工具包</div>
                 </div>
@@ -231,12 +237,12 @@
                     <div class="card-description">實驗室主持人介紹</div>
                 </div>
                 <div class="card">
-                    <div class="card-icon"></div>
+                    <div class="card-icon">👩‍🔬</div>
                     <h3 class="card-title">Research Team</h3>
                     <div class="card-description">研究團隊成員介紹</div>
                 </div>
                 <div class="card">
-                    <div class="card-icon">🎓</div>
+                    <div class="card-icon">👨‍🎓</div>
                     <h3 class="card-title">Students</h3>
                     <div class="card-description">研究生與學生成員</div>
                 </div>
@@ -254,7 +260,7 @@
             <p>© 2024 BK Lab. All rights reserved.</p>
         </div>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.1/lib/p5.min.js"></script>
     <script src="rhill-voronoi-core.min.js"></script>
     <script>
         let points = [];
@@ -299,6 +305,11 @@
             }
             mousePos.x = width / 2;
             mousePos.y = height / 2;
+        }
+
+        // 添加設備檢測函數
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
         function draw() {
@@ -376,18 +387,16 @@
                 pointsDirection[index].prev_move_dir.unshift({x: weightedDx, y: weightedDy}); // 添加新的記錄
             });
 
-            // 檢查滑鼠閒置狀態
+            // 修改滑鼠閒置檢查部分
             const currentTime = Date.now();
             if (currentTime - lastCheckTime > CHECK_INTERVAL) {
-                if (currentTime - lastMouseMoveTime > MOUSE_IDLE_THRESHOLD) {
-                    // 讓附近的點緩慢移動到滑鼠位置
+                // 只在非移動設備上執行點的聚集效果
+                if (!isMobileDevice() && currentTime - lastMouseMoveTime > MOUSE_IDLE_THRESHOLD) {
                     points.forEach(point => {
-                        // 使用自定義的距離計算
                         const dx = point.x - mousePos.x;
                         const dy = point.y - mousePos.y;
                         const d = Math.sqrt(dx * dx + dy * dy);
-                        //console.log(point.x,mousePos.x);
-                        if (d < 250 && d>20) {
+                        if (d < 250 && d > 20) {
                             point.x += (mousePos.x - point.x) * 0.00015 * (250-d);
                             point.y += (mousePos.y - point.y) * 0.00015 * (250-d);
                         }
@@ -458,6 +467,18 @@
                 });
             }
         }
+
+        // 添加 intro 動畫
+        document.addEventListener('DOMContentLoaded', function() {
+            const introText = document.querySelector('.intro p');
+            // 確保元素存在
+            if (introText) {
+                // 延遲一小段時間後顯示文字
+                setTimeout(() => {
+                    introText.classList.add('visible');
+                }, 700);
+            }
+        });
     </script>
     </body>
 </html>
