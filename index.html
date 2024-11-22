@@ -441,25 +441,32 @@
             return false;
         }
 
-        // 新增觸控事件支援
+        // 修改觸控事件處理
         function touchStarted() {
-            if (touches.length === 1) {
-                // 獲取畫布相對於視窗的位置
+            // 只在特定條件下添加新點（例如雙指觸控）
+            if (touches.length === 2) {
                 let rect = bgCanvas.getBoundingClientRect();
-                
-                // 計算觸摸點相對於畫布的實際位置
                 let touchX = touches[0].x - rect.left;
                 let touchY = touches[0].y - rect.top;
-                //console.log(touches[0],rect);
+                
                 points.push({
                     x: touchX,
                     y: touchY
                 });
-                document.getElementById("ttt").innerText=rect.top;
                 pointsDirection.push({
                     prev_move_dir: Array(conti_t_randomWalk).fill().map(() => ({x: 0, y: 0}))
                 });
             }
+            return false;
+        }
+
+
+        // 確保觸控時不會有意外行為
+        function touchMoved() {
+            return false;
+        }
+        // 確保觸控結束時不會有意外行為
+        function touchEnded() {
             return false;
         }
 
