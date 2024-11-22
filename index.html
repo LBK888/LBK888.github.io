@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <title>BK Lab - Systems Biology</title>
     <style>
         * {
@@ -18,20 +20,34 @@
             overflow-x: hidden;
         }
 
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            touch-action: none;
+        }
+
         #background-canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100vh;
+            height: 100%;
             z-index: -1;
             pointer-events: none;
+            touch-action: none;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
@@ -154,7 +170,9 @@
     </style>
 </head>
 <body>
-    <canvas id="background-canvas"></canvas>
+    <div id="canvas-container">
+        <canvas id="background-canvas"></canvas>
+    </div>
 
     <div class="container">
         <header class="header">
@@ -284,6 +302,7 @@
         function setup() {
             // 創建主canvas
             let canvas = createCanvas(windowWidth, windowHeight);
+            canvas.parent('canvas-container');
             
             // 設置p5.js canvas為fixed定位
             canvas.style('position', 'fixed');
@@ -291,6 +310,7 @@
             canvas.style('left', '0');
             canvas.style('z-index', '-1');
             canvas.style('pointer-events', 'none');
+            canvas.style('touch-action', 'none');
             
             // 初始化背景canvas
             bgCanvas = document.getElementById('background-canvas');
@@ -443,8 +463,8 @@
 
         // 修改觸控事件處理
         function touchStarted() {
-            // 只在特定條件下添加新點（例如雙指觸控）
-            if (touches.length === 2) {
+            if (touches.length === 1) {
+                // 處理雙指觸控
                 let rect = bgCanvas.getBoundingClientRect();
                 let touchX = touches[0].x - rect.left;
                 let touchY = touches[0].y - rect.top;
@@ -457,17 +477,15 @@
                     prev_move_dir: Array(conti_t_randomWalk).fill().map(() => ({x: 0, y: 0}))
                 });
             }
-            return false;
+            return true; // 改為 return true 允許事件冒泡
         }
 
-
-        // 確保觸控時不會有意外行為
         function touchMoved() {
-            return false;
+            return true; // 允許事件冒泡
         }
-        // 確保觸控結束時不會有意外行為
+
         function touchEnded() {
-            return false;
+            return true; // 允許事件冒泡
         }
 
         // 新增重置點的函數
