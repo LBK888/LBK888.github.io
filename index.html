@@ -14,7 +14,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, "Noto Sans TC";
             line-height: 1.6;
             color: #333;
             overflow-x: hidden;
@@ -45,7 +45,7 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 10px;
             position: relative;
             z-index: 1;
         }
@@ -58,7 +58,7 @@
         .title {
             font-size: 4rem;
             margin-bottom: 20px;
-            color: #2c3e50;
+            color: #cc2f7e;
             font-weight: 700;
         }
 
@@ -71,9 +71,9 @@
         .intro {
             max-width: 800px;
             margin: 0 auto;
-            min-height: 100px;
+            min-height: 50px;
             position: relative;
-            padding: 0px, 20px, 20px;
+            padding: 0px;
         }
 
         .intro p {
@@ -86,6 +86,60 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@600&display=swap');
+        .noto-sans-tc-600 {
+            font-family: "Noto Sans TC", "Noto Sans TC";
+            font-optical-sizing: auto;
+            font-weight: 600;
+            font-style: normal;
+            }
+        .g-container {
+            position: relative;
+            font-family: 'Segoe UI', Arial, "Noto Sans TC";
+            
+            font-weight: 600;
+            color: #cc2f7e;
+            font-size: 20px;
+            
+            filter: contrast(15);
+        }
+        .word {
+            position: absolute;
+            width: 80%;
+            top: 0%;
+            left: 50%;
+            transform: translate(-50%, -20%);
+            animation: change 12s infinite ease-in-out;
+        }
+        .word:nth-child(1) {
+            animation-delay: -12s;
+        }
+        .word:nth-child(2) {
+            animation-delay: -9s;
+        }
+        .word:nth-child(3) {
+            animation-delay: -6s;
+        }
+        .word:nth-child(4) {
+            animation-delay: -3s;
+        }
+        @keyframes change {
+            0% ,
+            5%,
+            100% {
+                filter: blur(0px);
+                opacity: 1;
+            }
+            50%,
+            80% {
+                filter: blur(80px);
+                opacity: 0;
+            }
+        }
+
+
+
 
         .section {
             padding: 60px 0;
@@ -141,6 +195,7 @@
             padding: 15px;
             transform: translateY(100%);
             transition: transform 0.3s ease;
+            font-family: 'Segoe UI', Arial, "Noto Sans TC";
         }
 
         .card:hover .card-description {
@@ -150,8 +205,8 @@
         footer {
             background: rgba(35, 64, 94, 0.5);
             color: white;
-            padding: 40px 0;
-            margin-top: 20px;
+            padding: 30px 0;
+            margin-top: 10px;
         }
 
         @media (max-width: 768px) {
@@ -178,29 +233,38 @@
         <header class="header">
             <h1 class="title">BK Lab</h1>
             <h2 class="subtitle">AI-Powered Patterning Research in Systems Biology</h2>
-        </header>
             <div class="intro">
-                <p>我們的實驗室專注於利用人工智慧技術來研究系統生物學中的模式形成問。通過整合最新的深度學習方法與傳統的生物學研究，我們致力於解開生系統中複雜的調控網絡。我們的研究涉及從分子層面到組織層面的多個尺度，並開發創新的計算工具來預測和理解生物系統的行為。們特別關注於如何將AI技術應用於生物圖像分析、基因調控網絡重建以及細胞命運決定的研究中。通過跨學科的方法，我們期望能為生命科學研究帶來新的見解和突破。</p>
-            </div>
-
+            <div class="g-container">
+                <div class="word">專注於利用人工智慧技術來研究系統生物學中的圖樣生成<br>
+                    We use AI to study patterning in systems biology</div>
+                <div class="word">跨領域應用於生物影像分析、細胞分化機制及命運決定的研究<br>
+                    Our work focuses on bioimage analysis and cell differentiation</div>
+                <div class="word">這裡還有許多適合學生的研究資源與教學遊戲<br>
+                    Here provides resources and educational tools for students.
+                </div>
+                <div class="word">我們期望能為生命科學研究帶來新的見解和突破<br>
+                    We aim to advance life sciences with new insights and breakthroughs.
+                </div>
+            </div></div>
+        </header>
 
         <section class="section">
             <h2 class="section-title" id="ttt">kAI - our open-source AI projects</h2>
             <div class="grid">
                 <div class="card">
                     <div class="card-icon">🤖</div>
-                    <h3 class="card-title">Deep Learning Models</h3>
-                    <div class="card-description">用於生物圖像分析的深度學習模型庫</div>
+                    <h3 class="card-title">ZebraVision</h3>
+                    <div class="card-description">斑馬魚機器視覺</div>
                 </div>
                 <div class="card">
                     <div class="card-icon">🧬</div>
-                    <h3 class="card-title">Gene Network Analysis</h3>
-                    <div class="card-description">基因調控網絡分析工具</div>
+                    <h3 class="card-title">AqAiot Projects</h3>
+                    <div class="card-description">智慧物聯網專題</div>
                 </div>
                 <div class="card">
                     <div class="card-icon">📊</div>
-                    <h3 class="card-title">Data Visualization</h3>
-                    <div class="card-description">生物數據可視化工具包</div>
+                    <h3 class="card-title">Bioimage informatics</h3>
+                    <div class="card-description">生物影像分析與數據分析</div>
                 </div>
             </div>
         </section>
@@ -210,8 +274,8 @@
             <div class="grid">
                 <div class="card">
                     <div class="card-icon">🔬</div>
-                    <h3 class="card-title">Pattern Formation</h3>
-                    <div class="card-description">研究生物系統中的模式形成機制</div>
+                    <h3 class="card-title">Tissue Patterning </h3>
+                    <div class="card-description">生物系統中的圖樣形成機制</div>
                 </div>
                 <div class="card">
                     <div class="card-icon">🦠</div>
@@ -236,13 +300,13 @@
                 </div>
                 <div class="card">
                     <div class="card-icon">📚</div>
-                    <h3 class="card-title">Books</h3>
-                    <div class="card-description">實驗室成員編寫的專業書籍</div>
+                    <h3 class="card-title">Books & Theses</h3>
+                    <div class="card-description">研究人員編寫的專書與論文</div>
                 </div>
                 <div class="card">
                     <div class="card-icon">🎓</div>
-                    <h3 class="card-title">Theses</h3>
-                    <div class="card-description">研究生論文作品集</div>
+                    <h3 class="card-title">Video & Games</h3>
+                    <div class="card-description">科普影片與教學遊戲作品</div>
                 </div>
             </div>
         </section>
@@ -262,8 +326,8 @@
                 </div>
                 <div class="card">
                     <div class="card-icon">👨‍🎓</div>
-                    <h3 class="card-title">Students</h3>
-                    <div class="card-description">研究生與學生成員</div>
+                    <h3 class="card-title">Future Students</h3>
+                    <div class="card-description">召募研究人員</div>
                 </div>
             </div>
         </section>
@@ -271,10 +335,11 @@
 
     <footer>
         <div class="container">
-            <p>Contect Info 聯絡資訊：</p>
-            <p>Address 地址：基隆市中正區北寧路2號</p>
-            <p>Email: liaobk@email.ntou.edu.tw</p>
-            <p>Tel 電話：(02) 2462-2192</p>
+            <p><b>Contect Info 聯絡資訊：</b></p>
+            <p> Department of Aquaculture,<br> National Ocean Taiwan University<br>
+                Address 地址：202 基隆市中正區北寧路2號 生科館510</p>
+            <p> Email: liaobk@email.ntou.edu.tw
+            <br> Tel 電話：(02) 2462-2192</p>
             <br>
             <p>© 2024 BK Lab. All rights reserved.</p>
         </div>
