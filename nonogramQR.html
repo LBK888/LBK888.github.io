@@ -74,6 +74,27 @@
         .show {
             display: block !important;  /* 用於顯示QR碼的類別 */
         }
+
+        .marked {
+            position: relative;
+            background-color: white;
+        }
+        .marked::before,
+        .marked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 2px;
+            background-color: red;
+        }
+        .marked::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+        .marked::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
     </style>
 </head>
 <body>
@@ -212,9 +233,22 @@
         }
 
         function toggleCell(row, col) {
-            nonogramState[row][col] = 1 - nonogramState[row][col];
+            // 狀態循環：0 (空白) -> 1 (填充) -> 2 (標記X) -> 0 (空白)
+            nonogramState[row][col] = (nonogramState[row][col] + 1) % 3;
             const cell = document.querySelector(`#nonogram tr:nth-child(${row + 2}) td:nth-child(${col + 2})`);
-            cell.className = nonogramState[row][col] ? 'cell filled' : 'cell';
+            
+            // 根據狀態設置對應的類別
+            switch(nonogramState[row][col]) {
+                case 0: // 空白
+                    cell.className = 'cell';
+                    break;
+                case 1: // 填充
+                    cell.className = 'cell filled';
+                    break;
+                case 2: // 標記X
+                    cell.className = 'cell marked';
+                    break;
+            }
             
             checkLine(row, 'row');
             checkLine(col, 'col');
