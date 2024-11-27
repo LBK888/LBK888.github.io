@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>QR Code Nonogram Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #nonogram {
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #nonogram td {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            text-align: center;
+            cursor: pointer;
+            min-width: 20px;
+        }
+
+        .hint {
+            color: red;
+            font-size: 10px;
+            padding: 3px;
+            white-space: nowrap;
+        }
+
+        .col-hint {
+            font-size: 8px;
+            line-height: 1.1;
+            white-space: pre-line;
+        }
+
+        .correct {
+            color: #444;
+        }
+
+        .cell {
+            background-color: white;
+        }
+
+        .filled {
+            background-color: black;
+        }
+
+        .download-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        #qrcode {
+        display: none;  /* 預設隱藏QR碼 */
+        }
+        
+        .show {
+            display: block !important;  /* 用於顯示QR碼的類別 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Code Nonogram Generator</h1>
+        
+        <div>
+            <input type="text" id="urlInput" placeholder="輸入網址" style="width: 300px;">
+            <button onclick="generateQR()">生成QR Code</button>
+        </div>
+        <div>
+            <button class="download-btn" onclick="downloadQR()">下載QR Code</button>
+            <button class="download-btn" onclick="downloadNonogram()">下載Nonogram</button>
+            <button class="download-btn" onclick="clearNonogram()">清除</button>
+        </div>
+        <div id="qrcode"></div>
+        <div id="nonogramContainer"></div>
+        
+    </div>
+
+    <script>
+        let qrMatrix = [];
+        let nonogramState = [];
+        let rowHints = [];
+        let colHints = [];
+        
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        window.onload = function() {
+            const urlParam = getUrlParameter('url');
+            if (urlParam) {
+                document.getElementById('urlInput').value = urlParam;
+                generateQR();
+            }
+        };
+
+        function generateQR() {
+            const url = document.getElementById('urlInput').value;
+            if (!url) return;
+
+            const qr = qrcode(0, 'L');
+            qr.addData(url);
+            qr.make();
+
+            // 獲取QR碼矩陣
+            qrMatrix = qr.getModuleCount();
+            const matrix = [];
+            for (let y = 0; y < qrMatrix; y++) {
+                const row = [];
+                for (let x = 0; x < qrMatrix; x++) {
+                    row.push(qr.isDark(y, x) ? 1 : 0);
+                }
+                matrix.push(row);
+            }
+            qrMatrix = matrix;
+
+            // 顯示QR碼
+            document.getElementById('qrcode').innerHTML = qr.createImgTag(12);
+
+            // 生成Nonogram提示
+            generateNonogramHints();
+            createNonogramTable();
+        }
+
+        function generateNonogramHints() {
+            rowHints = [];
+            colHints = [];
+
+            // 生成行提示
+            for (let i = 0; i < qrMatrix.length; i++) {
+                let count = 0;
+                const hints = [];
+                for (let j = 0; j < qrMatrix[i].length; j++) {
+                    if (qrMatrix[i][j] === 1) {
+                        count++;
+                    } else if (count > 0) {
+                        hints.push(count);
+                        count = 0;
+                    }
+                }
+                if (count > 0) hints.push(count);
+                rowHints.push(hints.length ? hints : [0]);
+            }
+
+            // 生成列提示
+            for (let j = 0; j < qrMatrix[0].length; j++) {
+                let count = 0;
+                const hints = [];
+                for (let i = 0; i < qrMatrix.length; i++) {
+                    if (qrMatrix[i][j] === 1) {
+                        count++;
+                    } else if (count > 0) {
+                        hints.push(count);
+                        count = 0;
+                    }
+                }
+                if (count > 0) hints.push(count);
+                colHints.push(hints.length ? hints : [0]);
+            }
+        }
+
+        function createNonogramTable() {
+            nonogramState = Array(qrMatrix.length).fill().map(() => Array(qrMatrix.length).fill(0));
+            
+            const container = document.getElementById('nonogramContainer');
+            const table = document.createElement('table');
+            table.id = 'nonogram';
+
+            // 添加列提示
+            const maxColHints = Math.max(...colHints.map(h => h.length));
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td></td>`;
+            for (let j = 0; j < qrMatrix.length; j++) {
+                const hints = colHints[j].join('\n'); // 使用換行符號分隔數字
+                tr.innerHTML += `<td class="hint col-hint col-hint-${j}">${hints}</td>`;
+            }
+            table.appendChild(tr);
+
+            // 添加主網格和行提示
+            for (let i = 0; i < qrMatrix.length; i++) {
+                const tr = document.createElement('tr');
+                const hints = rowHints[i].join(', '); // 使用逗號分隔數字
+                tr.innerHTML = `<td class="hint row-hint-${i}">${hints}</td>`;
+    
+                for (let j = 0; j < qrMatrix.length; j++) {
+                    tr.innerHTML += `<td class="cell" onclick="toggleCell(${i}, ${j})"></td>`;
+                }
+                table.appendChild(tr);
+            }
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        function toggleCell(row, col) {
+            nonogramState[row][col] = 1 - nonogramState[row][col];
+            const cell = document.querySelector(`#nonogram tr:nth-child(${row + 2}) td:nth-child(${col + 2})`);
+            cell.className = nonogramState[row][col] ? 'cell filled' : 'cell';
+            
+            checkLine(row, 'row');
+            checkLine(col, 'col');
+            
+            // 檢查是否完成遊戲
+            checkCompletion();
+        }
+
+
+        // 檢查遊戲是否完成
+        function checkCompletion() {
+            let isComplete = true;
+            
+            // 檢查所有行
+            for (let i = 0; i < qrMatrix.length; i++) {
+                let line = nonogramState[i];
+                let hints = rowHints[i];
+                
+                let count = 0;
+                let currentHints = [];
+                for (let j = 0; j < line.length; j++) {
+                    if (line[j] === 1) {
+                        count++;
+                    } else if (count > 0) {
+                        currentHints.push(count);
+                        count = 0;
+                    }
+                }
+                if (count > 0) currentHints.push(count);
+                if (currentHints.length === 0) currentHints.push(0);
+                
+                if (JSON.stringify(currentHints) !== JSON.stringify(hints)) {
+                    isComplete = false;
+                    break;
+                }
+            }
+            
+            // 如果所有行都正確，則顯示QR碼
+            if (isComplete) {
+                document.getElementById('qrcode').classList.add('show');
+            } else {
+                document.getElementById('qrcode').classList.remove('show');
+            }
+        }
+
+        function checkLine(index, type) {
+            const line = type === 'row' ? nonogramState[index] : nonogramState.map(row => row[index]);
+            const hints = type === 'row' ? rowHints[index] : colHints[index];
+            
+            let count = 0;
+            const currentHints = [];
+            for (let i = 0; i < line.length; i++) {
+                if (line[i] === 1) {
+                    count++;
+                } else if (count > 0) {
+                    currentHints.push(count);
+                    count = 0;
+                }
+            }
+            if (count > 0) currentHints.push(count);
+            if (currentHints.length === 0) currentHints.push(0);
+
+            const isCorrect = JSON.stringify(currentHints) === JSON.stringify(hints);
+            const hintElements = document.getElementsByClassName(`${type}-hint-${index}`);
+            
+            for (let element of hintElements) {
+                const classes = [`hint`, `${type}-hint-${index}`];
+                if (type === 'col') classes.push('col-hint');
+                if (isCorrect) classes.push('correct');
+                element.className = classes.join(' ');
+            }
+        }
+
+        function downloadQR() {
+            const canvas = document.createElement('canvas');
+            const qrImg = document.querySelector('#qrcode img');
+            // 增加解析度
+            canvas.width = qrImg.width;
+            canvas.height = qrImg.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(qrImg, 0, 0, canvas.width, canvas.height);
+            
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        function downloadNonogram() {
+            const nonogram = document.getElementById('nonogram');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const padding = 10;
+            const cellSize = 25; // 設定固定的格子大小
+            const hintCellWidth = 500; // 為行提示預留更寬的空間
+            const hintCellHeight = 600; // 為列提示預留更高的空間
+            const rows = nonogram.rows.length;
+            const cols = nonogram.rows[0].cells.length;
+            
+            // 調整 canvas 尺寸，考慮提示空間
+            canvas.width = (cols - 1) * cellSize + hintCellWidth + padding * 2;  // -1 是因為第一列是提示
+            canvas.height = (rows - 1) * cellSize + hintCellHeight + padding * 2; // -1 是因為第一行是提示
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const data = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">
+                <foreignObject width="100%" height="100%">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="padding: ${padding}px;">
+                        <style>
+                            table { border-collapse: collapse; }
+                            td { 
+                                border: 1px solid #ccc !important;
+                                width: ${cellSize}px !important;
+                                height: ${cellSize}px !important;
+                                min-width: ${cellSize}px !important;
+                                min-height: ${cellSize}px !important;
+                                text-align: center;
+                            }
+                            .hint { white-space: nowrap !important; }
+                            .col-hint { white-space: pre !important; }
+                        </style>
+                        ${nonogram.outerHTML}
+                    </div>
+                </foreignObject>
+            </svg>`;
+            
+            const img = new Image();
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0);
+                const link = document.createElement('a');
+                link.download = 'nonogram.png';
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+            };
+            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
+        }
+
+        function clearNonogram() {
+            nonogramState = Array(qrMatrix.length).fill().map(() => Array(qrMatrix.length).fill(0));
+            const cells = document.querySelectorAll('#nonogram .cell');
+            cells.forEach(cell => {
+                cell.className = 'cell';
+            });
+            
+            // 重新檢查所有行和列
+            for (let i = 0; i < qrMatrix.length; i++) {
+                checkLine(i, 'row');
+                checkLine(i, 'col');
+            }
+    
+            document.getElementById('qrcode').classList.remove('show');
+        }   
+    </script>
+</body>
+</html>
