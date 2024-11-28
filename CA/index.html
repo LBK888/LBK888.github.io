@@ -1,0 +1,1716 @@
+﻿<!doctype html>
+<html lang="zh-tw">
+        <head>
+                <meta content="zh-tw" http-equiv="Content-Language">
+                <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+                <meta name="description" content="Multi-Cell Automata">
+                <meta name="viewport" content="width=700, initial-scale=0.6, maximum-scale=2.0, user-scalable=1">
+                
+                  <!-- JS -->
+                  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+                
+                  <!-- CSS STYLES -->
+                  <link rel="stylesheet" href="css/showcase.css">
+                  <link rel="stylesheet" href="css/jquery-ui.css">
+                  <link rel="stylesheet" href="css/font-awesome-animation.min.css"> 
+                
+                  <!-- ICONS & FONTS -->
+                  <script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
+                
+                <title>Group HW2-2 - LBK Course - Computer 101 </title>
+                
+                <style>
+                    @import url(https://fonts.googleapis.com/earlyaccess/notosanstc.css);
+                
+                    body{
+                      font-family: "Noto Sans", "Noto Sans CJK TC", sans-serif;
+                      margin: 5px;
+                    }
+                    select {
+                      width: 500px;
+                    }
+                    div.playbox {font-size:8px; display:inline-block; margin:0;}
+                      .container { display: table; border-collapse: collapse; }
+                      .column { float: left; overflow: hidden; width: 400px; }
+                      .statusbar { display: table-cell;border: 0px;height: 2px; }
+                    span.setbox {font-size:15px}
+                    
+                    table.tbox { background:#e3f1fc; border-collapse: collapse;}
+                    table.tbox2 { background:#d1d1d1; border-collapse: collapse;}
+                    table, th, td {
+                      border: 1px solid #6d6d6d;
+                    }
+                    td { width:16px; height:16px; text-align:center}
+                    td.setbox { font-size:12px; color:blue; font-weight: bold; width:24px; height:24px; text-align:center; background:#f8e5e5}
+                    td.setbox2 { font-size:12px; color:#6d6d6d; font-weight: bold; width:24px; height:24px; text-align:center; background:#fffeae}
+                    li.setbox { border: 1px solid #6d6d6d; width:12px; height:12px; text-align:center}
+                    fieldset {border: 0;}
+                    label {
+                      display: block;
+                      margin: 30px 0 0 0;
+                    }
+                    .overflow {
+                      height: 300px;
+                    }
+                </style>
+                
+                </head>
+<body>
+
+
+<section id="buttons-raised" class="showcase showcase-content background-light">
+    <header class="l-center">
+        <h3 class="showcase-title">多物種細胞自動機</h3>
+        <h4 class="showcase-sub-title">Multi-Cell Automata</h4>
+      </header>
+<div id="tabs" style="width: 1500px">
+	<ul>
+		<li><a href="#tabs-1"><i class="fas fa-bomb fa-lg"></i> Arena</a></li>
+		<li><a href="#tabs-2"><i class="fas fa-wrench fa-lg"></i> Settings</a></li>
+
+	</ul>
+  <div id="tabs-1">
+
+    <div class="playbox" id="box1">
+      <table class="tbox" id="tbox1">
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      </table>
+    </div><div class="playbox" id="box2">
+      <table class="tbox2" id="tbox2">
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      </table>
+    </div><div class="playbox" id="box3">
+      <table class="tbox" id="tbox3">
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      </table>
+    </div><div class="playbox" id="box4">
+        <table class="tbox2"  id="tbox4">
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        </table>
+      </div><div class="playbox" id="box5">
+          <table class="tbox"  id="tbox5">
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          </table>
+        </div>
+      
+    
+    <br><br>
+    <div class="playbox" style="width: 520px;">
+      <span id="GA_Text" class="setbox"><br>本組-設定: </span><br>
+      <div class="playbox" id="set1">
+        <table class="tbox" id="tset1">
+          <tr><td class="setbox">0</td><td class="setbox">0</td><td class="setbox">0</td></tr>
+          <tr><td class="setbox">0</td><td class="setbox2">1</td><td class="setbox">0</td></tr>
+          <tr><td class="setbox">0</td><td class="setbox">0</td><td class="setbox">0</td></tr>
+          </table>
+          <br>
+          <span id="SetLog1" style="color: red; font-weight: bold; font-size: 12pt">PASS</span>
+      </div>
+    </div><div class="playbox" style="width: 520px;">
+        <span id="GA_Text" class="setbox"><br>食物-設定(無法更改): </span><br>
+        <div class="playbox" id="set2">
+          <table class="tbox" id="tset2">
+            <tr><td class="setbox">0</td><td class="setbox">0</td><td class="setbox">0</td></tr>
+            <tr><td class="setbox">0</td><td class="setbox2">1</td><td class="setbox">0</td></tr>
+            <tr><td class="setbox">0</td><td class="setbox">0</td><td class="setbox">0</td></tr>
+            </table>
+            <br>
+          <span id="SetLog2" style="color: red; font-weight: bold; font-size: 12pt">PASS</span>
+      </div>
+    </div><div class="playbox" style="width: 250px;">
+      <span id="GA_Text" class="setbox"><br>對手-設定: </span><br>
+      <div class="playbox" id="set3">
+        <table class="tbox" id="tset3">
+          <tr><td class="setbox">0</td><td class="setbox">0</td><td class="setbox">0</td></tr>
+          <tr><td class="setbox">0</td><td class="setbox2">1</td><td class="setbox">0</td></tr>
+          <tr><td class="setbox">0</td><td class="setbox">0</td><td class="setbox">0</td></tr>
+          </table>
+          <br>
+          <span id="SetLog3" style="color: red; font-weight: bold; font-size: 12pt">PASS</span>
+    </div>
+  </div>
+  <br>
+  <br>
+  <form action="#">
+    <fieldset>
+      <label for="ourteam">選擇本組:</label>
+      <select name="ourteam" id="ourteam">
+        <option disabled selected>Please pick one</option>
+        <option value="00">B班-第A組</option>
+        <option value="01">B班-第B組</option>
+        <option value="02">B班-第C組</option>
+        <option value="03">B班-第D組</option>
+        <option value="04">B班-第E組</option>
+        <option value="05">B班-第F組</option>
+        <option value="10">A班-第A組</option>
+        <option value="11">A班-第B組</option>
+        <option value="12">A班-第C組</option>
+        <option value="13">A班-第D組</option>
+        <option value="14">A班-第E組</option>
+        <option value="15">A班-第F組</option>
+        <option value="16">A班-第G組</option>
+        <option value="17">A班-第H組</option>
+      </select>
+   
+      <label for="opntteam">選擇對手:</label>
+      <select name="opntteam" id="opntteam">
+        <option disabled selected>Please pick one</option>
+        <optgroup label="B班">
+          <option value="0A">B班-全</option>
+          <option value="00">B班-第A組</option>
+          <option value="01">B班-第B組</option>
+          <option value="02">B班-第C組</option>
+          <option value="03">B班-第D組</option>
+          <option value="04">B班-第E組</option>
+          <option value="05">B班-第F組</option>
+        </optgroup>
+        <optgroup label="A班">
+            <option value="1A">A班-全</option>
+            <option value="10">A班-第A組</option>
+            <option value="11">A班-第B組</option>
+            <option value="12">A班-第C組</option>
+            <option value="13">A班-第D組</option>
+            <option value="14">A班-第E組</option>
+            <option value="15">A班-第F組</option>
+            <option value="16">A班-第G組</option>
+            <option value="17">A班-第H組</option>
+          </optgroup>
+      </select>
+    </fieldset>
+    </form>
+    <br>
+  <span id="ClickBox" style="color: #0099ff;cursor: pointer;">[ <i class="fas fa-gamepad"></i><u> Click here to START!</u> ]</span><br>
+  <br><span id="ResultBox" style="color: #ff1443; font-size: 15pt; font-weight: bold">Results will be in HERE!</span><br>
+  <div id="LogBar" style="line-height: 20px; width: 402px;">_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _</div><br>
+  <div id="LogBox" style="line-height: 20px; width: 402px;"> </div><br>
+    <br>
+  </div>
+  <div id="tabs-2">
+    <span> ======= B班  ======= </span><br><br>
+  <div class="playbox" style="width: 350px;">
+    <span id="GA_Text" class="setbox"><br>B班-第A組-配置: </span><br>
+  <div class="playbox" id="boxG1">
+  <table class="tbox">
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+  </table>
+</div>
+</div><div class="playbox" style="width: 500px;">
+<span id="GA_Text" class="setbox"><br>B班-第A組-設定: </span><br>
+<div class="playbox" id="boxG1S">
+  <table class="tbox">
+    <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+    <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+    <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+    </table>
+</div>
+</div>
+    <br><br>
+
+    <div class="playbox" style="width: 350px;">
+      <span id="GA_Text" class="setbox"><br>B班-第B組-配置: </span><br>
+    <div class="playbox" id="boxG1">
+    <table class="tbox">
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+    </table>
+  </div>
+  </div><div class="playbox" style="width: 500px;">
+  <span id="GA_Text" class="setbox"><br>B班-第B組-設定: </span><br>
+  <div class="playbox" id="boxG1S">
+    <table class="tbox">
+      <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+      <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+      <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+      </table>
+  </div>
+  </div>
+      <br><br>
+  
+      
+      <div class="playbox" style="width: 350px;">
+        <span id="GA_Text" class="setbox"><br>B班-第C組-配置: </span><br>
+      <div class="playbox" id="boxG1">
+      <table class="tbox">
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+      </table>
+    </div>
+    </div><div class="playbox" style="width: 500px;">
+    <span id="GA_Text" class="setbox"><br>B班-第C組-設定: </span><br>
+    <div class="playbox" id="boxG1S">
+      <table class="tbox">
+        <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+        <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+        <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+        </table>
+    </div>
+    </div>
+        <br><br>
+  
+        
+        <div class="playbox" style="width: 350px;">
+          <span id="GA_Text" class="setbox"><br>B班-第D組-配置: </span><br>
+        <div class="playbox" id="boxG1">
+        <table class="tbox">
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+        </table>
+      </div>
+      </div><div class="playbox" style="width: 500px;">
+      <span id="GA_Text" class="setbox"><br>B班-第D組-設定: </span><br>
+      <div class="playbox" id="boxG1S">
+        <table class="tbox">
+          <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+          <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+          <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+          </table>
+      </div>
+      </div>
+          <br><br>
+
+          <div class="playbox" style="width: 350px;">
+            <span id="GA_Text" class="setbox"><br>B班-第E組-配置: </span><br>
+          <div class="playbox" id="boxG1">
+          <table class="tbox">
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+          </table>
+        </div>
+        </div><div class="playbox" style="width: 500px;">
+        <span id="GA_Text" class="setbox"><br>B班-第E組-設定: </span><br>
+        <div class="playbox" id="boxG1S">
+          <table class="tbox">
+            <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+            <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+            <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+            </table>
+        </div>
+        </div>
+            <br><br>
+        
+            <div class="playbox" style="width: 350px;">
+              <span id="GA_Text" class="setbox"><br>B班-第F組-配置: </span><br>
+            <div class="playbox" id="boxG1">
+            <table class="tbox">
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+            </table>
+          </div>
+          </div><div class="playbox" style="width: 500px;">
+          <span id="GA_Text" class="setbox"><br>B班-第F組-設定: </span><br>
+          <div class="playbox" id="boxG1S">
+            <table class="tbox">
+              <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+              <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+              <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+              </table>
+          </div>
+          </div>
+              <br><br>
+          
+              
+              <div class="playbox" style="width: 350px;">
+                <span id="GA_Text" class="setbox"><br>B班-第G組-配置: </span><br>
+              <div class="playbox" id="boxG1">
+              <table class="tbox">
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+              </table>
+            </div>
+            </div><div class="playbox" style="width: 500px;">
+            <span id="GA_Text" class="setbox"><br>B班-第G組-設定: </span><br>
+            <div class="playbox" id="boxG1S">
+              <table class="tbox">
+                <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                </table>
+            </div>
+            </div>
+                <br><br>
+          
+                
+                <div class="playbox" style="width: 350px;">
+                  <span id="GA_Text" class="setbox"><br>B班-第H組-配置: </span><br>
+                <div class="playbox" id="boxG1">
+                <table class="tbox">
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                </table>
+              </div>
+              </div><div class="playbox" style="width: 500px;">
+              <span id="GA_Text" class="setbox"><br>B班-第H組-設定: </span><br>
+              <div class="playbox" id="boxG1S">
+                <table class="tbox">
+                  <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                  <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                  <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                  </table>
+              </div>
+              </div>
+                  <br><br><br><br><br><br>
+
+
+                  <span> ======= A班  ======= </span><br><br>
+                  <div class="playbox" style="width: 350px;">
+                    <span id="GA_Text" class="setbox"><br>A班-第A組-配置: </span><br>
+                  <div class="playbox" id="boxG1">
+                  <table class="tbox">
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                  </table>
+                </div>
+                </div><div class="playbox" style="width: 500px;">
+                <span id="GA_Text" class="setbox"><br>A班-第A組-設定: </span><br>
+                <div class="playbox" id="boxG1S">
+                  <table class="tbox">
+                    <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                    <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                    <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                    </table>
+                </div>
+                </div>
+                    <br><br>
+                
+                    <div class="playbox" style="width: 350px;">
+                      <span id="GA_Text" class="setbox"><br>A班-第B組-配置: </span><br>
+                    <div class="playbox" id="boxG1">
+                    <table class="tbox">
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                    </table>
+                  </div>
+                  </div><div class="playbox" style="width: 500px;">
+                  <span id="GA_Text" class="setbox"><br>A班-第B組-設定: </span><br>
+                  <div class="playbox" id="boxG1S">
+                    <table class="tbox">
+                      <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                      <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                      <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                      </table>
+                  </div>
+                  </div>
+                      <br><br>
+                  
+                      
+                      <div class="playbox" style="width: 350px;">
+                        <span id="GA_Text" class="setbox"><br>A班-第C組-配置: </span><br>
+                      <div class="playbox" id="boxG1">
+                      <table class="tbox">
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                      </table>
+                    </div>
+                    </div><div class="playbox" style="width: 500px;">
+                    <span id="GA_Text" class="setbox"><br>A班-第C組-設定: </span><br>
+                    <div class="playbox" id="boxG1S">
+                      <table class="tbox">
+                        <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                        <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                        <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                        </table>
+                    </div>
+                    </div>
+                        <br><br>
+                  
+                        
+                        <div class="playbox" style="width: 350px;">
+                          <span id="GA_Text" class="setbox"><br>A班-第D組-配置: </span><br>
+                        <div class="playbox" id="boxG1">
+                        <table class="tbox">
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                        </table>
+                      </div>
+                      </div><div class="playbox" style="width: 500px;">
+                      <span id="GA_Text" class="setbox"><br>A班-第D組-設定: </span><br>
+                      <div class="playbox" id="boxG1S">
+                        <table class="tbox">
+                          <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                          <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                          <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                          </table>
+                      </div>
+                      </div>
+                          <br><br>
+                
+                          <div class="playbox" style="width: 350px;">
+                            <span id="GA_Text" class="setbox"><br>A班-第E組-配置: </span><br>
+                          <div class="playbox" id="boxG1">
+                          <table class="tbox">
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                          </table>
+                        </div>
+                        </div><div class="playbox" style="width: 500px;">
+                        <span id="GA_Text" class="setbox"><br>A班-第E組-設定: </span><br>
+                        <div class="playbox" id="boxG1S">
+                          <table class="tbox">
+                            <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                            <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                            <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                            </table>
+                        </div>
+                        </div>
+                            <br><br>
+                        
+                            <div class="playbox" style="width: 350px;">
+                              <span id="GA_Text" class="setbox"><br>A班-第F組-配置: </span><br>
+                            <div class="playbox" id="boxG1">
+                            <table class="tbox">
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                            </table>
+                          </div>
+                          </div><div class="playbox" style="width: 500px;">
+                          <span id="GA_Text" class="setbox"><br>A班-第F組-設定: </span><br>
+                          <div class="playbox" id="boxG1S">
+                            <table class="tbox">
+                              <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                              <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                              <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                              </table>
+                          </div>
+                          </div>
+                              <br><br>
+                          
+                              
+                              <div class="playbox" style="width: 350px;">
+                                <span id="GA_Text" class="setbox"><br>A班-第G組-配置: </span><br>
+                              <div class="playbox" id="boxG1">
+                              <table class="tbox">
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                              </table>
+                            </div>
+                            </div><div class="playbox" style="width: 500px;">
+                            <span id="GA_Text" class="setbox"><br>A班-第G組-設定: </span><br>
+                            <div class="playbox" id="boxG1S">
+                              <table class="tbox">
+                                <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                                <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                                <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                                </table>
+                            </div>
+                            </div>
+                                <br><br>
+                          
+                                
+                                <div class="playbox" style="width: 350px;">
+                                  <span id="GA_Text" class="setbox"><br>A班-第H組-配置: </span><br>
+                                <div class="playbox" id="boxG1">
+                                <table class="tbox">
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                  <tr><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+                                </table>
+                              </div>
+                              </div><div class="playbox" style="width: 500px;">
+                              <span id="GA_Text" class="setbox"><br>A班-第H組-設定: </span><br>
+                              <div class="playbox" id="boxG1S">
+                                <table class="tbox">
+                                  <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                                  <tr><td class="setbox"> </td><td class="setbox2"> </td><td class="setbox"> </td></tr>
+                                  <tr><td class="setbox"> </td><td class="setbox"> </td><td class="setbox"> </td></tr>
+                                  </table>
+                              </div>
+                              </div>
+                                  <br><br>
+  
+  </div>
+
+</section>
+
+<!--
+<footer class="l-center background-inverse" style="position: relative; width: 96%; height: 100px; padding:1% 2%; overflow:hidden;">
+        <section id="footer" class="showcase showcase-content">
+            <h4 class="showcase-sub-title"><?php echo $Sys_System_Title; ?> &nbsp; <?php echo $Sys_System_Version; ?> <i class="far fa-copyright"></i> <?php echo $Sys_Last_Modify; ?> <?php echo $Sys_Author_Name; ?> @ NTOU TW &nbsp;&nbsp;&nbsp;
+            <a title="email" target="_blank" href="mailto:?subject=about GradeFutures"><i class="fas fa-envelope fa-lg faa-shake animated-hover" style="color: white"></i></a>&nbsp;&nbsp;&nbsp;
+            <a title="facebook" target="_blank" href=""><i class="fab fa-facebook-square fa-lg faa-ring animated-hover" style="color: white"></i></a>&nbsp;&nbsp;&nbsp;
+            <a title="website" target="_blank" href=""><i class="far fa-address-card fa-lg  faa-float animated-hover" style="color: white"></i></a>
+            <p><i class="fas fa-exclamation-circle"></i><b> For educational purposes only </b><i class="fas fa-exclamation-circle"></i></p></h4>
+        </section> 
+</footer>
+-->
+
+
+
+
+<!-- JAVASCRIPT INCLUDES -->
+<script type="text/javascript" src="js/jquery-ui.js"></script>
+
+
+<script>
+
+
+var Playbox_XGrids=72;
+var Playbox_YGrids=18;
+//var left_index=0;
+var mid_index=486;
+var left_index=972;
+var full_index=1323; // 18*(18+9+18+9+18)+9*3-1
+var oriMapUpdate,refreshIntervalId;
+var runTpoint=150;  //times
+var runTintval=100; //ms
+var ourteamtxt="?-?";
+var opntteamtxt="?-?";
+
+//var Playbox_Boxes=5;
+
+var FoodPreload=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0],
+[0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,0,1,1,1,0,0,0,1,1,1,1,1,0,0,0],
+[0,0,0,0,1,1,1,0,0,0,1,1,1,1,0,0,0,0],[0,0,0,0,1,1,1,0,0,0,0,0,1,1,0,0,0,0],[0,0,0,0,1,1,1,1,1,0,0,0,1,1,0,0,0,0],
+[0,0,0,1,1,1,1,1,1,0,0,0,1,1,0,0,0,0],[0,0,0,1,1,0,0,1,1,0,1,1,1,1,0,0,0,0],[0,0,0,1,1,0,0,1,1,0,1,1,1,1,0,0,0,0],
+[0,0,0,1,1,1,1,1,1,0,1,1,1,1,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0],
+[0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0]];
+
+var OurPreload=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+
+var OpntPreload=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+
+//Group Homework
+var GH2=[[[[]]],[[[]]]]; //4D array [B=0, A=1][0~7, A~H Group][[2D data]]
+var GH2set=[[[[]]],[[[]]]];
+//B-A
+GH2[0][0]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[0][0]=[[0,1,-1],[0,1,1],[1,-1,-1]];
+
+//B-B
+GH2[0][1]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[0][1]=[[-1,0,1],[1,1,0],[-1,1,-1]];
+
+//B-C
+GH2[0][2]=[[0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,1,0,1],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[0][2]=[[-1,1,0],[-1,1,1],[-1,1,0]];
+
+//B-D
+GH2[0][3]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[0][3]=[[0,-1,1],[-1,1,1],[0,-1,1]];
+
+//B-E
+GH2[0][4]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[0][4]=[[-1,-1,1],[1,1,0],[-1,0,1]];
+
+//B-F
+GH2[0][5]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[0][5]=[[-1,0,1],[1,-1,1],[-1,0,1]];
+
+//B-G
+GH2[0][6]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[0][6]=[[0,0,0],[0,0,0],[0,0,0]];
+
+//B-H
+GH2[0][7]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[0][7]=[[0,0,0],[0,0,0],[0,0,0]];
+
+
+
+
+//A-A
+GH2[1][0]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[1][0]=[[-1,0,1],[1,1,-1],[-1,0,1]];
+
+//A-B
+GH2[1][1]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[1][1]=[[-1,-1,1],[1,0,1],[0,-1,1]];
+
+//A-C
+GH2[1][2]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[1][2]=[[-1,0,1],[1,-1,1],[0,1,-1]];
+
+//A-D
+GH2[1][3]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[1][3]=[[-1,1,-1],[1,0,1],[0,1,-1]];
+
+//A-E
+GH2[1][4]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[1][4]=[[0,-1,1],[1,-1,1],[0,-1,1]];
+
+//A-F
+GH2[1][5]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[1][5]=[[-1,1,1],[0,-1,1],[0,1,-1]];
+
+//A-G
+GH2[1][6]=[[0,0,0,0,1,0,0,1,0,0,1,0,1,0,0,1,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[1][6]=[[-1,1,-1],[0,1,1],[-1,1,0]];
+
+//A-H
+GH2[1][7]=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+GH2set[1][7]=[[-1,-1,1],[1,1,0],[-1,0,1]];
+
+
+
+//map value: 1=food, 2=our, 3=opnt
+var MapUpdate=Array((Playbox_YGrids+2)).fill().map(() => Array((Playbox_XGrids+2)).fill(0));
+//var OurUpdate=Array(Playbox_YGrids).fill().map(() => Array(Playbox_XGrids).fill(0));
+//var OpntUpdate=Array(Playbox_YGrids).fill().map(() => Array(Playbox_XGrids).fill(0));
+//loading preload array
+//console.log(window["MapUpdate"][2].length);
+
+
+var FoodSetting=[[0,0,0],[0,1,0],[0,0,0]];
+var OurSetting=[[0,0,0],[0,1,0],[0,0,0]];
+var OpntSetting=[[0,0,0],[0,1,0],[0,0,0]];
+
+
+for (y=0;y<18;y++) {
+  for (x=0;x<18;x++) {
+    if (FoodPreload[y][x]==1) {
+        i=y*18+x+mid_index;
+        $( "td:eq("+i+")" ).html("<i class='fas fa-lemon fa-lg' style='color: orange'></i>");
+        MapUpdate[y+1][x+27+1]=1;
+    }
+  }
+}
+
+
+//pre-load all group maps 
+for (C=0;C<2;C++) {
+  for (G=0;G<8;G++) {
+    for (y=0;y<18;y++) {
+      for (x=0;x<18;x++) {
+        if (GH2[C][G][y][x]==1) {
+            i=y*18+x+full_index+(G+C*8)*(18*18+9);
+            $( "td:eq("+i+")" ).html("<i class='fas fa-chevron-circle-right fa-lg' style='color: RoyalBlue'></i>");
+            //MapUpdate[y+1][x+27+1]=1;
+        }
+      }
+    }
+  }
+}
+
+
+//pre-load all group settings
+for (C=0;C<2;C++) {
+  for (G=0;G<8;G++) {
+    for (y=0;y<3;y++) {
+      for (x=0;x<3;x++) {
+            i=y*3+x+full_index+(18*18)+(G+C*8)*(18*18+9);
+            $( "td:eq("+i+")" ).text(GH2set[C][G][y][x]);
+            //MapUpdate[y+1][x+27+1]=1;
+        
+      }
+    }
+  }
+}
+delete window.GH2;
+delete window.GH2set;
+
+
+var FightAll=false;
+//=======================================
+//jqueryui selectmenu
+$( "#ourteam" ).selectmenu({
+  select: function( event, ui ) {
+    if (ui.item.value.length==2) LoadOurT(ui.item.value);
+  }
+})
+  .selectmenu( "menuWidget" )
+    .addClass( "overflow" );
+//=======================================
+
+//=======================================
+var opntClassID;    
+$( "#opntteam" ).selectmenu({
+  select: function( event, ui ) {
+    if (ui.item.value.length==2) {
+      var TeamID=ui.item.value.charAt(0);
+      if (ui.item.value.charAt(1)=="A") {
+        TeamID+="0";
+        FightAll=true;
+        opntClassID=ui.item.value.charAt(0);
+      }     
+      else {
+        TeamID+=ui.item.value.charAt(1);
+        FightAll=false;
+      }
+      LoadOpntT(TeamID);  
+    }
+  }
+})
+  .selectmenu( "menuWidget" )
+    .addClass( "overflow" );
+//=======================================
+
+
+
+
+$( "td" ).click(function() {
+  var col_X = $(this).parent().children().index($(this));
+  var row_Y = $(this).parent().parent().children().index($(this).parent());
+  if ($(this).parent().parent().parent()[0].id=="tbox1") {
+    if ($( this ).html()==" ") {
+      $( this ).html("<i class='fas fa-chevron-circle-right fa-lg' style='color: RoyalBlue'></i>");
+      MapUpdate[row_Y+1][col_X+1]=2;
+      ourteamtxt="?-?";
+    }
+    else {
+      $( this ).html(" ");
+      MapUpdate[row_Y+1][col_X+1]=0;
+      ourteamtxt="?-?";
+    }
+    $("#SetLog1").text(checkSetting("Our"));
+  }
+  else if ($(this).parent().parent().parent()[0].id=="tbox5") {
+    if ($( this ).html()==" ") {
+      $( this ).html("<i class='fas fa-dot-circle fa-lg' style='color: red'></i>");
+      MapUpdate[row_Y+1][col_X+54+1]=3;
+      opntteamtxt="?-?";
+    }
+    else {
+      $( this ).html(" ");
+      MapUpdate[row_Y+1][col_X+54+1]=0;
+      opntteamtxt="?-?";
+    }
+    $("#SetLog3").text(checkSetting("Opnt"));
+  }
+  else if ($(this).parent().parent().parent()[0].id=="tbox3") {
+    if ($( this ).html()==" ") {
+      $( this ).html("<i class='fas fa-lemon fa-lg' style='color: orange'></i>");
+      MapUpdate[row_Y+1][col_X+27+1]=1;
+    }
+    else {
+      $( this ).html(" ");
+      MapUpdate[row_Y+1][col_X+27+1]=0;
+    }
+    //$("#SetLog1").text(checkSetting("Food"));
+  }
+  else if ($(this).parent().parent().parent()[0].id=="tset1") {
+    if ($( this ).text()==0) $( this ).text(1);
+    else if ($( this ).text()==1) $( this ).text(-1);
+    else $( this ).text(0);
+
+    OurSetting[row_Y][col_X]=parseInt($( this ).text());
+    $("#SetLog1").text(checkSetting("Our"));
+    ourteamtxt="?-?";
+  }
+  else if ($(this).parent().parent().parent()[0].id=="tset3") {
+    if ($( this ).text()==0) $( this ).text(1);
+    else if ($( this ).text()==1) $( this ).text(-1);
+    else $( this ).text(0);
+
+    OpntSetting[row_Y][col_X]=parseInt($( this ).text());
+    $("#SetLog3").text(checkSetting("Opnt"));
+    opntteamtxt="?-?";
+  }
+
+  //var tbn = $(this).parent().parent().id();
+
+  //$( "#box2:nth-of-type(5)" ).html("<i class='far fa-copyright'></i>");
+  //console.log($(this).parent().parent().parent()[0].id);
+  //$( "td:eq("+100+")" ).html("<i class='far fa-copyright'></i>");
+  
+  /*
+  var showtext="[";
+  for (i=486;i<(18*18)+486;i++) {
+    
+    if ($( "td:eq("+i+")" ).html().length>1) {
+      showtext=showtext+"1,";
+    }
+    else {
+      showtext=showtext+"0,";
+    }
+    if ((i+1)%18==0) showtext=showtext+"],[";
+  }
+  $( "#LogBox" ).html(showtext);
+  */
+
+});
+
+var t_counter=1;
+var fightbarS="";
+var counterXT=[0,0,0,0];
+var typeid="MapUpdate";
+var winTimes=0;
+var loseTimes=0;
+
+$( "#ClickBox" ).click(function() {
+  //$( "#LogBox" ).text("");
+  $( "#ClickBox" ).html("[ <i class='fas fa-gamepad'></i><u> Click again to RESET!</u> ]");
+
+  if (t_counter>1) {  //already start
+    
+    clearInterval(refreshIntervalId);
+    fightbarS="";
+    $( "#ClickBox" ).html("[ <i class='fas fa-gamepad'></i><u> Click here to START!</u> ]");
+    ClearMap();
+    t_counter=1;
+
+  }
+  else {  //start loop
+    if (FightAll) repeatT=8;
+    else repeatT=1;
+    
+    xyz=0;
+        oriMapUpdate=MapUpdate; //backup
+        counterXT=[0,0,0,0];
+
+        typeid="MapUpdate";
+        for (var yy = 1; yy < window[typeid].length-1; yy++) {
+          for (var xx = 1; xx < window[typeid][yy].length-1; xx++) {
+            counterXT[window[typeid][yy][xx]]++;
+        }}
+        //setTimeout(FightNGrow, 500);
+        
+        refreshIntervalId=setInterval(function() {
+          if (FightNGrow()==false) {
+            xyz++;
+            if (xyz>=repeatT) {
+              clearInterval(refreshIntervalId);
+              winTimes=0;
+              loseTimes=0;
+            }
+            else {
+              ClearMap();
+              t_counter=1;
+          
+              LoadOpntT((opntClassID+xyz));
+              oriMapUpdate=MapUpdate; //backup
+              counterXT=[0,0,0,0];
+
+              typeid="MapUpdate";
+              for (var yy = 1; yy < window[typeid].length-1; yy++) {
+                for (var xx = 1; xx < window[typeid][yy].length-1; xx++) {
+                  counterXT[window[typeid][yy][xx]]++;
+              }}
+
+            }
+          }
+        },runTintval);
+        
+  }
+});
+
+
+//*************************************************************
+//************************  Functions  ************************
+//*************************************************************
+function ClearMap() {
+    var typeid="oriMapUpdate";
+    // update arena
+    for (var yy = 1; yy < window[typeid].length-1; yy++) {
+      for (var xx = 1; xx < window[typeid][yy].length-1; xx++) {
+        var idx=0;
+        if (xx>54) idx=(yy-1)*18+(xx-1-54)+972;
+        else if (xx>45) idx=(yy-1)*9+(xx-1-45)+810;
+        else if (xx>27) idx=(yy-1)*18+(xx-1-27)+486;
+        else if (xx>18) idx=(yy-1)*9+(xx-1-18)+324;
+        else idx=(yy-1)*18+xx-1;
+
+        if (window[typeid][yy][xx]==1) $( "td:eq("+idx+")" ).html("<i class='fas fa-lemon fa-lg' style='color: orange'></i>");
+        else if (window[typeid][yy][xx]==2) $( "td:eq("+idx+")" ).html("<i class='fas fa-chevron-circle-right fa-lg' style='color: RoyalBlue'></i>");
+        else if (window[typeid][yy][xx]==3) $( "td:eq("+idx+")" ).html("<i class='fas fa-dot-circle fa-lg' style='color: red'></i>");
+        else $( "td:eq("+idx+")" ).html(" ");
+
+    }}
+    MapUpdate=oriMapUpdate;
+}
+
+
+function LoadOpntT(TeamID) {
+  if (t_counter==1) { //not in running
+    var ClassID=parseInt(TeamID.charAt(0));        
+    var GroupID=parseInt(TeamID.charAt(1));
+
+    if (ClassID==0) opntteamtxt="B班";
+    else  opntteamtxt="A班";
+    if (GroupID==0) opntteamtxt+="-A組";
+    else if (GroupID==1) opntteamtxt+="-B組";
+    else if (GroupID==2) opntteamtxt+="-C組";
+    else if (GroupID==3) opntteamtxt+="-D組";
+    else if (GroupID==4) opntteamtxt+="-E組";
+    else if (GroupID==5) opntteamtxt+="-F組";
+    else if (GroupID==6) opntteamtxt+="-G組";
+    else if (GroupID==7) opntteamtxt+="-H組";
+    else opntteamtxt+="-?組";
+
+    //update map array
+    for (y=0;y<18;y++) {
+      for (x=0;x<18;x++) {
+          i=y*18+x+full_index+(GroupID+ClassID*8)*(18*18+9);
+          if ($( "td:eq("+i+")" ).html()==" ") MapUpdate[y+1][17-(x+1)+54]=0;
+          else MapUpdate[y+1][19-(x+1)+54]=3;
+      }
+    }
+
+    //update arena
+    var typeid="MapUpdate";
+    for (var yy = 1; yy < window[typeid].length-1; yy++) {
+      for (var xx = 1; xx < window[typeid][yy].length-1; xx++) {
+        var idx=0;
+        if (xx>54) idx=(yy-1)*18+(xx-1-54)+972;
+        else if (xx>45) idx=(yy-1)*9+(xx-1-45)+810;
+        else if (xx>27) idx=(yy-1)*18+(xx-1-27)+486;
+        else if (xx>18) idx=(yy-1)*9+(xx-1-18)+324;
+        else idx=(yy-1)*18+xx-1;
+
+        if (window[typeid][yy][xx]==1) $( "td:eq("+idx+")" ).html("<i class='fas fa-lemon fa-lg' style='color: orange'></i>");
+        else if (window[typeid][yy][xx]==2) $( "td:eq("+idx+")" ).html("<i class='fas fa-chevron-circle-right fa-lg' style='color: RoyalBlue'></i>");
+        else if (window[typeid][yy][xx]==3) $( "td:eq("+idx+")" ).html("<i class='fas fa-dot-circle fa-lg' style='color: red'></i>");
+        else $( "td:eq("+idx+")" ).html(" ");
+    }}
+
+    //update OurSetting array
+    for (y=0;y<3;y++) {
+      for (x=0;x<3;x++) {
+          ii=y*3+x+full_index+(18*18)+(GroupID+ClassID*8)*(18*18+9);
+          OpntSetting[y][2-x]=parseInt($( "td:eq("+ii+")" ).text());
+          i=y*3+(2-x)+full_index-9;
+          $( "td:eq("+i+")" ).text($( "td:eq("+ii+")" ).text());
+          $("#SetLog3").text(checkSetting("Opnt"));
+      }
+    }
+
+
+    //console.log(ui.item.value);
+  }
+  
+
+}
+//*************************************************************
+function LoadOurT(TeamID) {
+  if (t_counter==1) { //not in running
+    var ClassID=parseInt(TeamID.charAt(0));        
+    var GroupID=parseInt(TeamID.charAt(1));
+    if (ClassID==0) ourteamtxt="B班";
+    else  ourteamtxt="A班";
+    if (GroupID==0) ourteamtxt+="-A組";
+    else if (GroupID==1) ourteamtxt+="-B組";
+    else if (GroupID==2) ourteamtxt+="-C組";
+    else if (GroupID==3) ourteamtxt+="-D組";
+    else if (GroupID==4) ourteamtxt+="-E組";
+    else if (GroupID==5) ourteamtxt+="-F組";
+    else if (GroupID==6) ourteamtxt+="-G組";
+    else if (GroupID==7) ourteamtxt+="-H組";
+    else ourteamtxt+="-?組";
+
+    //update map array
+    for (y=0;y<18;y++) {
+      for (x=0;x<18;x++) {
+          i=y*18+x+full_index+(GroupID+ClassID*8)*(18*18+9);
+          if ($( "td:eq("+i+")" ).html()==" ") MapUpdate[y+1][x+1]=0;
+          else MapUpdate[y+1][x+1]=2;
+      }
+    }
+
+    //update arena
+    var typeid="MapUpdate";
+    for (var yy = 1; yy < window[typeid].length-1; yy++) {
+      for (var xx = 1; xx < window[typeid][yy].length-1-54; xx++) {
+        var idx=0;
+        if (xx>54) idx=(yy-1)*18+(xx-1-54)+972;
+        else if (xx>45) idx=(yy-1)*9+(xx-1-45)+810;
+        else if (xx>27) idx=(yy-1)*18+(xx-1-27)+486;
+        else if (xx>18) idx=(yy-1)*9+(xx-1-18)+324;
+        else idx=(yy-1)*18+xx-1;
+
+        if (window[typeid][yy][xx]==1) $( "td:eq("+idx+")" ).html("<i class='fas fa-lemon fa-lg' style='color: orange'></i>");
+        else if (window[typeid][yy][xx]==2) $( "td:eq("+idx+")" ).html("<i class='fas fa-chevron-circle-right fa-lg' style='color: RoyalBlue'></i>");
+        else if (window[typeid][yy][xx]==3) $( "td:eq("+idx+")" ).html("<i class='fas fa-dot-circle fa-lg' style='color: red'></i>");
+        else $( "td:eq("+idx+")" ).html(" ");
+    }}
+
+    //update OurSetting array
+    for (y=0;y<3;y++) {
+      for (x=0;x<3;x++) {
+          ii=y*3+x+full_index+(18*18)+(GroupID+ClassID*8)*(18*18+9);
+          OurSetting[y][x]=parseInt($( "td:eq("+ii+")" ).text());
+          i=y*3+x+full_index-27;
+          $( "td:eq("+i+")" ).text($( "td:eq("+ii+")" ).text());
+          $("#SetLog1").text(checkSetting("Our"));
+      }
+    }
+
+  }
+}
+//*************************************************************
+
+function FightNGrow() {
+  
+  //refreshIntervalId=setInterval(function() {
+    //#########
+    var newMapUpdate=Array(Playbox_YGrids+2).fill().map(() => Array(Playbox_XGrids+2).fill(0));
+    //1.fight
+    //  只算上下左右相鄰, 任何非自己物種的數目大於等於自己物種數目則死亡
+    var typeid="MapUpdate";
+    for (var yy = 1; yy < window[typeid].length-1; yy++) {
+      for (var xx = 1; xx < window[typeid][yy].length-1; xx++) {
+      if (window[typeid][yy][xx]!=0 && (window[typeid][yy+1][xx]+window[typeid][yy-1][xx]+window[typeid][yy][xx+1]+window[typeid][yy][xx-1])>0) {
+        counterX=[0,0,0,0];
+        counterX[window[typeid][yy+1][xx]]++;
+        counterX[window[typeid][yy-1][xx]]++;
+        counterX[window[typeid][yy][xx+1]]++;
+        counterX[window[typeid][yy][xx-1]]++;
+
+        if (window[typeid][yy][xx]==1 && counterX[window[typeid][yy][xx]]<=(counterX[2]+counterX[3])) {
+          newMapUpdate[yy][xx]=0;
+          counterXT[1]--;
+        }
+        else if (window[typeid][yy][xx]==2 && counterX[window[typeid][yy][xx]]<=(counterX[1]+counterX[3])) {
+          newMapUpdate[yy][xx]=0;
+          counterXT[2]--;
+        }
+        else if (window[typeid][yy][xx]==3 && counterX[window[typeid][yy][xx]]<=(counterX[1]+counterX[2])) {
+          newMapUpdate[yy][xx]=0;
+          counterXT[3]--;
+        }       
+        else newMapUpdate[yy][xx]=window[typeid][yy][xx];
+        
+      }
+      else {
+        newMapUpdate[yy][xx]=window[typeid][yy][xx];
+      }
+    }}
+    MapUpdate=newMapUpdate;
+    //console.log(MapUpdate);
+
+    //2.expand
+    var newMapUpdate=Array(Playbox_YGrids+2).fill().map(() => Array(Playbox_XGrids+2).fill(0));
+    rFoodSetting=inverseA(FoodSetting);
+    rOurSetting=inverseA(OurSetting);
+    rOpntSetting=inverseA(OpntSetting);
+
+    for (var yy = 1; yy < window[typeid].length-1; yy++) {
+      for (var xx = 1; xx < window[typeid][yy].length-1; xx++) {
+        
+          var smallA={food:[[0,0,0],[0,0,0],[0,0,0]], our:[[0,0,0],[0,0,0],[0,0,0]], opnt:[[0,0,0],[0,0,0],[0,0,0]]};
+          var counterX=[0.1,0,0,0];
+
+            for (tty=-1;tty<2;tty++) {
+              for (ttx=-1;ttx<2;ttx++) {
+                if (window[typeid][yy+tty][xx+ttx]==1) smallA["food"][tty+1][ttx+1]=1;
+                else if (window[typeid][yy+tty][xx+ttx]==2) smallA["our"][tty+1][ttx+1]=1;
+                else if (window[typeid][yy+tty][xx+ttx]==3) smallA["opnt"][tty+1][ttx+1]=1;
+              }
+            }
+          
+          counterX[1]=sumProduct2D(smallA["food"],rFoodSetting);
+          counterX[2]=sumProduct2D(smallA["our"],rOurSetting);
+          counterX[3]=sumProduct2D(smallA["opnt"],rOpntSetting);
+          
+          if (window[typeid][yy][xx]==0) {  //if empty, occupied by max
+            t_counterX=counterX;
+            No1=arrayMaxI(counterX);
+            t_counterX[No1]=-Infinity;
+            No2=arrayMaxI(t_counterX);
+            if (counterX[No1]==counterX[No2] && (No1==2 || No2==2)) { //tight val => our win
+              console.log(No1+","+No2);
+              newMapUpdate[yy][xx]=2;
+            }
+            else newMapUpdate[yy][xx]=No1;
+
+            counterXT[newMapUpdate[yy][xx]]++;
+          }
+          else if (counterX[window[typeid][yy][xx]]<=0) { //if already occupied, by weakened
+            newMapUpdate[yy][xx]=0;
+            counterXT[window[typeid][yy][xx]]--;
+          }
+          else newMapUpdate[yy][xx]=window[typeid][yy][xx];
+
+          //update arena
+          var idx=0;
+          if (xx>54) idx=(yy-1)*18+(xx-1-54)+972;
+          else if (xx>45) idx=(yy-1)*9+(xx-1-45)+810;
+          else if (xx>27) idx=(yy-1)*18+(xx-1-27)+486;
+          else if (xx>18) idx=(yy-1)*9+(xx-1-18)+324;
+          else idx=(yy-1)*18+xx-1;
+
+          if (newMapUpdate[yy][xx]==1) $( "td:eq("+idx+")" ).html("<i class='fas fa-lemon fa-lg' style='color: orange'></i>");
+          else if (newMapUpdate[yy][xx]==2) $( "td:eq("+idx+")" ).html("<i class='fas fa-chevron-circle-right fa-lg' style='color: RoyalBlue'></i>");
+          else if (newMapUpdate[yy][xx]==3) $( "td:eq("+idx+")" ).html("<i class='fas fa-dot-circle fa-lg' style='color: red'></i>");
+          else $( "td:eq("+idx+")" ).html(" ");
+    }}
+    
+    MapUpdate=newMapUpdate;
+    
+
+    //3.udate log
+    var fightbar="";
+    var fightlogText="";
+
+
+    //fightlogText="<br>"+ourteamtxt+" vs "+opntteamtxt+": <span style='color: purple'>T"+t_counter+"</span>, We="+counterXT[2]+", Food="+counterXT[1]+", Opnt="+counterXT[3]+"\n";
+    fightlogText=ourteamtxt+" vs "+opntteamtxt+": T"+t_counter+", We="+counterXT[2]+", Food="+counterXT[1]+", Opnt="+counterXT[3]+"\n";
+
+    var total_seed=counterXT[1]+counterXT[2]+counterXT[3];
+    var ourprsnt=Math.round((counterXT[2]/total_seed)*100);
+    var opntprsnt=Math.round((counterXT[3]/total_seed)*100);
+    //var foodprsnt=Math.round((counterXT[1]/total_seed)*100);
+    var foodprsnt=100-ourprsnt-opntprsnt;
+
+    var pxamp=4;
+    var ourprsntpx=Math.round((counterXT[2]/total_seed)*100*pxamp);
+    var opntprsntpx=Math.round((counterXT[3]/total_seed)*100*pxamp);
+    var foodprsntpx=100*pxamp-ourprsntpx-opntprsntpx;
+
+    // for (jj=0;jj<20;jj++) {
+    //   if (jj*5<ourprsnt) colorcode="RoyalBlue";
+    //   else if ((jj*5-ourprsnt)<foodprsnt)  colorcode="orange";
+    //   else colorcode="red";
+    //   fightbar+="<div class='statusbar' style='color: "+colorcode+"; '></i>";
+    // }
+
+    fightbarS+="<div class='column'><div class='statusbar' style='background: RoyalBlue; width: "+ourprsntpx+"px;'></div><div class='statusbar' style='background: orange; width: "+foodprsntpx+"px;'></div><div class='statusbar' style='background: red; width: "+opntprsntpx+"px;'></div></div>";
+    fightbar="<br><br>"+ourteamtxt+" v.s. "+opntteamtxt+" : <i style='color: RoyalBlue; height:12px'>"+ourprsnt+"%</i>:<i style='color: orange'>"+foodprsnt+"%</i>:<i style='color: red'>"+opntprsnt+"%</i><br><div class='container'>"+fightbarS+"</div>";
+    
+  
+    
+    $( "#ResultBox" ).html("Time="+t_counter+"/"+runTpoint+" ("+Math.round((t_counter/runTpoint)*100)+"%)");
+    $( "#LogBar" ).html(fightbar);
+    //$( "#LogBox" ).append(fightlogText);
+    console.log(fightlogText);
+    //console.log(ourteamtxt+" vs "+opntteamtxt+", T"+t_counter+"/"+runTpoint+" ("+Math.round((t_counter/runTpoint)*100)+"%)");
+    
+    t_counter++;
+    //console.log(t_counter);
+    if (t_counter>runTpoint || ((counterXT[2]==0 || counterXT[3]==0) && counterXT[1]==0)) {
+      //clearInterval(refreshIntervalId);
+      counterXT[0]=0;
+      var winner=arrayMaxI(counterXT);
+      if (winner==2) { 
+        $( "#ResultBox" ).html("<i style='color: RoyalBlue'>We won!</i>, T="+(t_counter-1));
+        winTimes++;
+      }
+      else if (winner==1) {
+        $( "#ResultBox" ).html("<i style='color: orange'>Food won!</i>, T="+(t_counter-1));
+        loseTimes++;
+      }
+      else if (winner==3) {
+        $( "#ResultBox" ).html("<i style='color: red'>Opnt won!</i>, T="+(t_counter-1));
+        loseTimes++;
+      }
+      WL_text="NOW: win "+winTimes+" ; lose "+loseTimes+" in total "+(winTimes+loseTimes)+" fights";
+      $( "#LogBox" ).append("<br><br><br>"+$( "#ResultBox" ).html()+fightbar+"<br>"+WL_text);
+      $( "#LogBar" ).html("");
+      fightbarS="";
+      //t_counter=1;
+      return false; //end
+    }
+    else return true; //in runing
+  //}
+  //,runTintval);
+  //#####
+}
+//*************************************************************
+
+function checkSetting(typename) {
+    typeid=typename+"Setting";
+    var sum=0;
+    var zerocount=0;
+    for (var ii = 0; ii < window[typeid].length; ii++) {
+      for (var iii = 0; iii < window[typeid][ii].length; iii++) {
+      if (window[typeid][ii][iii]==0) zerocount++;
+      sum += window[typeid][ii][iii];
+    }}
+
+    typeid="MapUpdate";
+    var seedcount={Our:0, Food:0, Opnt:0};
+    for (var ii = 1; ii < window[typeid].length-1; ii++) {
+      for (var iii = 1; iii < window[typeid][ii].length-1; iii++) {
+      if (window[typeid][ii][iii]==1) seedcount['Food']++;
+      else if (window[typeid][ii][iii]==2) seedcount['Our']++;
+      else if (window[typeid][ii][iii]==3) seedcount['Opnt']++;
+    }}
+
+    var logtext="";
+    if (sum>1) logtext+="設定總和需小於等於1; ";
+    if (zerocount<2) logtext+="設定須至少使用兩個0; ";
+    if (seedcount[typename]>6) logtext+="使用超過6個種子; ";
+    if (logtext=="") logtext="PASS"
+    return logtext;
+}
+
+
+function sumProduct2D(m1, m2) {
+  var result = 0;
+  var len1 = m1.length;
+  for (var i1 = 0; i1 < len1; i1++) {
+    var len2 = m1[i1].length;
+    for (var i2 = 0; i2 < len2; i2++) {
+      result += m1[i1][i2] * m2[i1][i2];
+    }
+  }
+  return result;
+}
+
+function inverseA(m1) {
+  var result=Array((m1.length)).fill().map(() => Array((m1[0].length)).fill(0));
+  var len1 = m1.length;
+  for (var i1 = 0; i1 < len1; i1++) {
+    var len2 = m1[i1].length;
+    for (var i2 = 0; i2 < len2; i2++) {
+      result[i1][i2]= m1[len1-i1-1][len2-i2-1];
+    }
+  }
+  return result;
+}
+
+function HmirrorA(m1) {
+
+  var result=Array((m1.length)).fill().map(() => Array((m1[0].length)).fill(0));
+  var len1 = m1.length;
+  for (var i1 = 0; i1 < len1; i1++) {
+    var len2 = m1[i1].length;
+    for (var i2 = 0; i2 < len2; i2++) {
+      result[i1][i2]= m1[len1-i1-1][len2-i2-1];
+    }
+  }
+  return result;
+}
+
+
+function arrayMaxI(arr) {
+  var len = arr.length, max = -Infinity, idx=arr.length;
+  while (len--) {
+    if (arr[len] > max) {
+      max = arr[len];
+      idx=len;
+    }
+  }
+  return idx;
+};
+
+
+
+$( "#tabs" ).tabs();
+
+
+
+</script>
+
+
+</body>
+
+</html>
