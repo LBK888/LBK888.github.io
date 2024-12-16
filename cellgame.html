@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cell Culture Adventure</title>
+    <style>
+        /* 基本樣式設定 */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4fcff;
+        }
+
+        /* 頁首 */
+        header {
+            background-color: #2c97de;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            font-size: 1.5rem;
+        }
+
+        /* 主要內容區 */
+        .content {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .card-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            width: 200px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card img {
+            width: 100%;
+            height: 120px;
+            overflow-clip-margin: content-box;
+            overflow: clip;
+            border-radius: 0 !important;
+            object-fit: cover;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .card:hover img {
+            transform: scale(1.1);
+        }
+
+        .item-img {
+            overflow: hidden;
+        }
+
+        .card p {
+            margin: 0;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        /* 蜂巢格設定 */
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #f4fcff;
+            border: 1px solid #2c97de;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            header, footer {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* 按鈕 */
+        .start-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #3f9dc4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .start-btn:hover {
+            background-color: #2c97de;
+        }
+
+        .control-btn {
+            display: inline-block;
+            margin-top: 20px;
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .control-btn:hover {
+            background-color: #ff5252;
+        }
+
+        /* 頁尾 */
+        footer {
+            background: #2c97de;
+            color: white;
+            padding: 10px 0;
+            margin-top: 0px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- 頁首 -->
+    <header>
+        Cell Culture Adventure
+    </header>
+
+    <!-- 主要內容 -->
+    <div class="content">
+        <h2>Welcome to the wild world of cell culture!</h2>
+        <p>Dive into the experiment madness and unleash your inner scientist!</p>
+
+        <!-- 卡片區 -->
+        <div class="card-container">
+            <div class="card">
+                <div class="item-img">
+                <img src="1.jpeg" alt="Reading and Quiz">
+                </div>
+                <p>Reading and Quiz<br>7/10 to go</p>
+            </div>
+            <div class="card">
+                <img src="2.jpeg" alt="Experiment Strategies">
+                <p>My Experiments<br>20/75 collected</p>
+            </div>
+            <div class="card">
+                <img src="3.jpeg" alt="Cell Credits">
+                <p>Credits and Shop<br>54,231C / 17B / 22GF </p>
+            </div>
+            <div class="card">
+                <img src="4.jpeg" alt="Cell Culture Tips">
+                <p>How to Cell Culture<br>Game Strategies and Tips</p>
+            </div>
+        </div>
+
+        <!-- 蜂巢格 -->
+        <h3>Start your Cell Culture Experiment</h3>
+        <canvas id="hexCanvas"></canvas>
+        <button class="start-btn" onclick="startCulture()">Start Culturing</button>
+        <button class="control-btn" onclick="controlCulture()">Stop</button>
+    </div>
+
+    <!-- 頁尾 -->
+
+    <footer>
+        <div class="container">
+            <p><b>Contect Info 聯絡資訊：</b> <a href="http://lbk.tw">LBK.tw Webpage</a></p>
+            <p> Department of Aquaculture,<br> National Ocean Taiwan University<br>
+                Address 地址：202 基隆市中正區北寧���2號 生科館510</p>
+            <p> Email: liaobk@email.ntou.edu.tw
+            <br> Tel 電話：(02) 2462-2192</p>
+            <br>
+            <p>© 2024 BK Lab. All rights reserved.</p>
+        </div>
+    </footer>
+
+<script>
+    const canvas = document.getElementById('hexCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const gridCols = 32; // 固定列數
+    const gridRows = 32; // 固定行數
+    const hexGrid = [];  // 紀錄每個六邊形的資訊
+    let hoveredHex = null; // 目前滑鼠所在的六邊形
+
+    let isRunning = false;
+    let updateInterval = null;
+
+    function resizeCanvas() {
+        const screenWidth = window.innerWidth - 60;
+        const hexRadius = Math.max(7,Math.min(screenWidth / (gridCols * Math.sqrt(3)), 16)); // 動態計算半徑
+        const hexWidth = Math.sqrt(3) * hexRadius;
+        const hexHeight = 2 * hexRadius;
+        const offsetX = hexWidth; 
+        const offsetY = hexHeight * 0.75;
+
+        canvas.width = Math.ceil(gridCols * offsetX) + hexRadius;
+        canvas.height = Math.ceil(gridRows * offsetY) + hexRadius;
+
+        createHexGrid(hexRadius, offsetX, offsetY);
+        drawHexGrid();
+    }
+
+    function createHexGrid(radius, offsetX, offsetY) {
+        hexGrid.length = 0; // 清空現有格子
+        for (let row = 0; row < gridRows; row++) {
+            for (let col = 0; col < gridCols; col++) {
+                const x = col * offsetX + (row % 2 === 1 ? offsetX / 2 : 0) + radius;
+                const y = row * offsetY + radius;
+                hexGrid.push({ x, y, radius, color: '#e6f7ff', clicked: false });
+            }
+        }
+    }
+
+    function drawHexGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < hexGrid.length; i++) {
+            const hex = hexGrid[i];
+            drawHexagon(hex.x, hex.y, hex.radius, hex.color);
+        }
+    }
+
+    function drawHexagon(x, y, radius, color) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i;
+            const px = x + radius * Math.sin(angle);
+            const py = y + radius * Math.cos(angle);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = "#2c97de";
+        ctx.stroke();
+    }
+
+    function getHexAtMouse(x, y) {
+        for (let i = 0; i < hexGrid.length; i++) {
+            const hex = hexGrid[i];
+            const dx = x - hex.x;
+            const dy = y - hex.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist <= hex.radius) return hex;
+        }
+        return null;
+    }
+
+    // 滑鼠移動事件
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const currentHex = getHexAtMouse(mouseX, mouseY);
+
+        if (hoveredHex !== currentHex) {
+            if (hoveredHex && !hoveredHex.clicked) hoveredHex.color = '#e6f7ff'; // 重置之前的 hover 顏色
+            if (currentHex && !currentHex.clicked) currentHex.color = '#f07fc1'; // hover 顏色
+            hoveredHex = currentHex;
+            drawHexGrid();
+        }
+    });
+
+    // 滑鼠點擊事件
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const clickedHex = getHexAtMouse(mouseX, mouseY);
+
+        if (clickedHex) {
+            clickedHex.clicked = !clickedHex.clicked; // 點擊切換狀態
+            clickedHex.color = clickedHex.clicked ? '#f5675b' : '#e6f7ff';
+            drawHexGrid();
+        }
+    });
+
+    // 初始化蜂巢格
+    function startCulture() {
+        // 定義細胞類型的顏色
+        const EPITHELIAL = '#f5675b';  // 上皮細胞-紅色
+        const MESENCHYMAL = '#fcd349';  // 間質細胞-黃色 
+        const ENDOTHELIAL = '#91bd33';  // 內皮細胞-綠色
+
+        // 取得每個六邊形周圍的鄰居
+        function getNeighbors(hex) {
+            let neighbors = [];
+            for (let i = 0; i < hexGrid.length; i++) {
+                const other = hexGrid[i];
+                if (hex === other) continue;
+                const dx = hex.x - other.x;
+                const dy = hex.y - other.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist <= hex.radius * 2.1) neighbors.push(other);
+            }
+            return neighbors;
+        }
+
+        // 取得隨機空鄰居
+        function getRandomEmptyNeighbor(neighbors) {
+            const emptyNeighbors = neighbors.filter(n => !n.clicked);
+            if (emptyNeighbors.length === 0) return null;
+            return emptyNeighbors[Math.floor(Math.random() * emptyNeighbors.length)];
+        }
+
+        // 更新細胞狀態
+        function updateCells() {
+            const changes = [];
+            
+            for (let hex of hexGrid) {
+                if (!hex.clicked) continue;
+                
+                const neighbors = getNeighbors(hex);
+                const livingNeighbors = neighbors.filter(n => n.clicked).length;
+                
+                // 上皮細胞規則(紅色)
+                if (hex.color === EPITHELIAL) {
+                    if (livingNeighbors === 0) {
+                        changes.push({hex: hex, action: 'die'});
+                    } else if (livingNeighbors <= 2) {
+                        const emptyNeighbor = getRandomEmptyNeighbor(neighbors);
+                        if (emptyNeighbor) {
+                            changes.push({hex: emptyNeighbor, action: 'birth', color: EPITHELIAL});
+                        }
+                    } else if (livingNeighbors >= 5) {
+                        changes.push({hex: hex, action: 'transform', color: MESENCHYMAL});
+                    }
+                }
+                // 間質細胞規則(黃色)
+                else if (hex.color === MESENCHYMAL) {
+                    if (livingNeighbors <= 2) {
+                        changes.push({hex: hex, action: 'die'});
+                    } else if (livingNeighbors === 6) {
+                        changes.push({hex: hex, action: 'transform', color: ENDOTHELIAL});
+                    }
+                }
+                // 內皮細胞規則(綠色)
+                else if (hex.color === ENDOTHELIAL) {
+                    if (livingNeighbors <= 3) {
+                        changes.push({hex: hex, action: 'die'});
+                    } else if (livingNeighbors <= 5) {
+                        const emptyNeighbor = getRandomEmptyNeighbor(neighbors);
+                        if (emptyNeighbor) {
+                            changes.push({hex: emptyNeighbor, action: 'birth', color: ENDOTHELIAL});
+                        }
+                    }
+                }
+            }
+
+            // 應用變化
+            for (let change of changes) {
+                if (change.action === 'die') {
+                    change.hex.clicked = false;
+                    change.hex.color = '#e6f7ff';
+                } else if (change.action === 'birth') {
+                    change.hex.clicked = true;
+                    change.hex.color = change.color;
+                } else if (change.action === 'transform') {
+                    change.hex.color = change.color;
+                }
+            }
+
+            drawHexGrid();
+            if (isRunning) {
+                updateInterval = setTimeout(updateCells, 1000);
+            }
+        }
+
+        alert("請在蜂巢格中放置細胞開始培養！\n紅色：上皮細胞\n黃色：間質細胞\n綠色：內皮細胞");
+        isRunning = true;
+        updateCells();
+    }
+
+    function controlCulture() {
+        const controlBtn = document.querySelector('.control-btn');
+        if (isRunning) {
+            // 停止更新
+            isRunning = false;
+            clearTimeout(updateInterval);
+            controlBtn.textContent = 'Reset';
+        } else if (controlBtn.textContent === 'Reset') {
+            // 重置
+            resizeCanvas();
+            controlBtn.textContent = 'Stop';
+            //location.reload();
+        }
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+</script>
+</body>
+</html>
+
