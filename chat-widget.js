@@ -144,6 +144,31 @@
       max-height: 100%;
       border-radius: 0;
     }
+    #chat-bubble {
+      width: 3rem;
+      height: 3rem;
+    }
+    
+    #chat-bubble svg {
+      width: 1.8rem;
+      height: 1.8rem;
+    }
+    
+    #chat-widget-container {
+      bottom: 10px;
+      right: 10px;
+    }
+  }
+  @media (max-width: 480px) {
+    #chat-bubble {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+    
+    #chat-bubble svg {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
   }
   `;
 
