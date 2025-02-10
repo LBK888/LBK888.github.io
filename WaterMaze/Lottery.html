@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bingo Ball Picker</title>
+  <script src="matter.min.js"></script>
+  <style>
+    canvas {
+      border: 1px solid black;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+<canvas id="world"></canvas>
+<script>
+  // settings
+  const ball_num = 60;
+
+  // module aliases
+  const Engine = Matter.Engine,
+        Render = Matter.Render,
+        Runner = Matter.Runner,
+        Bodies = Matter.Bodies,
+        Composite = Matter.Composite,
+        Common = Matter.Common,
+        Body = Matter.Body,
+        Events = Matter.Events;
+
+  // create an engine
+  const engine = Engine.create();
+
+  // create a renderer
+  const W = window.innerWidth<800 ? window.innerWidth: 800
+  const H = window.innerHeight<800 ? window.innerHeight: 800
+
+  const render = Render.create({
+    element: document.body,
+    canvas: document.getElementById('world'),
+    engine: engine,
+    options: {
+      width: W,
+      height: H,
+      wireframes: false,
+      background: 'white',
+      pixelRatio: window.devicePixelRatio // here
+    }
+  });
+
+  console.log(W,H)
+  
+  // create walls
+  const walls = [];
+  walls.push(Bodies.rectangle(W/2, 2, W, 4, {
+      isStatic: true, render: { fillStyle: 'black',} }));
+  walls.push(Bodies.rectangle(W-2, H/2, 4, H, {
+    isStatic: true, render: { fillStyle: 'black',} }));
+  walls.push(Bodies.rectangle(W/2, H-5, W, 10, {
+    isStatic: true, render: { fillStyle: 'black',} }));
+  walls.push(Bodies.rectangle(2, H/2, 4, H, {
+    isStatic: true, render: { fillStyle: 'black',} }));
+
+  walls.push(Bodies.rectangle(W/2, H-55, W*1.05, 10, {
+    isStatic: true, angle: 10/360 * (2 * Math.PI) , render: { fillStyle: 'black',} }));
+  walls.push(Bodies.rectangle(W*3/4, H-75, W/2, 10, {
+    isStatic: true, angle: 10/360 * (2 * Math.PI) , render: { fillStyle: 'black',} }));
+
+  walls.push(Bodies.rectangle(W*8/13+25, H-200, W/1.4, 10, {
+    isStatic: true, angle: 350/360 * (2 * Math.PI) , render: { fillStyle: 'black',} }));
+
+
+  // create rotating circular container
+  const parts = [];
+  const containerRadius = 250;
+  const containerThickness = 8;
+  const segmentCount = 48;
+  const segmentAngle = (2 * Math.PI) / segmentCount;
+  var part;
+
+  for (let i = 0; i < segmentCount; i++) { // Leave one segment open
+    var angle = i * segmentAngle;
+    var x = 300 + containerRadius * Math.cos(angle);
+    var y = 300 + containerRadius * Math.sin(angle);
+    if (i < 5) {   //first 4 bars are opening and obstacles
+      x=300+getRandomInt(containerRadius*1.5)-containerRadius*0.75;
+      y=300+getRandomInt(containerRadius*1.5)-containerRadius*0.75;
+
+      part = Bodies.circle(x, y, 15, 
+      {isStatic: true, render: { fillStyle: 'black'}})
+        
+    }
+    else {
+      part = Bodies.rectangle(x, y, containerThickness, containerRadius/2, {
+        isStatic: true,
+        angle: angle,
+        render: {
+          fillStyle: 'black',
+          strokeStyle: 'black',
+          lineWidth: 2
+        }});
+    }
+    parts.push(part);
+  }
+
+  const container = Composite.create({ bodies: parts });
+
+  // add balls with numbers
+  const balls = [];
+  for (let i = 1; i <= ball_num; i++) {
+    var s=100 - (i/2.5)*(i%3);
+    const ball = Bodies.circle(300+getRandomInt(300)-150, 350+getRandomInt(300)-150, 18, {
+      restitution: 0.9,
+      density: 5,
+      friction: 0.9,
+      render: {
+        fillStyle: `hsl(${i * 41}, ${s}%, 50%)`,
+        strokeStyle: 'black',
+        text: {
+          content: `${i}.`,
+          color: 'white',
+          size: 20
+        }
+      }
+    });
+    balls.push(ball);
+  }
+
+  // add all of the bodies to the world
+  Composite.add(engine.world, [container, ...balls, ...walls]);
+
+  // add rotating motion to the container
+  Events.on(engine, 'beforeUpdate', function(event) {
+    Composite.rotate(container, 0.02, { x: 300, y: 300 });
+  });
+
+  // runner
+  const runner = Runner.create();
+  Runner.run(runner, engine);
+
+  // render the scene
+  Render.run(render);
+
+  // Custom rendering for text on balls
+  Events.on(render, 'afterRender', function() {
+    const context = render.context;
+    context.font = "15px Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    balls.forEach(ball => {
+      const x = ball.position.x;
+      const y = ball.position.y;
+      const text = ball.render.text.content;
+
+      context.save();
+      context.translate(x, y);
+      context.rotate(ball.angle);
+      context.strokeStyle = "black";
+      context.lineWidth = 3;
+      context.strokeText(text, 0, 0);
+      context.fillStyle = "white";
+      context.fillText(text, 0, 0);
+      context.restore();
+
+
+      //context.strokeStyle = "darkgray";
+      //context.lineWidth = 3;
+      //context.strokeText(text, x, y);
+      //context.fillStyle = "white";
+      //context.fillText(text, x, y);
+    });
+  });
+
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
+
+/* `allBodies` is a variable that contains all the bodies that can
+ * escape. Use something like `Composite.allBodies(world)` to get 
+ * them all but beware to not include the box's borders which are
+ * also bodies.
+ * `startCoordinates` is an object that contains the x and y
+ * coordinate of the place on the canvas where we should move escaped
+ * bodies to.
+ */
+function initEscapedBodiesRetrieval(allBodies, startCoordinates) {
+
+    function hasBodyEscaped(body) {
+        var x = body.position.x;
+        var y = body.position.y;
+
+        return x < 0 || x > _canvasWidth || y < 0 || y > _canvasHeight;
+    }
+
+    setInterval(function() {
+        var i, body;
+
+        for (i = 0; i < allBodies.length; i++) {
+            body = allBodies[i];
+            if (hasBodyEscaped(body)) {
+                Matter.Body.translate(body, { x: (startCoordinates.x - body.position.x), y: (startCoordinates.y - body.position.y) });
+            }
+        }
+    }, 300); /* We do this every 300 msecs */ 
+}
+</script>
+</body>
+</html>
