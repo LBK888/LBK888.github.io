@@ -1,0 +1,14 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+}
+
+button {
+    margin: 5px;
+}
+
+#mazeCanvas {
+    border: 1px solid black;
+}
