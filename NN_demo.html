@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #control-panel {
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            border: 1px solid black;
+            margin: 0 auto;
+            display: block;
+        }
+
+        #tooltip {
+            position: absolute;
+            background-color: #002e67;
+            border: 1px solid black;
+            padding: 5px;
+            display: none;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        input[type="number"] {
+            width: 60px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ANN神經網教學模擬器</h1>
+    
+    <div id="control-panel">
+        <label>隱藏層數量: <input type="number" id="hidden-layers" min="1" max="5" value="2"></label>
+        <label>激活函數:
+            <select id="activation-function">
+                <option value="relu">ReLU</option>
+                <option value="sigmoid">Sigmoid</option>
+                <option value="tanh">Tanh</option>
+            </select>
+        </label>
+        <button id="update-network">更新網路</button>
+        <table id="QUICK INPUT">
+            <thead>
+                <tr>
+                    <td>輸入層快速輸入(學號末兩碼)：</td>
+                    <td><input type="number" value="0" id="inputLayer_val" class="weight-input" step="1"></td>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <canvas id="networkCanvas" width="800" height="600"></canvas>
+    
+    <div id="tooltip" class="hidden"></div>
+
+    <table id="parameter-table">
+        <thead>
+            <tr>
+                <th>Layer</th>
+                <th>Node</th>
+                <th>Weight (W)</th>
+                <th>Bias (B)</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        //網路結構設定，若修改這裡要一併修改後面的預設值結構
+        const inputNodes = 2;
+        const outputNodes = 3;
+        const hiddenNodes = 4;
+
+        // 預設權重配置
+        const defaultWeights = {
+            layer1: [
+                [1, -1],     // 第一個節點的權重 (連接到輸入層2個節點)
+                [1, -3],    // 第二個節點的權重
+                [0, 2],    // 第三個節點的權重
+                [-1, 0]      // 第四個節點的權重
+            ],
+            layer2: [
+                [2, 1, -1, -3],    // 第一個節點的權重 (連接到前一層4個節點)
+                [0, -1, 1, 1],    // 第二個節點的權重
+                [5, -1, -1, 3],    // 第三個節點的權重
+                [-1, 0, -2, 0]     // 第四個節點的權重
+            ],
+            layer3: [
+                [1, 1, -1, 0],    // 輸出層第一個節點的權重
+                [0, -2, 2, 2],    // 輸出層第二個節點的權重
+                [4, 0, -1, 1]     // 輸出層第三個節點的權重
+            ]
+        };
+
+        // 預設偏差值配置 (每個節點一個偏差值)
+        const defaultBiases = {
+            layer1: [2, -2, 1, 0],       // 第一層隱藏層4個節點的偏差值
+            layer2: [-1, 0, 3, -4],        // 第二層隱藏層4個節點的偏差值
+            layer3: [-2, 2, 0]            // 輸出層3個節點的偏差值
+        };
+
+        const canvas = document.getElementById("networkCanvas");
+        const ctx = canvas.getContext("2d");
+        const tooltip = document.getElementById("tooltip");
+
+        let network = {
+            layers: 2,
+            activation: "relu",
+            weights: [
+                defaultWeights.layer1,
+                defaultWeights.layer2,
+                defaultWeights.layer3
+            ],
+            biases: [
+                defaultBiases.layer1,
+                defaultBiases.layer2,
+                defaultBiases.layer3
+            ]
+        };
+        //console.log(network.biases);
+
+        let inputValues = [0, 0, 0];
+        let connections = [];
+
+        let allLayerNodes = []; // 添加全局變量來存儲所有層的節點
+
+        // 節流函數。使用 throttle 函數，讓 mousemove 事件每 100 毫秒才執行一次，降低事件觸發頻率
+        function throttle(func, delay) {
+            let lastCall = 0;
+            return function (...args) {
+                const now = new Date().getTime();
+                if (now - lastCall < delay) return;
+                lastCall = now;
+                return func(...args);
+            };
+        }
+        // 儲存 nodes 資訊以便於計算
+        let tooltip_nodes = [];
+
+        // 在全局變量區域添加一個標記
+        let isFirstLoad = true;
+
+        function drawNetwork() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            connections = [];
+            allLayerNodes = [];
+            tooltip_nodes = []; //清空node數據
+
+
+            const hiddenLayers = parseInt(document.getElementById("hidden-layers").value);
+            network.layers = hiddenLayers;
+            network.activation = document.getElementById("activation-function").value;
+
+            const layerSpacing = canvas.width / (hiddenLayers + 3);
+
+            // 添加層級標籤
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "black";
+            ctx.textAlign = "center";
+            
+            // Input Layer 標籤
+            ctx.fillText("輸入層", layerSpacing, 30);
+            
+            // Hidden Layers 標籤
+            for (let i = 1; i <= hiddenLayers; i++) {
+                ctx.fillText(`隱藏層 ${i}`, (i + 1) * layerSpacing, 30);
+            }
+            
+            // Output Layer 標籤
+            ctx.fillText("輸出層", (hiddenLayers + 2) * layerSpacing, 30);
+
+            // 先計算所有節點位置
+            drawLayer(1, inputNodes, "black", layerSpacing, true, false);
+            for (let i = 1; i <= hiddenLayers; i++) {
+                drawLayer(i + 1, hiddenNodes, "blue", layerSpacing, false, false);
+            }
+            drawLayer(hiddenLayers + 2, outputNodes, "orange", layerSpacing, false, false);
+
+            // 繪製所有連接線
+            connections.forEach(connection => drawConnection(connection));
+
+            // 再次繪製所有節點（這次實際繪製）
+            drawLayer(1, inputNodes, "black", layerSpacing, true, true);
+            for (let i = 1; i <= hiddenLayers; i++) {
+                drawLayer(i + 1, 4, "blue", layerSpacing, false, true);
+            }
+            drawLayer(hiddenLayers + 2, outputNodes, "orange", layerSpacing, false, true);
+
+            updateTable();
+        }
+
+        function drawLayer(layerIndex, nodeCount, color, layerSpacing, isInput = false, shouldDraw = true) {
+            const x = layerIndex * layerSpacing;
+            const yStep = canvas.height / (nodeCount + 1);
+            let currentLayerNodes = [];
+
+            for (let i = 1; i <= nodeCount; i++) {
+                const y = i * yStep;
+                const nodeValue = isInput ? inputValues[i - 1] : calculateNodeValue(layerIndex, i - 1);
+                currentLayerNodes.push({x, y, value: nodeValue, layer: layerIndex, node: i});
+                
+                if (shouldDraw) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 20, 0, 2 * Math.PI);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    if (isInput) {
+                        ctx.fillStyle = "white";
+                        ctx.font = "16px Arial";
+                        ctx.fillText(Math.round(nodeValue), x - 10, y + 5);
+                        
+                        currentLayerNodes[i-1].isInput = true;
+                    } else {
+                        ctx.fillStyle = "white";
+                        ctx.font = "12px Arial";
+                        ctx.fillText(nodeValue.toFixed(1), x - 6, y + 5);
+
+                        tooltip_nodes.push(...currentLayerNodes);  // 將該層的 node 資訊存入 nodes 陣列中
+
+                    }
+                } else if (!isInput && layerIndex > 1) {
+                    const previousLayer = allLayerNodes[layerIndex - 2];
+                    for (const prevNode of previousLayer) {
+                        connections.push({
+                            x1: prevNode.x, 
+                            y1: prevNode.y, 
+                            x2: x, 
+                            y2: y, 
+                            layer: layerIndex, 
+                            node: i
+                        });
+                    }
+                }
+            }
+            
+            if (!shouldDraw) {
+                allLayerNodes[layerIndex - 1] = currentLayerNodes;
+            }
+        }
+
+
+        // 優化後的滑鼠懸浮事件處理
+        canvas.addEventListener("mousemove", throttle(function (event) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX  - rect.left;
+            const mouseY = event.clientY - rect.top;
+            let TipContentc = "";
+
+            let isOverNode = false;
+
+            for (const node of tooltip_nodes) {
+                const distance = Math.sqrt(Math.pow(mouseX - node.x, 2) + Math.pow(mouseY - node.y, 2));
+                              
+                if (distance < 20) {
+                    highlightConnections(node.layer, node.node);
+                    
+                    TipContent=`Layer ${node.layer-1} - Node ${node.node}: <br><span style="color:deepPink; font-weight:bold;">`+document.getElementById("activation-function").value+'(</span>';
+                    const weights = network.weights[node.layer-2][node.node-1];
+                    const bias = network.biases[node.layer-2][node.node-1];
+                    const prevNodes= allLayerNodes[node.layer-2];
+                    console.log(prevNodes);
+                    weights.forEach((w_val, index) => {TipContent+=' <span style="color:yellow; font-weight:bold;">'+w_val+'</span> x '+prevNodes[index].value.toFixed(2)+'<br> +';})
+                    TipContent+=' <span style="color:red; font-weight:bold;">('+bias+')</span>';
+                    TipContent+= ' <span style="color:deepPink; font-weight:bold;">)</span> <br> = '+ node.value.toFixed(2);
+                    
+                    //console.log(bias); 
+                    showTooltip(mouseX+10, mouseY+50, TipContent);
+                    isOverNode = true;
+                    break; // 只需找到最近的 node，找到後結束迴圈
+                }
+            }
+
+            if (!isOverNode) {
+                hideTooltip();
+                drawNetwork();
+            }
+        }, 100)); // 節流間隔設為 100 毫秒
+
+
+        function drawConnection({x1, y1, x2, y2}) {
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+
+        function highlightConnections(layer, node) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawNetwork();
+
+            ctx.strokeStyle = "red";
+            connections
+                .filter(connection => connection.layer === layer && connection.node === node)
+                .forEach(connection => drawConnection(connection));
+
+            ctx.strokeStyle = "black";
+        }
+
+        function calculateNodeValue(layerIndex, nodeIndex) {
+            // 如果是第一層（輸入層），直接返回輸入值
+            if (layerIndex === 1) {
+                return inputValues[nodeIndex];
+            }
+            
+            // 獲取前一層的節點值
+            let previousLayerValues;
+            if (layerIndex === 2) {
+                previousLayerValues = inputValues;
+            } else {
+                previousLayerValues = allLayerNodes[layerIndex - 2].map(node => node.value);
+            }
+            
+            // 安全地獲取權重和偏差值
+            let weights = [];
+            let bias = 0;
+            
+            try {
+                weights = network.weights[layerIndex - 2] ? 
+                         network.weights[layerIndex - 2][nodeIndex] || [] : [];
+                bias = network.biases[layerIndex - 2] ? 
+                       network.biases[layerIndex - 2][nodeIndex] || 0 : 0;
+            } catch (error) {
+                console.warn(`無法獲取層 ${layerIndex} 節點 ${nodeIndex} 的權重或偏差值`);
+            }
+            
+            // 計算加權和
+            let value = 0;
+            for (let i = 0; i < previousLayerValues.length; i++) {
+                if (weights[i] !== undefined && previousLayerValues[i] !== undefined) {
+                    value += previousLayerValues[i] * weights[i];
+                }
+            }
+            value += bias;
+            
+            // 應用激活函數
+            switch (network.activation) {
+                case 'relu':
+                    return Math.max(0, value);
+                case 'sigmoid':
+                    return 1 / (1 + Math.exp(-value));
+                case 'tanh':
+                    return Math.tanh(value);
+                default:
+                    return value;
+            }
+        }
+
+        function showTooltip(x, y, text) {
+            tooltip.style.left = `${x + 60}px`;
+            tooltip.style.top = `${y + 10}px`;
+            tooltip.innerHTML = text;
+            tooltip.style.display = "block";
+        }
+
+        function hideTooltip() {
+            tooltip.style.display = "none";
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById("parameter-table").querySelector("tbody");
+            tbody.innerHTML = "";
+            
+            const hiddenLayers = parseInt(document.getElementById("hidden-layers").value);
+            const totalLayers = hiddenLayers + 1;
+            
+            // 每次重新初始化網路權重和偏差值  
+                const newWeights = [];
+                const newBiases = [];
+                
+                for (let layer = 0; layer < totalLayers; layer++) {
+                    const prevLayerSize = layer === 0 ? inputNodes : hiddenNodes;
+                    const currentLayerSize = layer === totalLayers - 1 ? outputNodes : hiddenNodes;
+                    
+                    // 初始化該層的權重
+                    const layerWeights = [];
+                    for (let node = 0; node < currentLayerSize; node++) {
+                        const nodeWeights = [];
+                        for (let prev = 0; prev < prevLayerSize; prev++) {
+                            // 優先使用已經存在的值，否則使用預設權重或0
+                            let defaultWeight = 0;
+                            if (layer === 0) defaultWeight = defaultWeights.layer1[node]?.[prev] || 0;
+                            else if (layer === 1) defaultWeight = defaultWeights.layer2[node]?.[prev] || 0;
+                            else if (layer === 2) defaultWeight = defaultWeights.layer3[node]?.[prev] || 0;
+                            
+                            const existingWeight = network.weights[layer]?.[node]?.[prev];
+                            nodeWeights.push(existingWeight !== undefined ? existingWeight : defaultWeight);
+                        }
+                        layerWeights.push(nodeWeights);
+                    }
+                    newWeights.push(layerWeights);
+                    
+                    // 初始化該層的偏差值
+                    const layerBiases = [];
+                    for (let node = 0; node < currentLayerSize; node++) {
+                        // 優先使用已經存在的值，否則使用預設偏差值或0
+                        let defaultBias = 0;
+                        if (layer === 0) defaultBias = defaultBiases.layer1[node] || 0;
+                        else if (layer === 1) defaultBias = defaultBiases.layer2[node] || 0;
+                        else if (layer === 2) defaultBias = defaultBiases.layer3[node] || 0;
+                        
+                        const existingBias = network.biases[layer]?.[node];
+                        layerBiases.push(existingBias !== undefined ? existingBias : defaultBias);
+                    }
+                    newBiases.push(layerBiases);
+                }
+                
+                network.weights = newWeights;
+                network.biases = newBiases;
+
+
+            // 更新表格顯示
+            for (let layer = 0; layer < totalLayers; layer++) {
+                const prevLayerNodes = layer === 0 ? inputNodes : hiddenNodes;
+                const currentLayerNodes = layer === totalLayers - 1 ? outputNodes : hiddenNodes;
+                
+                for (let node = 0; node < currentLayerNodes; node++) {
+                    const weights = network.weights[layer][node];
+                    const bias = network.biases[layer][node];
+                    //console.log('layer'+layer+', node'+node);
+                    
+                    // 為每個權重創建一行
+                    for (let w = 0; w < prevLayerNodes; w++) {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>Layer ${layer + 1}</td>
+                            <td>Node ${node + 1} (W${w + 1})</td>
+                            <td><input type="number" value="${weights[w]}" 
+                                data-layer="${layer}" data-node="${node}" data-weight="${w}" 
+                                class="weight-input" step="0.5"></td>
+                            <td>${w === 0 ? `<input type="number" value="${bias}" 
+                                data-layer="${layer}" data-node="${node}" 
+                                class="bias-input" step="0.5">` : ''}</td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                }
+            }
+
+            // 使用事件代理處理參數更新
+            const parameterTable = document.getElementById("parameter-table");
+            parameterTable.removeEventListener("input", handleParameterInput);
+            parameterTable.addEventListener("input", handleParameterInput);
+        }
+
+        // 新增事件處理函數
+        function handleParameterInput(event) {
+            const target = event.target;
+            
+            // 檢查是否是我們要處理的input元素
+            if (!target.matches('.weight-input, .bias-input')) return;
+            
+            const layer = parseInt(target.getAttribute("data-layer"));
+            const node = parseInt(target.getAttribute("data-node"));
+            const newValue = parseFloat(target.value) || 0;
+            
+            if (target.classList.contains('weight-input')) {
+                const weightIndex = parseInt(target.getAttribute("data-weight"));
+                
+                // 確保數據結構存在
+                if (!network.weights[layer]) network.weights[layer] = [];
+                if (!network.weights[layer][node]) network.weights[layer][node] = [];
+                
+                network.weights[layer][node][weightIndex] = newValue;
+            } else if (target.classList.contains('bias-input')) {
+                // 確保數據結構存在
+                if (!network.biases[layer]) network.biases[layer] = [];
+                
+                network.biases[layer][node] = newValue;
+            }
+            
+            drawNetwork();
+        }
+
+        canvas.addEventListener("click", function(event) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            const inputLayer = allLayerNodes[0];
+            if (inputLayer) {
+                inputLayer.forEach((node, index) => {
+                    const distance = Math.sqrt(Math.pow(mouseX - node.x, 2) + Math.pow(mouseY - node.y, 2));
+                    if (distance < 20) {
+                        const newValue = prompt("請輸入新的值:", inputValues[index]);
+                        if (newValue !== null && !isNaN(newValue)) {
+                            inputValues[index] = parseFloat(newValue);
+                            
+                            // 更新快速輸入表格
+                            let subTotal = 0;
+                            for (let i = 0; i < inputNodes; i++) {
+                                subTotal += inputValues[inputNodes - 1 - i] * Math.pow(10, i);
+                            }
+                            document.getElementById("inputLayer_val").value = subTotal;
+                            
+                            drawNetwork();
+                        }
+                    }
+                });
+            }
+        });
+
+        document.getElementById("update-network").addEventListener("click", drawNetwork);
+
+        canvas.addEventListener("input", function(event) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            inputValues.forEach((_, i) => {
+                const node = inputValues[i];
+                const distance = Math.sqrt(Math.pow(mouseX - node.x, 2) + Math.pow(mouseY - node.y, 2));
+                if (distance < 20) {
+                    inputValues[i] = parseFloat(event.target.value);
+                    drawNetwork();
+                }
+            });
+        });
+
+        // 在 script 標籤內添加這個事件監聽器
+        document.getElementById("inputLayer_val").addEventListener("input", function() {
+            const value = parseInt(this.value) || 0;
+            // 將數字轉換為個別位數
+            const digits = value.toString().padStart(inputNodes, '0').split('').map(Number);
+            
+            // 從右到左填入輸入值
+            for (let i = 0; i < inputNodes; i++) {
+                inputValues[inputNodes - 1 - i] = digits[digits.length - 1 - i] || 0;
+            }
+            
+            drawNetwork();
+        });
+
+        // 初始繪圖
+        drawNetwork();
+        
+    </script>
+</body>
+</html>
