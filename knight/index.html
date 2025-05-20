@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>Knight's Tour Solver</title>
+  <!-- React & Babel -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { background: #f0f2f5; font-family: sans-serif; margin: 0; padding: 2rem; }
+    .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 1rem; margin-bottom: 1rem; }
+    h1 { margin: 0 0 1rem; font-size: 1.75rem; display: flex; align-items: center; }
+    h1 .icon { font-size: 1.5rem; margin-right: 0.5rem; color: #e63946; }
+    .controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+    .controls label { flex: 1; display: flex; flex-direction: column; font-size: 0.9rem; }
+    .controls input { margin-top: 0.25rem; padding: 0.5rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+    .controls button { padding: 0.6rem 1.2rem; font-size: 1rem; border: none; border-radius: 4px; cursor: pointer; }
+    .btn-primary { background: #e63946; color: #fff; }
+    .btn-secondary { background: #fff; color: #333; border: 1px solid #ccc; display: flex; align-items: center; gap: 0.5rem; }
+    .board-card { background: #ffe4e1; border-radius: 8px; padding: 1rem; }
+    .board-container { position: relative; overflow: auto; width: 100%; max-width: 480px; margin: auto; }
+    .board-container table { width: 100%; min-width: 320px; max-width: 480px; }
+    table { border-collapse: collapse; margin: auto; --cols: 8; }
+    table, td { table-layout: auto; }
+    td { border: 1px solid #ddd; position: relative; width: 50px; height: 50px; padding: 0; cursor: pointer; }
+    td .cell-inner { position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .knight { font-size: 1.5rem; color: #3E2723; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+    function App() {
+      const [movePattern, setMovePattern] = useState('2,1');
+      const [boardSize, setBoardSize] = useState('8,8');
+      const [board, setBoard] = useState(null); // 解題後的結果
+      const [path, setPath] = useState([]); // 解題路徑
+      const [step, setStep] = useState(0); // 動畫步數
+      const [animating, setAnimating] = useState(false);
+      const [duration, setDuration] = useState(null);
+      const [cols, setCols] = useState(8);
+      const [rows, setRows] = useState(8);
+      const [startPosition, setStartPosition] = useState(null); // 起點
+      const [showGenerateButton, setShowGenerateButton] = useState(true);
+      const containerRef = useRef();
+      const canvasRef = useRef();
+      const tableRef = useRef();
+
+      // 更新 Canvas 尺寸
+      const updateCanvas = useCallback(() => {
+        if (!containerRef.current || !canvasRef.current || !tableRef.current) return;
+        const rect = tableRef.current.getBoundingClientRect();
+        canvasRef.current.width = rect.width;
+        canvasRef.current.height = rect.height;
+        canvasRef.current.style.width = rect.width + 'px';
+        canvasRef.current.style.height = rect.height + 'px';
+      }, [board, cols, rows]);
+      useEffect(() => { updateCanvas(); window.addEventListener('resize', updateCanvas); return ()=>window.removeEventListener('resize', updateCanvas); }, [updateCanvas]);
+
+      // 畫路徑
+      const drawPath = useCallback(() => {
+        if (!canvasRef.current || !path.length || step < 1) return;
+        const ctx = canvasRef.current.getContext('2d');
+        const cells = containerRef.current.querySelectorAll('td');
+        if (!cells.length) return;
+        const w = cells[0].offsetWidth;
+        const h = cells[0].offsetHeight;
+        ctx.clearRect(0,0,canvasRef.current.width, canvasRef.current.height);
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
+        for (let i = 0; i < Math.min(step, path.length-1); i++) {
+          const a = path[i], b = path[i+1];
+          ctx.beginPath();
+          ctx.moveTo((a.y+0.5)*w, (a.x+0.5)*h);
+          ctx.lineTo((b.y+0.5)*w, (b.x+0.5)*h);
+          ctx.stroke();
+        }
+      }, [path, step]);
+      useEffect(drawPath, [drawPath, step]);
+
+      // 產生空棋盤
+      const generateBoard = () => {
+        const [m,n] = boardSize.split(',').map(Number);
+        setBoard(Array.from({length:m},()=>Array(n).fill(undefined)));
+        setPath([]); setStep(0); setAnimating(false); setDuration(null);
+        setCols(n); setRows(m);
+        setStartPosition(null);
+        setShowGenerateButton(false);
+        if (canvasRef.current) {
+          const ctx = canvasRef.current.getContext('2d');
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
+      };
+
+      // 點 cell 設定起點
+      const handleCellClick = (i,j) => {
+        if (animating) return;
+        setStartPosition({x:i, y:j});
+      };
+
+      // 解題
+      const solve = () => {
+        if (!startPosition) return;
+        const t0 = performance.now();
+        const [m,n] = boardSize.split(',').map(Number);
+        const [dx,dy] = movePattern.split(',').map(Number);
+        const B = Array.from({length:m},()=>Array(n).fill(undefined));
+        const moves = [[dx,dy],[dx,-dy],[-dx,dy],[-dx,-dy],[dy,dx],[dy,-dx],[-dy,dx],[-dy,-dx]];
+        const valid=(x,y)=>x>=0&&x<m&&y>=0&&y<n&&B[x][y]===undefined;
+        const cnt=(x,y)=>moves.reduce((c,[mx,my])=>c+(valid(x+mx,y+my)?1:0),0);
+        const next=(x,y)=>{
+          let min=Infinity, nx,ny;
+          for(const [mx,my] of moves) if(valid(x+mx,y+my)){
+            const c = cnt(x+mx,y+my);
+            if(c<min){min=c; nx=x+mx; ny=y+my;}
+          }
+          return min===Infinity?null:{x:nx,y:ny};
+        };
+        let cur = {x: startPosition.x, y: startPosition.y}, s=1, p=[{...cur}];
+        B[cur.x][cur.y] = 0;
+        while(s < m*n) {
+          const q = next(cur.x,cur.y);
+          if(!q) break;
+          B[q.x][q.y] = s;
+          p.push({...q});
+          cur = q;
+          s++;
+        }
+        const t1 = performance.now();
+        setDuration(((t1-t0)/1000).toFixed(3));
+        if(s === m*n) {
+          setBoard(B);
+          setPath(p);
+          setStep(0);
+          setAnimating(true);
+          setShowGenerateButton(true);
+        } else {
+          setBoard('not solvable');
+          setPath([]);
+          setAnimating(false);
+          setShowGenerateButton(true);
+        }
+      };
+
+      // 動畫步進
+      useEffect(()=>{
+        if(animating && board && board !== 'not solvable' && step < rows*cols-1) {
+          const id = setTimeout(()=>setStep(s=>s+1), 100);
+          return ()=>clearTimeout(id);
+        }
+      }, [animating, step, board, rows, cols]);
+
+      // 下載 PNG
+      const savePNG = () => {
+        if(!board || board === 'not solvable' || !path.length || step < rows*cols-1) return;
+        const tbl = tableRef.current;
+        const rect = tbl.getBoundingClientRect();
+        const m = rows, n = cols;
+        const canvas = document.createElement('canvas');
+        canvas.width = rect.width*2; canvas.height = rect.height*2;
+        const ctx = canvas.getContext('2d'); ctx.scale(2,2);
+        ctx.fillStyle='#fff'; ctx.fillRect(0,0,rect.width, rect.height);
+        const w = rect.width/n, h = rect.height/m;
+        for(let i=0;i<m;i++) for(let j=0;j<n;j++){
+          const isWhite = (i+j)%2===0;
+          ctx.fillStyle = isWhite ? '#fff' : '#f5f5f5';
+          ctx.fillRect(j*w,i*h,w,h);
+          ctx.strokeStyle='#e0e0e0'; ctx.strokeRect(j*w,i*h,w,h);
+          const v = board[i][j];
+          if(v!==undefined){ ctx.fillStyle='#000'; ctx.font=`${w*0.4}px Arial`;
+            ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(v+1, j*w+w/2, i*h+h/2);
+          }
+        }
+        // 可選：畫騎士圖示在最後一格
+        // const finalPos = path[path.length-1];
+        // if(finalPos){ /* 可畫SVG圖示 */ }
+        const data = canvas.toDataURL();
+        const a = document.createElement('a'); a.href=data; a.download='knight-tour.png'; a.click();
+      };
+
+      // 棋盤渲染
+      const renderBoard = (board) => (
+        <table ref={tableRef} style={{'--cols': cols}}>
+          <tbody>
+            {board.map((row,i)=>(
+              <tr key={i}>
+                {row.map((cell,j)=>{
+                  const isWhite = (i+j)%2===0;
+                  const isStart = startPosition && startPosition.x===i && startPosition.y===j;
+                  const isCurrent = animating && cell===step;
+                  const showNumber = animating && cell<=step;
+                  return (
+                    <td key={j} onClick={()=>handleCellClick(i,j)}
+                      style={{
+                        background: isWhite ? '#fff' : '#f5f5f5',
+                        border: isCurrent ? '2px solid #e63946' : '1px solid #ddd',
+                        position: 'relative',
+                        cursor: animating ? 'default' : 'pointer',
+                        userSelect: 'none',
+                      }}>
+                      <div className="cell-inner">
+                        {showNumber ? cell+1 : ''}
+                        {((isCurrent && animating) || (isStart && !animating)) && (
+                          <span className="knight">♞</span>
+                        )}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+
+      return (
+        <>
+          <div className="card">
+            <h1><span className="icon">♞</span>Knight's Tour Solver</h1>
+            <div className="controls">
+              <label>Move Pattern (x,y)<input value={movePattern} onChange={e=>setMovePattern(e.target.value)} /></label>
+              <label>Board Size (m,n)<input value={boardSize} onChange={e=>setBoardSize(e.target.value)} /></label>
+              {(showGenerateButton || !board) ? (
+                <button className="btn-primary" onClick={generateBoard}>Generate Board</button>
+              ) : startPosition && (
+                <button className="btn-primary" onClick={solve}>Solve</button>
+              )}
+              {board && board !== 'not solvable' && animating && step === rows*cols-1 && (
+                <button className="btn-secondary" onClick={savePNG}><span>📥</span> Save as PNG</button>
+              )}
+            </div>
+          </div>
+
+          {board && (
+            <div className="card board-card">
+              <div className="board-container" ref={containerRef}>
+                {board === 'not solvable' ? (
+                  <p style={{color:'#e63946',textAlign:'center'}}>Not solvable</p>
+                ) : (
+                  <>
+                    {renderBoard(board)}
+                    <canvas ref={canvasRef} style={{position:'absolute',top:0,left:0,pointerEvents:'none'}}></canvas>
+                  </>
+                )}
+              </div>
+              {duration && <p>Processing time: {duration} seconds</p>}
+              {!startPosition && board !== 'not solvable' && <p style={{color:'#888',textAlign:'center'}}>請點選一格作為起點</p>}
+            </div>
+          )}
+        </>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
