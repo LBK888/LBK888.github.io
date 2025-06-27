@@ -494,10 +494,10 @@ const mazeArea = document.getElementById('mazeArea');
 
 // 確保canvas有正確的大小
 if (gameCanvas) {
-    gameCanvas.width = 600;
-    gameCanvas.height = 800;
-    gameCanvas.style.width = '600px';
-    gameCanvas.style.height = '800px';
+    gameCanvas.width = 450;
+    gameCanvas.height = 600;
+    gameCanvas.style.width = '450px';
+    gameCanvas.style.height = '600px';
     console.log('Canvas設定完成:', gameCanvas.width, 'x', gameCanvas.height);
 }
 
@@ -506,8 +506,8 @@ var render = Render.create({
     canvas: gameCanvas,
     engine: engine,
     options: {
-        width: 600,
-        height: 800,  // 垂直長方形，適合手機
+        width: 450,
+        height: 600,  // 垂直長方形，適合手機
         showVelocity: false,
         showAngleIndicator: false,
         wireframes: false,
