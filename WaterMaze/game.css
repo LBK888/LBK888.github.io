@@ -1,0 +1,286 @@
+/* 全局樣式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* 遊戲容器 */
+#gameContainer {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* 頂部狀態欄 */
+#statusBar {
+    height: 60px;
+    background-color: #111;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 2px solid #333;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#statusBar > div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 數字圖片樣式 */
+.number-img {
+    width: 20px;
+    height: 24px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.score-number {
+    width: 16px;
+    height: 20px;
+}
+
+#stageInfo {
+    color: #4CAF50;
+}
+
+#timeInfo {
+    color: #FF9800;
+}
+
+#scoreInfo {
+    color: #2196F3;
+}
+
+/* 迷宮區域 */
+#mazeArea {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+    position: relative;
+}
+
+#gameCanvas {
+    border: 2px solid #333;
+    border-radius: 10px;
+    background-color: #111;
+    width: 800px !important;
+    height: 1200px !important;
+    display: block !important;
+}
+
+/* 秤盤區域 */
+#scaleArea {
+    height: 120px;
+    background-color: #111;
+    border-top: 2px solid #333;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+#scaleContainer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#scalePan {
+    width: 200px;
+    height: 15px;
+    background: linear-gradient(to bottom, #888, #666);
+    border: 2px solid #444;
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+#scaleBase {
+    width: 20px;
+    height: 30px;
+    background: linear-gradient(to bottom, #666, #444);
+    border: 1px solid #333;
+    margin-top: -2px;
+}
+
+#weightInfo {
+    font-size: 18px;
+    font-weight: bold;
+    color: #FFC107;
+}
+
+/* 彈窗樣式 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #222;
+    margin: 10% auto;
+    padding: 30px;
+    border: 2px solid #444;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.modal-content h2 {
+    color: #4CAF50;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.instruction-text {
+    text-align: left;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.instruction-text p {
+    margin-bottom: 15px;
+}
+
+.instruction-text ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.instruction-text li {
+    margin-bottom: 5px;
+}
+
+.game-btn {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.game-btn:hover {
+    background: linear-gradient(45deg, #45a049, #4CAF50);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.game-btn:active {
+    transform: translateY(0);
+}
+
+/* 結果顯示 */
+#stageResult, #finalResult, #failResult {
+    margin-bottom: 20px;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+#stageResult p, #finalResult p, #failResult p {
+    margin-bottom: 10px;
+}
+
+#ranking {
+    margin-top: 20px;
+    text-align: left;
+}
+
+#ranking h3 {
+    color: #FF9800;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+#rankingList {
+    background-color: #333;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 0;
+}
+
+#rankingList li {
+    padding: 8px 0;
+    border-bottom: 1px solid #444;
+    font-size: 14px;
+}
+
+#rankingList li:last-child {
+    border-bottom: none;
+}
+
+/* 響應式設計 */
+@media (max-width: 480px) {
+    #statusBar {
+        height: 50px;
+        font-size: 14px;
+        padding: 0 15px;
+    }
+    
+    .modal-content {
+        margin: 5% auto;
+        padding: 20px;
+        width: 95%;
+    }
+    
+    .modal-content h2 {
+        font-size: 20px;
+    }
+    
+    .game-btn {
+        padding: 12px 25px;
+        font-size: 16px;
+    }
+    
+    #weightInfo {
+        font-size: 16px;
+    }
+}
+
+/* 動畫效果 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.show .modal-content {
+    animation: fadeIn 0.3s ease;
+}

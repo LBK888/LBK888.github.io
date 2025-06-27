@@ -1,18 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kruskal Maze Generator with Water Flow</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Water Maze Game</title>
+    <link rel="stylesheet" href="game.css">
 </head>
 <body>
-    <h1>Kruskal's Algorithm Maze Generator with Water Flow</h1>
-    <button id="generateButton">Generate Maze</button>
-    <button id="startWaterButton">Start Water Flow</button>
-    <canvas id="mazeCanvas"></canvas>
+    <!-- 遊戲主界面 -->
+    <div id="gameContainer">
+        <!-- 頂部狀態欄 -->
+        <div id="statusBar">
+            <div id="stageInfo">
+                <span>Stage: </span>
+                <span id="currentStage"></span>
+                <span>/</span>
+                <span id="totalStages"></span>
+            </div>
+            <div id="timeInfo">
+                <span>Time: </span>
+                <span id="gameTime"></span>
+                <span> sec</span>
+            </div>
+            <div id="scoreInfo">
+                <span>Score: </span>
+                <span id="gameScore"></span>
+            </div>
+        </div>
+
+        <!-- 迷宮區域 -->
+        <div id="mazeArea">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <!-- 秤盤區域 -->
+        <div id="scaleArea">
+            <div id="scaleContainer">
+                <div id="scalePan"></div>
+                <div id="scaleBase"></div>
+            </div>
+            <div id="weightInfo">
+                <span id="currentWeight"></span>
+                <span>/</span>
+                <span id="targetWeight"></span>
+                <span> g</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲說明彈窗 -->
+    <div id="instructionModal" class="modal">
+        <div class="modal-content">
+            <h2>遊戲說明</h2>
+            <div class="instruction-text">
+                <p>🎯 <strong>遊戲目標：</strong>旋轉迷宮讓水滴掉落到秤盤上，達到目標重量即可過關</p>
+                <p>🎮 <strong>操作方式：</strong>拖拽迷宮進行旋轉，讓水滴從開口掉出</p>
+                <p>⏱️ <strong>計分規則：</strong></p>
+                <ul>
+                    <li>10秒內：每個水滴 4 分</li>
+                    <li>10-30秒：每個水滴 3 分</li>
+                    <li>30-60秒：每個水滴 2 分</li>
+                    <li>超過60秒：每個水滴 1 分</li>
+                </ul>
+                <p>⚠️ <strong>注意：</strong>每關限時3分鐘，超時自動跳下一關</p>
+            </div>
+            <button id="startGameBtn" class="game-btn">開始遊戲</button>
+        </div>
+    </div>
+
+    <!-- 關卡完成彈窗 -->
+    <div id="stageCompleteModal" class="modal">
+        <div class="modal-content">
+            <h2>關卡完成！</h2>
+            <div id="stageResult">
+                <p>完成時間：<span id="stageTime"></span> 秒</p>
+                <p>獲得分數：<span id="stageScore"></span> 分</p>
+                <p>總分數：<span id="totalScore"></span> 分</p>
+            </div>
+            <button id="nextStageBtn" class="game-btn">下一關</button>
+        </div>
+    </div>
+
+    <!-- 遊戲結束彈窗 -->
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2>遊戲結束</h2>
+            <div id="finalResult">
+                <p>最終分數：<span id="finalScore"></span> 分</p>
+                <div id="ranking">
+                    <h3>排行榜</h3>
+                    <ol id="rankingList"></ol>
+                </div>
+            </div>
+            <button id="restartGameBtn" class="game-btn">重新開始</button>
+        </div>
+    </div>
+
+    <!-- 關卡失敗彈窗 -->
+    <div id="stageFailModal" class="modal">
+        <div class="modal-content">
+            <h2>時間到！</h2>
+            <div id="failResult">
+                <p>本關未能在時間內完成</p>
+                <p>獲得分數：<span id="failScore"></span> 分</p>
+            </div>
+            <button id="nextStageFailBtn" class="game-btn">下一關</button>
+        </div>
+    </div>
+
+    <!-- 引入依賴 -->
     <script src="matter.js"></script>
     <script src="script.js"></script>
-
+    <script src="game.js"></script>
 </body>
 </html>
