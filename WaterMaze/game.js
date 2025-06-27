@@ -6,7 +6,7 @@ class WaterMazeGame {
         this.gameScore = 0;
         this.stageStartTime = 0;
         this.gameTimer = null;
-        this.stageTimeLimit = 120; // 3分鐘
+        this.stageTimeLimit = 90; // 3分鐘
         
         // 關卡配置
         this.stageConfigs = [
@@ -19,9 +19,9 @@ class WaterMazeGame {
             { mazeSize: 17, startDroplets: 150, targetWeight: 50, scalePanWidth: 21 },
             { mazeSize: 17, startDroplets: 100, targetWeight: 60, scalePanWidth: 17 },
             // 第7-9關
-            { mazeSize: 25, startDroplets: 400, targetWeight: 70, scalePanWidth: 23 },
-            { mazeSize: 25, startDroplets: 300, targetWeight: 80, scalePanWidth: 19 },
-            { mazeSize: 25, startDroplets: 200, targetWeight: 90, scalePanWidth: 15 }
+            { mazeSize: 25, startDroplets: 400, targetWeight: 60, scalePanWidth: 23 },
+            { mazeSize: 25, startDroplets: 310, targetWeight: 70, scalePanWidth: 19 },
+            { mazeSize: 25, startDroplets: 250, targetWeight: 80, scalePanWidth: 15 }
         ];
         
         // 遊戲狀態
