@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>即時數據預警演算法教學（Kalman｜ESN｜Holt）Forecasting Algorithms Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.2/math.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0e1b;
+      --bg-secondary: #111827;
+      --bg-card: #1f2937;
+      --bg-soft: #374151;
+      --text-primary: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-muted: #9ca3af;
+      --accent-primary: #3b82f6;
+      --accent-secondary: #06b6d4;
+      --accent-success: #10b981;
+      --accent-warning: #f59e0b;
+      --accent-error: #ef4444;
+      --border-primary: #374151;
+      --border-soft: #4b5563;
+      --glass-bg: rgba(31, 41, 55, 0.8);
+      --glass-border: rgba(75, 85, 99, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px) saturate(1.2);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.5rem 0;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 900;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+    }
+
+    .header-text h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-text .subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1.2fr 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-primary);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: var(--border-soft);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--accent-secondary);
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      line-height: 1.7;
+    }
+
+    /* Tags */
+    .tag-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-soft);
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+
+    .tag:hover {
+      background: var(--accent-primary);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      min-height: 44px; /* Touch-friendly */
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: white;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+      animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3); }
+      50% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5); }
+    }
+
+    .btn-secondary {
+      background: var(--bg-soft);
+      color: var(--text-primary);
+      border: 1px solid var(--border-soft);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, var(--accent-warning), #fb923c);
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      background: var(--bg-secondary);
+      padding: 0.25rem;
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: 120px;
+      padding: 0.75rem 1rem;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: var(--accent-primary);
+      color: white;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .tab:hover:not(.active) {
+      background: var(--bg-soft);
+      color: var(--text-secondary);
+    }
+
+    /* Panels */
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .panel-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Controls */
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .control {
+      display: grid;
+      grid-template-columns: 1fr 2fr auto;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 8px;
+    }
+
+    .control label {
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: var(--text-primary);
+    }
+
+    .control small {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .control input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-soft);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: var(--accent-primary);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+    }
+
+    .control input[type="number"] {
+      width: 80px;
+      padding: 0.5rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-primary);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      text-align: center;
+    }
+
+    /* Chart */
+    .chart-container {
+      position: relative;
+      margin: 1rem 0;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    canvas {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0.75rem;
+      }
+      
+      .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+      }
+      
+      .header-text h1 {
+        font-size: 1.25rem;
+      }
+      
+      .btn-group {
+        justify-content: center;
+      }
+      
+      .control {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      
+      .tabs {
+        flex-direction: column;
+      }
+      
+      .tab {
+        min-width: unset;
+      }
+    }
+
+    /* Mathematical expressions */
+    .math {
+      font-family: 'Times New Roman', serif;
+      font-style: italic;
+      padding: 0.5rem 1rem;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    /* Details/Summary */
+    details {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.5rem 0;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--accent-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-text {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 2rem;
+      padding: 1rem;
+    }
+
+    /* Loading states */
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* Error states */
+    .error {
+      color: var(--accent-error);
+      background: rgba(239, 68, 68, 0.1);
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">AI</div>
+        <div class="header-text">
+          <h1>即時數據預警演算法教學</h1>
+          <div class="subtitle">Kalman Filter・Echo State Network・Holt's Exponential Smoothing｜Forecasting Algorithms Demo 雙語教學</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="main-grid">
+      <!-- Chart Section -->
+      <section class="card">
+        <div class="tag-row">
+          <span class="tag">📱 Mobile-ready</span>
+          <span class="tag">⚡ Real-time</span>
+          <span class="tag">🧮 Lightweight</span>
+        </div>
+        
+        <h2>🎯 課程導覽｜Overview</h2>
+        <p>這個互動式教學示範著重於在 <strong>手機／平板</strong> 上快速理解三種可線上更新的輕量預測演算法。每個演算法提供：<strong>概念</strong>、<strong>公式</strong>、<strong>參數</strong>、<strong>即時調整與圖表</strong>。本教材使用者不需深厚數學背景也能上手。</p>
+        <p>This interactive tutorial is optimized for <strong>phones/tablets</strong> and introduces three <strong>incremental forecasting</strong> algorithms with <strong>concepts</strong>, <strong>equations</strong>, <strong>parameters</strong>, and <strong>live charts</strong>. Designed for non-math majors.</p>
+        
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btnAddNoise" title="新增一筆觀測並更新預測｜Add one observation and update forecasts">
+            ➕ 新增一筆資料 Add Point
+          </button>
+          <button class="btn btn-secondary" id="btnStream">
+            ▶️ 開始/停止串流 Start/Stop
+          </button>
+          <button class="btn btn-warning" id="btnReset">
+            ♻️ 重置 Reset
+          </button>
+        </div>
+        
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+          提示 Tip：「新增一筆資料」會加入一個新觀測值並把三條預測線向前推 5 點顯示。Data: synthetic (sine + trend + noise).
+        </p>
+        
+        <div class="chart-container">
+          <canvas id="mainChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Algorithm Controls -->
+      <section class="card">
+        <h2>🔬 演算法切換｜Algorithm Tabs</h2>
+        <div class="tabs">
+          <button class="tab active" data-tab="kalman">① 卡爾曼濾波 Kalman</button>
+          <button class="tab" data-tab="holt">② Holt 雙指數平滑</button>
+          <button class="tab" data-tab="esn">③ Echo State Network</button>
+        </div>
+
+        <!-- Kalman Panel -->
+        <div class="panel active" id="panel-kalman">
+          <div class="panel-grid">
+            <div>
+              <h3>💡 概念｜Concept</h3>
+              <p>用於含雜訊的動態系統估測：假設真實狀態 <em>x</em> 以簡單模型（此處用「隨機銀走」）演進，量測 <em>z</em> = <em>x</em> + 雜訊。卡爾曼濾波在每次新觀測到來時，<strong>先預測</strong>再<strong>更新</strong>，同時輸出不確定度。</p>
+              <p>Best for noisy streams: predict state then correct with the new observation, also tracking uncertainty.</p>
+              <details>
+                <summary>📐 公式｜Equations</summary>
+                <div class="math">
+                  Predict: x̂⁻ = x̂ + 0, P⁻ = P + Q<br/>
+                  Update: K = P⁻/(P⁻ + R), x̂ = x̂⁻ + K(z-x̂⁻), P = (1-K)P⁻
+                </div>
+              </details>
+            </div>
+            <div>
+              <h3>⚙️ 參數｜Parameters</h3>
+              <div class="control-group">
+                <div class="control">
+                  <label>過程雜訊 Q<small>Process noise</small></label>
+                  <input id="kfQ" type="range" min="0.001" max="0.5" step="0.001" value="0.02">
+                  <input id="kfQn" type="number" step="0.001" value="0.02">
+                </div>
+                <div class="control">
+                  <label>量測雜訊 R<small>Measurement noise</small></label>
+                  <input id="kfR" type="range" min="0.001" max="1" step="0.001" value="0.05">
+                  <input id="kfRn" type="number" step="0.001" value="0.05">
+                </div>
+                <div class="btn-group">
+                  <button class="btn btn-primary" id="kfApply">套用 Apply</button>
+                  <button class="btn btn-secondary" id="kfRecalc">重新計算 Recompute</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Holt Panel -->
+        <div class="panel" id="panel-holt">
+          <div class="panel-grid">
+            <div>
+              <h3>💡 概念｜Concept</h3>
+              <p>雙指數平滑把序列拆成<strong>水平 L</strong>與<strong>趨勢 B</strong>兩部分，使用指數權重更新。適合<strong>線性趨勢</strong>與<strong>短期預測</strong>，參數少、計算快。</p>
+              <p>Decomposes series into <strong>level</strong> and <strong>trend</strong> with exponential updates. Great for small data and short-term forecasting.</p>
+              <details>
+                <summary>📐 公式｜Equations</summary>
+                <div class="math">
+                  L_t = α y_t + (1-α)(L_{t-1}+B_{t-1})<br/>
+                  B_t = β (L_t-L_{t-1}) + (1-β)B_{t-1}<br/>
+                  Forecast: ŷ_{t+h} = L_t + h B_t
+                </div>
+              </details>
+            </div>
+            <div>
+              <h3>⚙️ 參數｜Parameters</h3>
+              <div class="control-group">
+                <div class="control">
+                  <label>α（水平）<small>Level smoothing</small></label>
+                  <input id="holtA" type="range" min="0.01" max="0.9" step="0.01" value="0.4">
+                  <input id="holtAn" type="number" step="0.01" value="0.4">
+                </div>
+                <div class="control">
+                  <label>β（趨勢）<small>Trend smoothing</small></label>
+                  <input id="holtB" type="range" min="0.01" max="0.9" step="0.01" value="0.3">
+                  <input id="holtBn" type="number" step="0.01" value="0.3">
+                </div>
+                <div class="control">
+                  <label>前視步數 h<small>Horizon (steps)</small></label>
+                  <input id="holtH" type="range" min="1" max="12" step="1" value="5">
+                  <input id="holtHn" type="number" step="1" value="5">
+                </div>
+                <div class="btn-group">
+                  <button class="btn btn-primary" id="holtApply">套用 Apply</button>
+                  <button class="btn btn-secondary" id="holtRecalc">重新計算 Recompute</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ESN Panel -->
+        <div class="panel" id="panel-esn">
+          <div class="panel-grid">
+            <div>
+              <h3>💡 概念｜Concept</h3>
+              <p>ESN 使用<strong>隨機固定</strong>的 reservoir（隱層），僅<strong>訓練輸出層</strong>。本示範採用<strong>RLS（遞迴最小平方）</strong>做增量 ridge 更新，適合在手機上快速調整。</p>
+              <p>Reservoir is random & fixed; only the readout is learned. We use <strong>Recursive Least Squares</strong> for online ridge updates.</p>
+              <details>
+                <summary>📐 公式｜Equations (Sketch)</summary>
+                <div class="math">
+                  Reservoir: r_t = tanh(W_{res} r_{t-1} + W_{in} u_t + b)<br/>
+                  RLS gain: k_t = P x_t /(1 + x_t^T P x_t)<br/>
+                  Weights: W ← W + k_t (y_t - x_t^T W), P ← P - k_t x_t^T P
+                </div>
+              </details>
+            </div>
+            <div>
+              <h3>⚙️ 參數｜Parameters</h3>
+              <div class="control-group">
+                <div class="control">
+                  <label>Reservoir 大小<small>Size</small></label>
+                  <input id="esnN" type="range" min="10" max="100" step="1" value="50">
+                  <input id="esnNn" type="number" step="1" value="50">
+                </div>
+                <div class="control">
+                  <label>光譜半徑 ρ<small>Spectral radius</small></label>
+                  <input id="esnRho" type="range" min="0.1" max="1.2" step="0.01" value="0.9">
+                  <input id="esnRhon" type="number" step="0.01" value="0.9">
+                </div>
+                <div class="control">
+                  <label>輸入縮放<small>Input scale</small></label>
+                  <input id="esnScale" type="range" min="0.1" max="2" step="0.01" value="0.5">
+                  <input id="esnScalen" type="number" step="0.01" value="0.5">
+                </div>
+                <div class="control">
+                  <label>Ridge λ<small>Regularization</small></label>
+                  <input id="esnLam" type="range" min="0.001" max="1" step="0.001" value="0.01">
+                  <input id="esnLamn" type="number" step="0.001" value="0.01">
+                </div>
+                <div class="btn-group">
+                  <button class="btn btn-primary" id="esnApply">套用 Apply</button>
+                  <button class="btn btn-secondary" id="esnReinit">重新初始化 Reinit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Usage Instructions -->
+    <section class="card">
+      <h2>📖 使用方式｜How to Use</h2>
+      <div class="panel-grid">
+        <div>
+          <h3>中文說明</h3>
+          <ol style="color: var(--text-secondary); line-height: 1.8;">
+            <li>按「新增一筆資料」或啟動「串流」逐步產生觀測值。</li>
+            <li>切換上方分頁，調整參數並觀察預測曲線與誤差。</li>
+            <li>長按圖表可拖動時間軸；小螢幕下元件將自動換行。</li>
+          </ol>
+        </div>
+        <div>
+          <h3>English Instructions</h3>
+          <ol style="color: var(--text-secondary); line-height: 1.8;">
+            <li>Click <strong>Add Point</strong> or start <strong>Stream</strong> to feed observations.</li>
+            <li>Switch tabs, tune parameters, and watch predictions and errors update.</li>
+            <li>On phones, layout wraps automatically; long-press chart to pan.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-text">
+      © 教學示範用途｜For educational demo only
+    </div>
+  </main>
+
+  <script>
+    // ===== Utilities =====
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, Number(v)));
+    
+    // Improved Box-Muller transform for normal distribution
+    let hasSpareGaussian = false;
+    let spareGaussian = 0;
+    
+    const randn = () => {
+      if (hasSpareGaussian) {
+        hasSpareGaussian = false;
+        return spareGaussian;
+      }
+      
+      hasSpareGaussian = true;
+      const u = Math.random();
+      const v = Math.random();
+      const mag = 0.15 * Math.sqrt(-2 * Math.log(u));
+      spareGaussian = mag * Math.cos(2 * Math.PI * v);
+      return mag * Math.sin(2 * Math.PI * v);
+    };
+
+    // ===== Synthetic Data Stream =====
+    const data = { t: [], y: [] };
+    let t = 0;
+    let streaming = false;
+    let streamTimer = null;
+    
+    function genPoint() {
+      t += 1;
+      // More interesting synthetic data: sine wave + linear trend + noise
+      const base = 0.6 * Math.sin(t / 8) + 0.03 * t + 2;
+      const y = base + randn();
+      data.t.push(t);
+      data.y.push(y);
+      return { t, y };
+    }
+
+    // ===== Chart Setup =====
+    const ctx = document.getElementById('mainChart');
+    const chartColors = {
+      observed: '#10b981',    // Green
+      kalman: '#3b82f6',      // Blue  
+      holt: '#f59e0b',        // Amber
+      esn: '#ef4444'          // Red
+    };
+    
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: '觀測 Observed',
+            data: [],
+            borderColor: chartColors.observed,
+            backgroundColor: chartColors.observed + '20',
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            borderWidth: 2.5,
+            fill: false
+          },
+          {
+            label: 'Kalman 預測 (t+5)',
+            data: [],
+            borderColor: chartColors.kalman,
+            backgroundColor: chartColors.kalman + '20',
+            tension: 0.3,
+            pointRadius: 0,
+            borderWidth: 2,
+            borderDash: [8, 4],
+            fill: false
+          },
+          {
+            label: 'Holt 預測 (t+5)',
+            data: [],
+            borderColor: chartColors.holt,
+            backgroundColor: chartColors.holt + '20',
+            tension: 0.3,
+            pointRadius: 0,
+            borderWidth: 2,
+            borderDash: [8, 4],
+            fill: false
+          },
+          {
+            label: 'ESN 預測 (t+5)',
+            data: [],
+            borderColor: chartColors.esn,
+            backgroundColor: chartColors.esn + '20',
+            tension: 0.3,
+            pointRadius: 0,
+            borderWidth: 2,
+            borderDash: [8, 4],
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: window.innerWidth < 768 ? 1.2 : 2,
+        animation: {
+          duration: 300,
+          easing: 'easeInOutQuart'
+        },
+        layout: {
+          padding: {
+            left: 8,
+            right: 8,
+            top: 8,
+            bottom: 8
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              color: 'rgba(75, 85, 99, 0.3)',
+              lineWidth: 1
+            },
+            ticks: {
+              color: '#d1d5db',
+              font: {
+                size: 12,
+                weight: '500'
+              },
+              maxTicksLimit: window.innerWidth < 768 ? 6 : 10
+            },
+            title: {
+              display: true,
+              text: 'Time Steps',
+              color: '#9ca3af',
+              font: {
+                size: 14,
+                weight: '600'
+              }
+            }
+          },
+          y: {
+            grid: {
+              color: 'rgba(75, 85, 99, 0.3)',
+              lineWidth: 1
+            },
+            ticks: {
+              color: '#d1d5db',
+              font: {
+                size: 12,
+                weight: '500'
+              }
+            },
+            title: {
+              display: true,
+              text: 'Value',
+              color: '#9ca3af',
+              font: {
+                size: 14,
+                weight: '600'
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              color: '#d1d5db',
+              font: {
+                size: 13,
+                weight: '600'
+              },
+              padding: 15,
+              usePointStyle: true,
+              pointStyle: 'line'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(31, 41, 55, 0.95)',
+            titleColor: '#f9fafb',
+            bodyColor: '#d1d5db',
+            borderColor: 'rgba(75, 85, 99, 0.5)',
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: true,
+            titleFont: {
+              size: 14,
+              weight: '600'
+            },
+            bodyFont: {
+              size: 13
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        }
+      }
+    });
+
+    const FORECAST_OFFSET = 5;
+
+    function ensureLabelsUpTo(targetT) {
+      while (chart.data.labels.length < targetT) {
+        chart.data.labels.push(chart.data.labels.length + 1);
+      }
+    }
+
+    function pushObserved(y) {
+      chart.data.labels.push(t);
+      chart.data.datasets[0].data.push(y);
+    }
+
+    function setForecastAt(offsetT, kfVal, holtVal, esnVal) {
+      ensureLabelsUpTo(offsetT);
+      const idx = offsetT - 1;
+      const datasets = chart.data.datasets;
+      
+      // Extend arrays with nulls if needed
+      const needLen = chart.data.labels.length;
+      for (let i = 1; i < datasets.length; i++) {
+        while (datasets[i].data.length < needLen) {
+          datasets[i].data.push(null);
+        }
+      }
+      
+      if (idx >= 0 && idx < needLen) {
+        datasets[1].data[idx] = kfVal;
+        datasets[2].data[idx] = holtVal;
+        datasets[3].data[idx] = esnVal;
+      }
+    }
+
+    function resetAll() {
+      data.t = [];
+      data.y = [];
+      t = 0;
+      streaming = false;
+      
+      if (streamTimer) {
+        clearInterval(streamTimer);
+        streamTimer = null;
+      }
+      
+      chart.data.labels = [];
+      chart.data.datasets.forEach(d => d.data = []);
+      chart.update();
+      
+      // Reset algorithms
+      KF.reset();
+      HOLT.reset();
+      ESN.reset();
+      
+      updateStreamButton();
+    }
+
+    // ===== Kalman Filter (1D Random Walk) =====
+    const KF = (function() {
+      let x = 0, P = 1, Q = 0.02, R = 0.05, initialized = false;
+      
+      return {
+        set(q, r) {
+          Q = clamp(q, 0.001, 1);
+          R = clamp(r, 0.001, 1);
+        },
+        
+        step(z) {
+          if (!initialized) {
+            x = z;
+            P = 1;
+            initialized = true;
+          }
+          
+          // Predict step
+          // For random walk: x_k|k-1 = x_k-1|k-1
+          // P_k|k-1 = P_k-1|k-1 + Q
+          P = P + Q;
+          
+          // Update step
+          const K = P / (P + R); // Kalman gain
+          x = x + K * (z - x);   // State update
+          P = (1 - K) * P;       // Covariance update
+          
+          return x;
+        },
+        
+        predict(steps = 1) {
+          return x; // For random walk, prediction is current state
+        },
+        
+        reset() {
+          x = 0;
+          P = 1;
+          initialized = false;
+        },
+        
+        getState() {
+          return { x, P, Q, R };
+        }
+      };
+    })();
+
+    // ===== Holt's Linear Exponential Smoothing =====
+    const HOLT = (function() {
+      let alpha = 0.4, beta = 0.3, L = 0, B = 0, initialized = false, horizon = 5;
+      
+      return {
+        set(a, b, h) {
+          alpha = clamp(a, 0.01, 0.99);
+          beta = clamp(b, 0.01, 0.99);
+          horizon = Math.max(1, parseInt(h));
+        },
+        
+        step(y) {
+          if (!initialized) {
+            L = y;
+            B = 0;
+            initialized = true;
+            return y;
+          }
+          
+          const prevL = L;
+          L = alpha * y + (1 - alpha) * (L + B);
+          B = beta * (L - prevL) + (1 - beta) * B;
+          
+          return L + B; // One-step ahead forecast
+        },
+        
+        forecast(h = null) {
+          const steps = h !== null ? h : horizon;
+          return L + steps * B;
+        },
+        
+        reset() {
+          initialized = false;
+          L = 0;
+          B = 0;
+        },
+        
+        getState() {
+          return { alpha, beta, L, B, horizon };
+        }
+      };
+    })();
+
+    // ===== Echo State Network (Improved Implementation) =====
+    const ESN = (function() {
+      let N = 50, rho = 0.9, inputScale = 0.5, lambda = 0.01;
+      let Wres, Win, r, Wout, P;
+      let initialized = false;
+
+      function createMatrix(rows, cols, scale = 1) {
+        const matrix = new Array(rows);
+        for (let i = 0; i < rows; i++) {
+          matrix[i] = new Array(cols);
+          for (let j = 0; j < cols; j++) {
+            matrix[i][j] = (Math.random() * 2 - 1) * scale;
+          }
+        }
+        return matrix;
+      }
+
+      function matrixVectorMultiply(matrix, vector) {
+        const result = new Array(matrix.length);
+        for (let i = 0; i < matrix.length; i++) {
+          result[i] = 0;
+          for (let j = 0; j < vector.length; j++) {
+            result[i] += matrix[i][j] * vector[j];
+          }
+        }
+        return result;
+      }
+
+      function scaleToSpectralRadius(matrix, targetRho) {
+        // Simple approximation using power iteration
+        let v = new Array(matrix.length).fill(0).map(() => Math.random());
+        
+        // Normalize v
+        let norm = Math.sqrt(v.reduce((sum, x) => sum + x * x, 0));
+        v = v.map(x => x / norm);
+        
+        // Power iteration
+        for (let iter = 0; iter < 20; iter++) {
+          v = matrixVectorMultiply(matrix, v);
+          norm = Math.sqrt(v.reduce((sum, x) => sum + x * x, 0));
+          if (norm > 1e-12) {
+            v = v.map(x => x / norm);
+          }
+        }
+        
+        // Estimate spectral radius
+        const Av = matrixVectorMultiply(matrix, v);
+        const spectralRadius = Math.abs(v.reduce((sum, val, i) => sum + val * Av[i], 0));
+        
+        // Scale matrix
+        const scale = targetRho / (spectralRadius || 1);
+        for (let i = 0; i < matrix.length; i++) {
+          for (let j = 0; j < matrix[i].length; j++) {
+            matrix[i][j] *= scale;
+          }
+        }
+      }
+
+      function init() {
+        try {
+          // Create reservoir weight matrix
+          Wres = createMatrix(N, N, 1);
+          scaleToSpectralRadius(Wres, rho);
+          
+          // Create input weight matrix
+          Win = new Array(N).fill(0).map(() => (Math.random() * 2 - 1) * inputScale);
+          
+          // Initialize reservoir state
+          r = new Array(N).fill(0);
+          
+          // Initialize output weights
+          Wout = new Array(N).fill(0);
+          
+          // Initialize RLS inverse covariance matrix
+          P = createMatrix(N, N, 0);
+          const invLambda = 1 / lambda;
+          for (let i = 0; i < N; i++) {
+            P[i][i] = invLambda;
+          }
+          
+          initialized = true;
+        } catch (error) {
+          console.error('ESN initialization error:', error);
+          initialized = false;
+        }
+      }
+
+      function step(u, yTarget) {
+        if (!initialized) init();
+        if (!initialized) return 0;
+        
+        try {
+          // Update reservoir state: r = tanh(Wres * r + Win * u)
+          const newR = new Array(N);
+          for (let i = 0; i < N; i++) {
+            let sum = Win[i] * u;
+            for (let j = 0; j < N; j++) {
+              sum += Wres[i][j] * r[j];
+            }
+            newR[i] = Math.tanh(sum);
+          }
+          r = newR;
+          
+          // Compute current output
+          let yHat = 0;
+          for (let i = 0; i < N; i++) {
+            yHat += Wout[i] * r[i];
+          }
+          
+          // RLS update
+          if (yTarget !== undefined && !isNaN(yTarget)) {
+            // Compute P * r
+            const Pr = new Array(N);
+            for (let i = 0; i < N; i++) {
+              Pr[i] = 0;
+              for (let j = 0; j < N; j++) {
+                Pr[i] += P[i][j] * r[j];
+              }
+            }
+            
+            // Compute denominator: 1 + r^T * P * r
+            let denom = 1;
+            for (let i = 0; i < N; i++) {
+              denom += r[i] * Pr[i];
+            }
+            
+            if (Math.abs(denom) > 1e-12) {
+              // Compute gain: k = P * r / denom
+              const gain = Pr.map(x => x / denom);
+              
+              // Update weights: W = W + k * error
+              const error = yTarget - yHat;
+              for (let i = 0; i < N; i++) {
+                Wout[i] += gain[i] * error;
+              }
+              
+              // Update P: P = P - k * r^T * P
+              const rTP = new Array(N);
+              for (let j = 0; j < N; j++) {
+                rTP[j] = 0;
+                for (let i = 0; i < N; i++) {
+                  rTP[j] += r[i] * P[i][j];
+                }
+              }
+              
+              for (let i = 0; i < N; i++) {
+                for (let j = 0; j < N; j++) {
+                  P[i][j] -= gain[i] * rTP[j];
+                }
+              }
+            }
+          }
+          
+          return yHat;
+        } catch (error) {
+          console.error('ESN step error:', error);
+          return 0;
+        }
+      }
+
+      return {
+        set(n, rhoVal, scale, lam) {
+          N = Math.max(10, Math.min(100, parseInt(n)));
+          rho = clamp(rhoVal, 0.1, 1.5);
+          inputScale = clamp(scale, 0.01, 2);
+          lambda = clamp(lam, 0.001, 1);
+        },
+        
+        step,
+        
+        reset() {
+          initialized = false;
+        },
+        
+        init,
+        
+        getState() {
+          return { N, rho, inputScale, lambda, initialized };
+        }
+      };
+    })();
+
+    // ===== UI Controls =====
+    function syncRangeNumber(rangeSelector, numberSelector) {
+      const range = document.querySelector(rangeSelector);
+      const number = document.querySelector(numberSelector);
+      
+      if (!range || !number) return;
+      
+      const updateNumber = () => number.value = range.value;
+      const updateRange = () => range.value = number.value;
+      
+      range.addEventListener('input', updateNumber);
+      number.addEventListener('input', updateRange);
+      
+      return { range, number };
+    }
+
+    // Sync controls
+    syncRangeNumber('#kfQ', '#kfQn');
+    syncRangeNumber('#kfR', '#kfRn');
+    syncRangeNumber('#holtA', '#holtAn');
+    syncRangeNumber('#holtB', '#holtBn');
+    syncRangeNumber('#holtH', '#holtHn');
+    syncRangeNumber('#esnN', '#esnNn');
+    syncRangeNumber('#esnRho', '#esnRhon');
+    syncRangeNumber('#esnScale', '#esnScalen');
+    syncRangeNumber('#esnLam', '#esnLamn');
+
+    // Button handlers
+    document.getElementById('kfApply').addEventListener('click', () => {
+      const Q = document.getElementById('kfQ').value;
+      const R = document.getElementById('kfR').value;
+      KF.set(Q, R);
+    });
+
+    document.getElementById('kfRecalc').addEventListener('click', recomputeAll);
+
+    document.getElementById('holtApply').addEventListener('click', () => {
+      const alpha = document.getElementById('holtA').value;
+      const beta = document.getElementById('holtB').value;
+      const horizon = document.getElementById('holtH').value;
+      HOLT.set(alpha, beta, horizon);
+    });
+
+    document.getElementById('holtRecalc').addEventListener('click', recomputeAll);
+
+    document.getElementById('esnApply').addEventListener('click', () => {
+      const n = document.getElementById('esnN').value;
+      const rho = document.getElementById('esnRho').value;
+      const scale = document.getElementById('esnScale').value;
+      const lambda = document.getElementById('esnLam').value;
+      ESN.set(n, rho, scale, lambda);
+    });
+
+    document.getElementById('esnReinit').addEventListener('click', () => {
+      ESN.reset();
+      ESN.init();
+      recomputeAll();
+    });
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active from all tabs and panels
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        
+        // Add active to clicked tab and corresponding panel
+        tab.classList.add('active');
+        const targetPanel = document.getElementById('panel-' + tab.dataset.tab);
+        if (targetPanel) {
+          targetPanel.classList.add('active');
+        }
+      });
+    });
+
+    // Main action buttons
+    function updateStreamButton() {
+      const btn = document.getElementById('btnStream');
+      btn.textContent = streaming ? '⏸️ 暫停 Pause' : '▶️ 開始串流 Start';
+      btn.classList.toggle('btn-warning', streaming);
+    }
+
+    document.getElementById('btnAddNoise').addEventListener('click', () => {
+      const btn = document.getElementById('btnAddNoise');
+      btn.style.transform = 'scale(0.95)';
+      setTimeout(() => btn.style.transform = '', 150);
+      
+      const { y } = genPoint();
+      streamStep(y);
+    });
+
+    document.getElementById('btnStream').addEventListener('click', () => {
+      streaming = !streaming;
+      
+      if (streaming) {
+        streamTimer = setInterval(() => {
+          const { y } = genPoint();
+          streamStep(y);
+        }, 400);
+      } else {
+        if (streamTimer) {
+          clearInterval(streamTimer);
+          streamTimer = null;
+        }
+      }
+      
+      updateStreamButton();
+    });
+
+    document.getElementById('btnReset').addEventListener('click', resetAll);
+
+    // Core streaming function
+    function streamStep(y) {
+      try {
+        // Process through all algorithms
+        const kfPred = KF.step(y);
+        const holtCurrent = HOLT.step(y);
+        const holtForecast = HOLT.forecast(FORECAST_OFFSET);
+        const esnPred = ESN.step(y, y); // Teacher forcing
+        
+        // Update chart
+        pushObserved(y);
+        setForecastAt(t + FORECAST_OFFSET, kfPred, holtForecast, esnPred);
+        
+        chart.update('none'); // No animation for real-time updates
+        
+      } catch (error) {
+        console.error('Error in streamStep:', error);
+      }
+    }
+
+    function recomputeAll() {
+      if (data.y.length === 0) return;
+      
+      // Store current data
+      const savedY = [...data.y];
+      const savedT = t;
+      
+      // Reset everything
+      resetAll();
+      
+      // Reprocess all data
+      for (let i = 0; i < savedY.length; i++) {
+        t = i + 1;
+        const y = savedY[i];
+        
+        const kfPred = KF.step(y);
+        const holtCurrent = HOLT.step(y);
+        const holtForecast = HOLT.forecast(FORECAST_OFFSET);
+        const esnPred = ESN.step(y, y);
+        
+        pushObserved(y);
+        setForecastAt(t + FORECAST_OFFSET, kfPred, holtForecast, esnPred);
+      }
+      
+      chart.update();
+    }
+
+    // Initialize algorithms with default parameters
+    function initializeAlgorithms() {
+      KF.set(
+        document.getElementById('kfQ').value,
+        document.getElementById('kfR').value
+      );
+      
+      HOLT.set(
+        document.getElementById('holtA').value,
+        document.getElementById('holtB').value,
+        document.getElementById('holtH').value
+      );
+      
+      ESN.set(
+        document.getElementById('esnN').value,
+        document.getElementById('esnRho').value,
+        document.getElementById('esnScale').value,
+        document.getElementById('esnLam').value
+      );
+      
+      ESN.init();
+    }
+
+    // Handle window resize for responsive chart
+    window.addEventListener('resize', () => {
+      chart.options.aspectRatio = window.innerWidth < 768 ? 1.2 : 2;
+      chart.options.scales.x.ticks.maxTicksLimit = window.innerWidth < 768 ? 6 : 10;
+      chart.resize();
+    });
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeAlgorithms();
+      updateStreamButton();
+    });
+
+    // Initialize on load
+    initializeAlgorithms();
+    updateStreamButton();
+  </script>
+</body>
+</html>
