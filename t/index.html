@@ -1567,9 +1567,57 @@
             }
         }
 
+
+        /**
+         * 通用 API 抓取數值（支援巢狀 key，用 '.' 分隔）
+         * @param {string} url - API URL
+         * @param {string[]} keys - 優先抓取的欄位 key，例如 ['value','heartRate','main.temp']
+         * @returns {Promise<number|null>} - 抓到的數值或 null
+         */
+        async function fetchValueFromApi(url, keys = ['value','data','v','main.temp']) {
+            try {
+                const res = await fetch(url, { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                const json = await res.json();
+                let value = null;
+
+                // Helper: 根據 "main.temp" 取得巢狀欄位
+                function getNested(obj, path) {
+                    return path.split('.').reduce((o, k) => (o && k in o ? o[k] : undefined), obj);
+                }
+
+                if (typeof json === 'number') {
+                    value = json;
+                } else if (json && typeof json === 'object') {
+                    for (const key of keys) {
+                        const candidate = parseFloat(getNested(json, key));
+                        if (Number.isFinite(candidate)) {
+                            value = candidate;
+                            break;
+                        }
+                    }
+                }
+
+                if (!Number.isFinite(value)) throw new Error('API 回傳非數值');
+
+                return value;
+
+            } catch (e) {
+                showError('API 取得數據失敗：' + (e?.message ?? '未知錯誤'));
+                return null;
+            }
+        }
+
+
         // API 連接：每秒取得新數據，追加到輸入中
         async function fetchOneValueFromApi(url) {
             try {
+                //先嘗試第一種解析方式
+                const value1 = fetchValueFromApi(url);
+                if (value1 != null) return value1;
+
+                //第二種解析方式    
                 const res = await fetch(url, { cache: 'no-store' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 
