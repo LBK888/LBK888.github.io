@@ -1,0 +1,1709 @@
+#ifndef INDEX_HTML_H
+#define INDEX_HTML_H
+
+#include <Arduino.h>
+
+// 使用 PROGMEM 儲存 HTML
+const char index_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數據預警預測演算法示範 / Early Warning Forecasting Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: monospace;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        #chart {
+            width: 100%;
+            height: 400px;
+            background: white;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e6ed;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .data-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #2196f3;
+        }
+        .alert-error {
+            background: #fdecea;
+            color: #d93025;
+            border-left: 4px solid #f44336;
+        }
+
+        .algorithm-info {
+            background: rgba(118, 75, 162, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Algorithm controls */
+        .algorithm-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .settings-panel {
+            display: none;
+            margin-top: 10px;
+            padding: 12px;
+            border: 2px solid #e0e6ed;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px 14px;
+            margin-top: 8px;
+        }
+        .btn-inline {
+            flex: none;
+            min-width: auto;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                min-width: auto;
+            }
+            
+            #chart {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>數據預警預測演算法示範 / Early Warning Forecasting Algorithms</h1>
+            <p>適合手機使用的輕量級時間序列預測系統 / Mobile-friendly lightweight time-series forecasting</p>
+        </div>
+        
+        <div class="content">
+            <!-- 演算法選擇 -->
+            <div class="section">
+                <h3>1. 預測演算法設定 / Algorithm settings / <a href="algorithm_demo_V2.html">範例與說明 DEMO</a></h3>
+                <div class="input-group">
+                    <label>啟用的預測演算法 / Enabled algorithms：</label>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; align-items: stretch; text-align: left;">
+                        <div class="algorithm-row">
+                            <label style="display: flex; align-items: center; gap: 8px; justify-content: flex-start;">
+                                <input type="checkbox" id="enableKalman" checked style="width: 20px">
+                                <span style="width: 20px; height: 3px; background: #667eea; display: inline-block;"></span>
+                                卡爾曼濾波器 (Kalman Filter)
+                            </label>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn-secondary btn-inline" onclick="toggleSettings('kalman')">設定 / Settings</button>
+                                <button class="btn-secondary btn-inline" onclick="openGuide('kalman')">介紹 / wiki</button>
+                            </div>
+                        </div>
+                        <div id="kalmanSettings" class="settings-panel">
+                            <div style="font-weight:600; color:#667eea;">卡爾曼濾波器參數 / Kalman hyperparameters</div>
+                            <div class="settings-grid">
+                                <div>
+                                    <label for="kalmanQ">過程雜訊 Q / Process noise (Q)</label>
+                                    <input type="number" id="kalmanQ" value="0.1" step="0.01">
+                                </div>
+                                <div>
+                                    <label for="kalmanR">觀測雜訊 R / Measurement noise (R)</label>
+                                    <input type="number" id="kalmanR" value="1" step="0.1">
+                                </div>
+                            </div>
+                            <div class="button-group" style="margin-top:10px;">
+                                <button class="btn-primary btn-inline" onclick="saveSettings('kalman')">保存設定 / Save</button>
+                                <button class="btn-secondary btn-inline" onclick="toggleSettings('kalman')">關閉 / Close</button>
+                            </div>
+                        </div>
+
+                        <div class="algorithm-row">
+                            <label style="display: flex; align-items: center; gap: 8px; justify-content: flex-start;">
+                                <input type="checkbox" id="enableHolt" checked  style="width: 20px">
+                                <span style="width: 20px; height: 3px; background: #ff6b6b; display: inline-block;"></span>
+                                Holt雙指數平滑法 (Holt's double exponential smoothing)
+                            </label>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn-secondary btn-inline" onclick="toggleSettings('holt')">設定 / Settings</button>
+                                <button class="btn-secondary btn-inline" onclick="openGuide('holt')">介紹 / wiki</button>
+                            </div>
+                        </div>
+                        <div id="holtSettings" class="settings-panel">
+                            <div style="font-weight:600; color:#ff6b6b;">Holt 參數 / Holt hyperparameters</div>
+                            <div class="settings-grid">
+                                <div>
+                                    <label for="holtAlpha">水平平滑 α / Level smoothing (alpha)</label>
+                                    <input type="number" id="holtAlpha" value="0.3" step="0.05" min="0" max="1">
+                                </div>
+                                <div>
+                                    <label for="holtBeta">趨勢平滑 β / Trend smoothing (beta)</label>
+                                    <input type="number" id="holtBeta" value="0.1" step="0.05" min="0" max="1">
+                                </div>
+                            </div>
+                            <div class="button-group" style="margin-top:10px;">
+                                <button class="btn-primary btn-inline" onclick="saveSettings('holt')">保存設定 / Save</button>
+                                <button class="btn-secondary btn-inline" onclick="toggleSettings('holt')">關閉 / Close</button>
+                            </div>
+                        </div>
+
+                        <div class="algorithm-row">
+                            <label style="display: flex; align-items: center; gap: 8px; justify-content: flex-start;">
+                                <input type="checkbox" id="enableESN" checked  style="width: 20px">
+                                <span style="width: 20px; height: 3px; background: #4ecdc4; display: inline-block;"></span>
+                                Echo State Network
+                            </label>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn-secondary btn-inline" onclick="toggleSettings('esn')">設定 / Settings</button>
+                                <button class="btn-secondary btn-inline" onclick="openGuide('esn')">介紹 / wiki</button>
+                            </div>
+                        </div>
+                        <div id="esnSettings" class="settings-panel">
+                            <div style="font-weight:600; color:#4ecdc4;">ESN 參數 / ESN hyperparameters</div>
+                            <div class="settings-grid">
+                                <div>
+                                    <label for="esnReservoir">儲存池大小 / Reservoir size</label>
+                                    <input type="number" id="esnReservoir" value="50" step="1" min="5">
+                                </div>
+                                <div>
+                                    <label for="esnInputScaling">輸入縮放 / Input scaling</label>
+                                    <input type="number" id="esnInputScaling" value="0.1" step="0.05" min="0">
+                                </div>
+                                <div>
+                                    <label for="esnSpectralRadius">光譜半徑 / Spectral radius</label>
+                                    <input type="number" id="esnSpectralRadius" value="0.9" step="0.05" min="0">
+                                </div>
+                                <div>
+                                    <label for="esnLeakingRate">滲漏率 / Leaking rate</label>
+                                    <input type="number" id="esnLeakingRate" value="0.3" step="0.05" min="0" max="1">
+                                </div>
+                                <div>
+                                    <label for="esnReg">正則化 / Regularization (λ)</label>
+                                    <input type="number" id="esnReg" value="0.000001" step="0.000001" min="0">
+                                </div>
+                            </div>
+                            <div class="button-group" style="margin-top:10px;">
+                                <button class="btn-primary btn-inline" onclick="saveSettings('esn')">保存設定 / Save</button>
+                                <button class="btn-secondary btn-inline" onclick="toggleSettings('esn')">關閉 / Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="predictSteps">預測步數 / Steps to predict：</label>
+                    <input type="number" id="predictSteps" value="10" min="1" max="20">
+                </div>
+            </div>
+
+            <!-- 數據輸入 -->
+            <div class="section">
+                <h3>2. 輸入歷史數據 / Historical data input</h3>
+                <div class="input-group">
+                    <label for="dataInput">數據輸入 / Data input（每行一個數值或逗號分隔 / one value per line or comma-separated）：</label>
+                    <textarea id="dataInput" placeholder="範例/Example：10,12,14,15,18,20,22,25,28,30"></textarea>
+                    <div class="alert alert-info">
+                        <strong>提示 / Tip：</strong>輸入數據後會自動執行預測並更新圖表。可以隨時添加新數據點，系統會自動更新模型。 / The chart updates automatically after you input data. You can append new points anytime and the models will update.
+                    </div>
+                    <div id="errorBox" class="alert alert-error" style="display: none;"></div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn-primary" onclick="loadSampleData()">載入範例數據 / Load sample</button>
+                    <button class="btn-secondary" onclick="clearData()">清除數據 / Clear</button>
+                </div>
+
+                <div class="input-group">
+                    <label for="apiUrlInput">主動取得新數據的 API URL / API URL to fetch data：</label>
+                    <input type="text" id="apiUrlInput" placeholder="例如：https://api.openweathermap.org/data/2.5/weather?q=Keelung&units=metric&appid=" style="width: 80%;">
+                    <button class="btn-secondary" id="connectApiBtn" onclick="toggleApiConnection()">連接 API / Connect API</button>
+                    <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 180px;">
+                            <label for="apiFreqSelect" style="margin-bottom: 6px;">數據取得頻率 / Fetch frequency</label>
+                            <select id="apiFreqSelect">
+                                <option value="1000">1 秒 / 1 sec</option>
+                                <option value="5000">5 秒 / 5 sec</option>
+                                <option value="10000">10 秒 / 10 sec</option>
+                                <option value="30000" selected>30 秒 / 30 sec</option>
+                                <option value="60000">60 秒 / 60 sec</option>
+                                <option value="300000">5 分鐘 / 5 min</option>
+                                <option value="900000">15 分鐘 / 15 min</option>
+                                <option value="3600000">1 小時 / 1 hr</option>
+                            </select>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- 統計資訊 -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="dataCount">0</div>
+                    <div class="stat-label">歷史數據點 / Historical</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="predCount">0</div>
+                    <div class="stat-label">預測數據點 / Predicted</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">
+                        <span id="maeKalman" style="color:#667eea">-</span>
+                        <span style="color:#aaa"> | </span>
+                        <span id="maeHolt" style="color:#ff6b6b">-</span>
+                        <span style="color:#aaa"> | </span>
+                        <span id="maeESN" style="color:#4ecdc4">-</span>
+                    </div>
+                    <div class="stat-label">平均絕對誤差 / MAE</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">
+                        <span id="pctKalman" style="color:#667eea">-</span>
+                        <span style="color:#aaa"> | </span>
+                        <span id="pctHolt" style="color:#ff6b6b">-</span>
+                        <span style="color:#aaa"> | </span>
+                        <span id="pctESN" style="color:#4ecdc4">-</span>
+                    </div>
+                    <div class="stat-label">百分比誤差 / Percentage</div>
+                </div>
+            </div>
+
+            <!-- 圖表顯示 -->
+            <canvas id="chart"></canvas>
+
+            <!-- 數據展示 -->
+            <div class="section">
+                <h3>3. 數據總覽 / Data overview</h3>
+                <div id="dataDisplay" class="data-display">尚未載入數據 / No data loaded</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let historicalData = [];
+        let predictions = {
+            kalman: [],
+            holt: [],
+            esn: []
+        };
+        let models = {
+            kalman: null,
+            holt: null,
+            esn: null
+        };
+        let chart = null;
+        let errorMessages = [];
+        let predictionHistory = { kalman: [], holt: [], esn: [] };
+        let predictionFirstPoints = { kalman: [], holt: [], esn: [] }; // 每次僅保存第一個預測點
+        let apiTimer = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+            
+            // 監聽數據輸入變化
+            document.getElementById('dataInput').addEventListener('input', debounce(autoPredict, 500));
+            document.getElementById('predictSteps').addEventListener('change', autoPredict);
+            
+            // 監聽演算法選擇變化
+            document.getElementById('enableKalman').addEventListener('change', autoPredict);
+            document.getElementById('enableHolt').addEventListener('change', autoPredict);
+            document.getElementById('enableESN').addEventListener('change', autoPredict);
+        });
+
+        function toggleSettings(key) {
+            const el = document.getElementById(key + 'Settings');
+            if (!el) return;
+            el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+        }
+
+        function openGuide(key) {
+            const guides = {
+                kalman: 'https://en.wikipedia.org/wiki/Kalman_filter',
+                holt: 'https://en.wikipedia.org/wiki/Exponential_smoothing#Double_exponential_smoothing',
+                esn: 'https://en.wikipedia.org/wiki/Reservoir_computing'
+            };
+            const url = guides[key] || 'https://en.wikipedia.org/';
+            window.open(url, '_blank');
+        }
+
+        function saveSettings(key) {
+            try {
+                if (key === 'kalman' && models.kalman) {
+                    const q = parseFloat(document.getElementById('kalmanQ').value);
+                    const r = parseFloat(document.getElementById('kalmanR').value);
+                    if (Number.isFinite(q)) models.kalman.Q = q;
+                    if (Number.isFinite(r)) models.kalman.R = r;
+                }
+                if (key === 'holt' && models.holt) {
+                    const a = parseFloat(document.getElementById('holtAlpha').value);
+                    const b = parseFloat(document.getElementById('holtBeta').value);
+                    if (Number.isFinite(a)) models.holt.alpha = Math.max(0, Math.min(1, a));
+                    if (Number.isFinite(b)) models.holt.beta = Math.max(0, Math.min(1, b));
+                }
+                if (key === 'esn' && models.esn) {
+                    const rs = parseInt(document.getElementById('esnReservoir').value);
+                    const is = parseFloat(document.getElementById('esnInputScaling').value);
+                    const sr = parseFloat(document.getElementById('esnSpectralRadius').value);
+                    const lr = parseFloat(document.getElementById('esnLeakingRate').value);
+                    const reg = parseFloat(document.getElementById('esnReg').value);
+                    if (Number.isFinite(rs)) models.esn.reservoirSize = rs;
+                    if (Number.isFinite(is)) models.esn.inputScaling = is;
+                    if (Number.isFinite(sr)) models.esn.spectralRadius = sr;
+                    if (Number.isFinite(lr)) models.esn.leakingRate = lr;
+                    if (Number.isFinite(reg)) models.esn.regularization = reg;
+                    // 重新初始化 ESN 權重
+                    models.esn.initializeWeights();
+                }
+            } catch {}
+            runPrediction();
+        }
+
+        // 防抖函數
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 初始化圖表
+        function initChart() {
+            const canvas = document.getElementById('chart');
+            const ctx = canvas.getContext('2d');
+            
+            // 高 DPI 處理
+            const dpr = window.devicePixelRatio || 1;
+            const cssWidth = canvas.clientWidth;
+            const cssHeight = canvas.clientHeight;
+            canvas.width = Math.floor(cssWidth * dpr);
+            canvas.height = Math.floor(cssHeight * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            
+            chart = { canvas, ctx, dpr };
+            drawChart();
+        }
+
+        // 載入範例數據
+        function loadSampleData() {
+            const sampleData = [28.6,28.4,28,27,26.8,26.5,27.3,29.2,30.7,30.7,30.7,30.5,30.4,30.7,30.5,30.1,29.7,29.3,29.1,29.1,28.9,28.7,28,27.6];
+            document.getElementById('dataInput').value = sampleData.join(',');
+            autoPredict();
+        }
+
+        // 清除數據
+        function clearData() {
+            document.getElementById('dataInput').value = '';
+            historicalData = [];
+            predictions = { kalman: [], holt: [], esn: [] };
+            models = { kalman: null, holt: null, esn: null };
+            predictionHistory = { kalman: [], holt: [], esn: [] };
+            predictionFirstPoints = { kalman: [], holt: [], esn: [] };
+            if (apiTimer) {
+                clearInterval(apiTimer);
+                apiTimer = null;
+                const btn = document.getElementById('connectApiBtn');
+                if (btn) { btn.textContent = '連接 API / Connect API'; btn.style.color = '#667eea'; }
+            }
+            updateStats();
+            updateDataDisplay();
+            drawChart();
+        }
+
+        // 自動預測函數
+        function autoPredict() {
+            clearErrors();
+            const prevLen = historicalData.length;
+            if (!parseInputData()) {
+                // 如果解析失敗，清空預測結果
+                predictions = { kalman: [], holt: [], esn: [] };
+                updateStats();
+                updateDataDisplay();
+                drawChart();
+                return;
+            }
+            if (historicalData.length > prevLen) {
+                preserveCurrentPredictions(prevLen);
+            }
+            // 重置當前預測
+            predictions = { kalman: [], holt: [], esn: [] };
+            runPrediction();
+        }
+
+        // 解析輸入數據
+        function parseInputData() {
+            const input = document.getElementById('dataInput').value.trim();
+            if (!input) {
+                historicalData = [];
+                return false;
+            }
+
+            try {
+                // 支援換行或逗號分隔
+                const rawData = input.split(/[\n,]+/).map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+                
+                if (rawData.length < 3) {
+                    showError('至少需要3個數據點才能進行預測');
+                    return false;
+                }
+
+                historicalData = rawData;
+                return true;
+            } catch (e) {
+                showError('數據格式錯誤，請檢查輸入');
+                return false;
+            }
+        }
+
+        // 保留現有預測線以便與後續真實數據比較
+        function preserveCurrentPredictions(prevLen) {
+            const startIndex = Math.max(0, prevLen - 1);
+            const maxKeep = 500; // 可保留較多點以便長期觀察
+            const enableKalman = document.getElementById('enableKalman').checked;
+            const enableHolt = document.getElementById('enableHolt').checked;
+            const enableESN = document.getElementById('enableESN').checked;
+            if (enableKalman && predictions.kalman && predictions.kalman.length > 0) {
+                const first = predictions.kalman[0];
+                predictionFirstPoints.kalman.push({ index: startIndex + 1, value: first });
+                if (predictionFirstPoints.kalman.length > maxKeep) predictionFirstPoints.kalman.shift();
+            }
+            if (enableHolt && predictions.holt && predictions.holt.length > 0) {
+                const first = predictions.holt[0];
+                predictionFirstPoints.holt.push({ index: startIndex + 1, value: first });
+                if (predictionFirstPoints.holt.length > maxKeep) predictionFirstPoints.holt.shift();
+            }
+            if (enableESN && predictions.esn && predictions.esn.length > 0) {
+                const first = predictions.esn[0];
+                predictionFirstPoints.esn.push({ index: startIndex + 1, value: first });
+                if (predictionFirstPoints.esn.length > maxKeep) predictionFirstPoints.esn.shift();
+            }
+        }
+
+        // 執行預測
+        function runPrediction() {
+            if (historicalData.length < 2) return; // 需要至少2個數據點
+
+            let steps = parseInt(document.getElementById('predictSteps').value);
+            if (!Number.isFinite(steps)) steps = 1;
+            steps = Math.max(1, Math.min(20, steps));
+
+            const enableKalman = document.getElementById('enableKalman').checked;
+            const enableHolt = document.getElementById('enableHolt').checked;
+            const enableESN = document.getElementById('enableESN').checked;
+
+            const computeFallback = () => {
+                const lastValue = historicalData[historicalData.length - 1];
+                const trend = historicalData.length > 1 ? (historicalData[historicalData.length - 1] - historicalData[historicalData.length - 2]) : 0;
+                const arr = [];
+                for (let i = 1; i <= steps; i++) arr.push(lastValue + trend * i);
+                return arr;
+            };
+
+            // 卡爾曼濾波器
+            if (enableKalman) {
+                try {
+                    if (!models.kalman) models.kalman = new KalmanFilter();
+                    // 由 UI 套用參數（若存在）
+                    try {
+                        const qEl = document.getElementById('kalmanQ');
+                        const rEl = document.getElementById('kalmanR');
+                        const qVal = qEl ? parseFloat(qEl.value) : null;
+                        const rVal = rEl ? parseFloat(rEl.value) : null;
+                        if (Number.isFinite(qVal)) models.kalman.Q = qVal;
+                        if (Number.isFinite(rVal)) models.kalman.R = rVal;
+                    } catch {}
+                    models.kalman.update(historicalData);
+                    predictions.kalman = models.kalman.predict(historicalData, steps);
+                } catch (e) {
+                    console.error('Kalman 預測錯誤：', e);
+                    showError('卡爾曼濾波器計算失敗，已使用線性趨勢備援。');
+                    predictions.kalman = computeFallback();
+                }
+            } else {
+                predictions.kalman = [];
+            }
+
+            // Holt平滑法
+            if (enableHolt) {
+                try {
+                    if (!models.holt) models.holt = new HoltSmoothing();
+                    // 由 UI 套用參數（若存在）
+                    try {
+                        const aEl = document.getElementById('holtAlpha');
+                        const bEl = document.getElementById('holtBeta');
+                        const aVal = aEl ? parseFloat(aEl.value) : null;
+                        const bVal = bEl ? parseFloat(bEl.value) : null;
+                        if (Number.isFinite(aVal)) models.holt.alpha = Math.max(0, Math.min(1, aVal));
+                        if (Number.isFinite(bVal)) models.holt.beta = Math.max(0, Math.min(1, bVal));
+                    } catch {}
+                    models.holt.update(historicalData);
+                    predictions.holt = models.holt.predict(historicalData, steps);
+                } catch (e) {
+                    console.error('Holt 預測錯誤：', e);
+                    showError('Holt 雙指數平滑計算失敗，已使用線性趨勢備援。');
+                    predictions.holt = computeFallback();
+                }
+            } else {
+                predictions.holt = [];
+            }
+
+            // ESN
+            if (enableESN) {
+                try {
+                    if (!models.esn) models.esn = new EchoStateNetwork();
+                    // 由 UI 套用參數（若存在）
+                    try {
+                        const rsEl = document.getElementById('esnReservoir');
+                        const isEl = document.getElementById('esnInputScaling');
+                        const srEl = document.getElementById('esnSpectralRadius');
+                        const lrEl = document.getElementById('esnLeakingRate');
+                        const regEl = document.getElementById('esnReg');
+                        const rs = rsEl ? parseInt(rsEl.value) : null;
+                        const is = isEl ? parseFloat(isEl.value) : null;
+                        const sr = srEl ? parseFloat(srEl.value) : null;
+                        const lr = lrEl ? parseFloat(lrEl.value) : null;
+                        const reg = regEl ? parseFloat(regEl.value) : null;
+                        let needReinit = false;
+                        if (Number.isFinite(rs) && rs !== models.esn.reservoirSize) { models.esn.reservoirSize = rs; needReinit = true; }
+                        if (Number.isFinite(is) && is !== models.esn.inputScaling) { models.esn.inputScaling = is; needReinit = true; }
+                        if (Number.isFinite(sr) && sr !== models.esn.spectralRadius) { models.esn.spectralRadius = sr; needReinit = true; }
+                        if (Number.isFinite(lr)) { models.esn.leakingRate = lr; }
+                        if (Number.isFinite(reg)) { models.esn.regularization = reg; }
+                        if (needReinit) { models.esn.initializeWeights(); }
+                    } catch {}
+                    models.esn.update(historicalData);
+                    predictions.esn = models.esn.predict(historicalData, steps);
+                } catch (e) {
+                    console.error('ESN 預測錯誤：', e);
+                    showError('ESN 計算失敗，已使用線性趨勢備援。');
+                    predictions.esn = computeFallback();
+                }
+            } else {
+                predictions.esn = [];
+            }
+
+            updateStats();
+            updateDataDisplay();
+            drawChart();
+            computeErrorMetricsPerModel();
+            computePercentageErrorFromPredictionsPerModel();
+        }
+
+        // 更新統計資訊
+        function updateStats() {
+            document.getElementById('dataCount').textContent = historicalData.length;
+            
+            const totalPredictions = Math.max(
+                predictions.kalman.length,
+                predictions.holt.length,
+                predictions.esn.length
+            );
+            document.getElementById('predCount').textContent = totalPredictions;
+            
+            // 清除誤差顯示（多模型）
+            const ids = ['maeKalman','maeHolt','maeESN','pctKalman','pctHolt','pctESN'];
+            ids.forEach(id=>{ const el = document.getElementById(id); if (el) el.textContent='-'; });
+        }
+
+        // 計算 MAE：各模型分開（walk-forward 一步預測）
+        function computeErrorMetricsPerModel() {
+            if (!historicalData || historicalData.length < 4) return;
+            const modelsToEval = [];
+            if (document.getElementById('enableKalman').checked) modelsToEval.push(['kalman', KalmanFilter]);
+            if (document.getElementById('enableHolt').checked) modelsToEval.push(['holt', HoltSmoothing]);
+            if (document.getElementById('enableESN').checked) modelsToEval.push(['esn', EchoStateNetwork]);
+            if (modelsToEval.length === 0) return;
+
+            const maeMap = { kalman: null, holt: null, esn: null };
+
+            for (const [key, Cls] of modelsToEval) {
+                let count = 0; let absSum = 0;
+                for (let t = 1; t < historicalData.length; t++) {
+                    const train = historicalData.slice(0, t);
+                    try {
+                        const m = new Cls();
+                        m.update(train);
+                        const p = m.predict(train, 1)[0];
+                        if (!Number.isFinite(p)) continue;
+                        const actual = historicalData[t];
+                        absSum += Math.abs(p - actual);
+                        count++;
+                    } catch {}
+                }
+                if (count > 0) maeMap[key] = (absSum / count);
+            }
+
+            if (maeMap.kalman != null) { const el = document.getElementById('maeKalman'); if (el) el.textContent = maeMap.kalman.toFixed(3); }
+            if (maeMap.holt != null) { const el = document.getElementById('maeHolt'); if (el) el.textContent = maeMap.holt.toFixed(3); }
+            if (maeMap.esn != null) { const el = document.getElementById('maeESN'); if (el) el.textContent = maeMap.esn.toFixed(3); }
+        }
+
+        // 以「預測與後續真實」計算百分比誤差 = (標準偏差 / 平均值)
+        // 使用上一輪保存的預測線對齊後續真實數據
+        // 以「每次預測第一點 vs 後續真實」分別計算百分比誤差
+        function computePercentageErrorFromPredictionsPerModel() {
+            function computePct(pointsArr) {
+                const errs = [];
+                pointsArr.forEach(p => {
+                    if (!p) return;
+                    const idx = p.index;
+                    if (idx < historicalData.length) {
+                        const pred = p.value;
+                        const actual = historicalData[idx];
+                        errs.push(pred - actual);
+                    }
+                });
+                if (errs.length < 2) return null;
+                const mean = errs.reduce((a,b)=>a+b,0) / errs.length;
+                const variance = errs.reduce((a,b)=>a + Math.pow(b - mean,2), 0) / (errs.length - 1);
+                const std = Math.sqrt(variance);
+                const denom = Math.abs(mean) > 1e-12 ? Math.abs(mean) : 1e-12;
+                return (std / denom) * 100;
+            }
+
+            function updateEl(id, pointsArr) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const pct = computePct(pointsArr);
+                el.textContent = pct == null ? '-' : pct.toFixed(2) + '%';
+            }
+
+            updateEl('pctKalman', predictionFirstPoints.kalman);
+            updateEl('pctHolt', predictionFirstPoints.holt);
+            updateEl('pctESN', predictionFirstPoints.esn);
+        }
+
+        // 更新數據顯示
+        function updateDataDisplay() {
+            let display = '';
+            
+            if (historicalData.length > 0) {
+                display += '歷史數據 / Historical: [' + historicalData.map(x => x.toFixed(2)).join(', ') + ']\n\n';
+            }
+            
+            if (predictions.kalman.length > 0) {
+                display += '卡爾曼濾波器預測 / Kalman: [' + predictions.kalman.map(x => x.toFixed(2)).join(', ') + ']\n\n';
+            }
+            
+            if (predictions.holt.length > 0) {
+                display += 'Holt平滑法預測 / Holt: [' + predictions.holt.map(x => x.toFixed(2)).join(', ') + ']\n\n';
+            }
+            
+            if (predictions.esn.length > 0) {
+                display += 'ESN預測 / ESN: [' + predictions.esn.map(x => x.toFixed(2)).join(', ') + ']\n\n';
+            }
+
+            document.getElementById('dataDisplay').textContent = display || '尚未載入數據';
+        }
+
+        // 繪製圖表
+        function drawChart() {
+            if (!chart) return;
+
+            const { canvas, ctx } = chart;
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            const padding = 40;
+
+            // 清除畫布
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, width, height);
+
+            // 如果沒有數據，顯示提示
+            if (historicalData.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('請先輸入數據 / Please input data', width / 2, height / 2);
+                return;
+            }
+
+            // 計算數據範圍（包含歷史預測線）
+            const historyPredVals = [
+                ...predictionHistory.kalman.flatMap(h => h.values),
+                ...predictionHistory.holt.flatMap(h => h.values),
+                ...predictionHistory.esn.flatMap(h => h.values)
+            ];
+            const firstPointVals = [
+                ...predictionFirstPoints.kalman.map(p => p.value),
+                ...predictionFirstPoints.holt.map(p => p.value),
+                ...predictionFirstPoints.esn.map(p => p.value)
+            ];
+            const allPredictions = [...predictions.kalman, ...predictions.holt, ...predictions.esn, ...historyPredVals, ...firstPointVals];
+            const allData = [...historicalData, ...allPredictions];
+            const rawMin = Math.min(...allData);
+            const rawMax = Math.max(...allData);
+            const maxVal = rawMax * 1.05; // Y 軸上限提升 5%
+            const minVal = rawMin; // 下限維持原值
+            const range = maxVal - minVal || 1;
+
+            // 設置座標轉換
+            const chartWidth = width - 2 * padding;
+            const chartHeight = height - 2 * padding;
+            const currentLastIndex = (historicalData.length - 1) + Math.max(
+                predictions.kalman.length,
+                predictions.holt.length,
+                predictions.esn.length
+            );
+            let historyLastIndex = historicalData.length - 1;
+            predictionHistory.kalman.forEach(h => { historyLastIndex = Math.max(historyLastIndex, h.startIndex + h.values.length); });
+            predictionHistory.holt.forEach(h => { historyLastIndex = Math.max(historyLastIndex, h.startIndex + h.values.length); });
+            predictionHistory.esn.forEach(h => { historyLastIndex = Math.max(historyLastIndex, h.startIndex + h.values.length); });
+            const firstPointLastIdx = Math.max(
+                0,
+                ...predictionFirstPoints.kalman.map(p => p.index),
+                ...predictionFirstPoints.holt.map(p => p.index),
+                ...predictionFirstPoints.esn.map(p => p.index)
+            );
+            const lastIndex = Math.max(currentLastIndex, historyLastIndex, firstPointLastIdx);
+            const maxDataPoints = Math.max(1, lastIndex + 1);
+            
+            function getX(index) {
+                return padding + (index / Math.max(maxDataPoints - 1, 1)) * chartWidth;
+            }
+            
+            function getY(value) {
+                return padding + (maxVal - value) / range * chartHeight;
+            }
+
+            // 繪製網格
+            ctx.strokeStyle = '#e0e6ed';
+            ctx.lineWidth = 1;
+            
+            // 垂直網格線
+            for (let i = 0; i <= 10; i++) {
+                const x = padding + (i / 10) * chartWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, height - padding);
+                ctx.stroke();
+            }
+            
+            // 水平網格線
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (i / 5) * chartHeight;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+
+            // 繪製座標軸與刻度數值
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1.2;
+            // Y 軸
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.stroke();
+            // X 軸
+            ctx.beginPath();
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            ctx.fillStyle = '#555';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            const yTicks = 5;
+            for (let i = 0; i <= yTicks; i++) {
+                const y = padding + (i / yTicks) * chartHeight;
+                const val = (maxVal - (i / yTicks) * range);
+                ctx.fillText(String(Math.round(val)), padding - 6, y);
+            }
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const xTicks = 10;
+            for (let i = 0; i <= xTicks; i++) {
+                const idx = Math.round((i / xTicks) * (maxDataPoints - 1));
+                const x = getX(idx);
+                ctx.fillText(String(idx), x, height - padding + 6);
+            }
+
+            // 繪製歷史數據
+            if (historicalData.length > 0) {
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                for (let i = 0; i < historicalData.length; i++) {
+                    const x = getX(i);
+                    const y = getY(historicalData[i]);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+
+                // 繪製歷史數據點
+                ctx.fillStyle = '#333';
+                for (let i = 0; i < historicalData.length; i++) {
+                    const x = getX(i);
+                    const y = getY(historicalData[i]);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+
+            const startIndex = historicalData.length - 1;
+            const startX = getX(startIndex);
+            const startY = getY(historicalData[historicalData.length - 1]);
+
+            // 繪製歷史預測線（較淡）
+            const drawHistory = (historyArr, color, pointRadius) => {
+                historyArr.forEach(h => {
+                    if (!h || !h.values || h.values.length === 0) return;
+                    ctx.strokeStyle = color;
+                    ctx.globalAlpha = 0.35;
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    const sX = getX(h.startIndex);
+                    const sY = getY(historicalData[Math.max(0, h.startIndex)]);
+                    ctx.moveTo(sX, sY);
+                    for (let i = 0; i < h.values.length; i++) {
+                        const x = getX(h.startIndex + 1 + i);
+                        const y = getY(h.values[i]);
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    ctx.fillStyle = color;
+                    for (let i = 0; i < h.values.length; i++) {
+                        const x = getX(h.startIndex + 1 + i);
+                        const y = getY(h.values[i]);
+                        ctx.beginPath();
+                        ctx.arc(x, y, pointRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = 1;
+                });
+            };
+            drawHistory(predictionHistory.kalman, '#667eea', 2);
+            drawHistory(predictionHistory.holt, '#ff6b6b', 2);
+            drawHistory(predictionHistory.esn, '#4ecdc4', 2);
+
+            // 繪製「每次預測的第一個點」並以線連接，表示過去預測結果
+            const drawFirstPoints = (points, color) => {
+                if (!points || points.length === 0) return;
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                for (let i = 0; i < points.length; i++) {
+                    const x = getX(points[i].index);
+                    const y = getY(points[i].value);
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+                // 正方形標記，避免與圓形真實點混淆
+                for (let i = 0; i < points.length; i++) {
+                    const x = getX(points[i].index);
+                    const y = getY(points[i].value);
+                    const size = 6;
+                    ctx.fillRect(x - size/2, y - size/2, size, size);
+                }
+            };
+            drawFirstPoints(predictionFirstPoints.kalman, '#667eea');
+            drawFirstPoints(predictionFirstPoints.holt, '#ff6b6b');
+            drawFirstPoints(predictionFirstPoints.esn, '#4ecdc4');
+
+            // 繪製卡爾曼濾波器預測
+            if (predictions.kalman.length > 0) {
+                ctx.strokeStyle = '#667eea';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                
+                for (let i = 0; i < predictions.kalman.length; i++) {
+                    const x = getX(startIndex + 1 + i);
+                    const y = getY(predictions.kalman[i]);
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 繪製預測點
+                ctx.fillStyle = '#667eea';
+                for (let i = 0; i < predictions.kalman.length; i++) {
+                    const x = getX(startIndex + 1 + i);
+                    const y = getY(predictions.kalman[i]);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+
+            // 繪製Holt預測
+            if (predictions.holt.length > 0) {
+                ctx.strokeStyle = '#ff6b6b';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                
+                for (let i = 0; i < predictions.holt.length; i++) {
+                    const x = getX(startIndex + 1 + i);
+                    const y = getY(predictions.holt[i]);
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 繪製預測點
+                ctx.fillStyle = '#ff6b6b';
+                for (let i = 0; i < predictions.holt.length; i++) {
+                    const x = getX(startIndex + 1 + i);
+                    const y = getY(predictions.holt[i]);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+
+            // 繪製ESN預測
+            if (predictions.esn.length > 0) {
+                ctx.strokeStyle = '#4ecdc4';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([8, 2]);
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                
+                for (let i = 0; i < predictions.esn.length; i++) {
+                    const x = getX(startIndex + 1 + i);
+                    const y = getY(predictions.esn[i]);
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 繪製預測點
+                ctx.fillStyle = '#4ecdc4';
+                for (let i = 0; i < predictions.esn.length; i++) {
+                    const x = getX(startIndex + 1 + i);
+                    const y = getY(predictions.esn[i]);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+
+            // 繪製圖例
+            const legendY = 20;
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'left';
+            
+            // 歷史數據圖例
+            ctx.fillStyle = '#333';
+            ctx.fillRect(10, legendY, 15, 3);
+            ctx.fillText('歷史數據 / Historical', 30, legendY - 8);
+            
+            // 卡爾曼濾波器圖例
+            if (predictions.kalman.length > 0 || predictionHistory.kalman.length > 0) {
+                ctx.fillStyle = '#667eea';
+                ctx.fillRect(120, legendY, 15, 3);
+                ctx.fillText('卡爾曼濾波器 / Kalman', 140, legendY - 8);
+            }
+            
+            // Holt圖例
+            if (predictions.holt.length > 0 || predictionHistory.holt.length > 0) {
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fillRect(220, legendY, 15, 3);
+                ctx.fillText("Holt平滑法 / Holt", 240, legendY - 8);
+            }
+            
+            // ESN圖例
+            if (predictions.esn.length > 0 || predictionHistory.esn.length > 0) {
+                ctx.fillStyle = '#4ecdc4';
+                ctx.fillRect(320, legendY, 15, 3);
+                ctx.fillText('ESN', 340, legendY - 8);
+            }
+        }
+
+        // 監聽視窗大小變化
+        window.addEventListener('resize', function() {
+            setTimeout(() => {
+                if (chart) {
+                    const canvas = chart.canvas;
+                    const ctx = chart.ctx;
+                    const dpr = window.devicePixelRatio || 1;
+                    const cssWidth = canvas.clientWidth;
+                    const cssHeight = canvas.clientHeight;
+                    canvas.width = Math.floor(cssWidth * dpr);
+                    canvas.height = Math.floor(cssHeight * dpr);
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    drawChart();
+                }
+            }, 100);
+        });
+
+        // 卡爾曼濾波器實作
+        class KalmanFilter {
+            constructor() {
+                this.A = 1; // 狀態轉移
+                this.H = 1; // 觀測模型  
+                this.Q = 0.1; // 過程雜訊
+                this.R = 1; // 觀測雜訊
+                this.x = 0; // 初始狀態
+                this.P = 1; // 初始誤差協方差
+            }
+
+            predict(data, steps) {
+                if (data.length < 2) throw new Error('卡爾曼濾波器需要至少2個數據點');
+                
+                // 用前面的數據估計初始狀態和趨勢
+                this.x = data[0];
+                this.P = 1;
+                
+                // 透過數據更新模型
+                for (let i = 1; i < data.length; i++) {
+                    this.updateFilter(data[i]);
+                }
+                
+                // 預測未來值
+                const predictions = [];
+                let currentX = this.x;
+                const trend = data.length > 1 ? (data[data.length-1] - data[data.length-2]) : 0;
+                
+                for (let i = 0; i < steps; i++) {
+                    currentX += trend * 0.8; // 減緩趨勢以避免過度預測
+                    predictions.push(currentX);
+                }
+                
+                return predictions;
+            }
+            
+            updateFilter(observation) {
+                // 預測步驟
+                const x_pred = this.A * this.x;
+                const P_pred = this.A * this.P * this.A + this.Q;
+                
+                // 更新步驟  
+                const K = P_pred * this.H / (this.H * P_pred * this.H + this.R);
+                this.x = x_pred + K * (observation - this.H * x_pred);
+                this.P = (1 - K * this.H) * P_pred;
+            }
+
+            update(newData) {
+                // 重新初始化並用新數據訓練
+                if (newData.length < 2) return;
+                
+                this.x = newData[0];
+                this.P = 1;
+                
+                for (let i = 1; i < newData.length; i++) {
+                    this.updateFilter(newData[i]);
+                }
+            }
+        }
+
+        // Holt雙指數平滑法實作
+        class HoltSmoothing {
+            constructor() {
+                this.alpha = 0.3; // 水平平滑參數
+                this.beta = 0.1;  // 趨勢平滑參數
+                this.level = 0;
+                this.trend = 0;
+            }
+
+            predict(data, steps) {
+                if (data.length < 2) throw new Error('Holt平滑法需要至少2個數據點');
+                
+                // 初始化
+                this.level = data[0];
+                this.trend = data[1] - data[0];
+                
+                // 更新模型
+                for (let i = 1; i < data.length; i++) {
+                    const prevLevel = this.level;
+                    this.level = this.alpha * data[i] + (1 - this.alpha) * (this.level + this.trend);
+                    this.trend = this.beta * (this.level - prevLevel) + (1 - this.beta) * this.trend;
+                }
+                
+                // 產生預測
+                const predictions = [];
+                for (let i = 1; i <= steps; i++) {
+                    predictions.push(this.level + i * this.trend);
+                }
+                
+                return predictions;
+            }
+            
+            update(newData) {
+                // 重新用所有數據訓練
+                if (newData.length < 2) return;
+                
+                this.level = newData[0];
+                this.trend = newData.length > 1 ? newData[1] - newData[0] : 0;
+                
+                for (let i = 1; i < newData.length; i++) {
+                    const prevLevel = this.level;
+                    this.level = this.alpha * newData[i] + (1 - this.alpha) * (this.level + this.trend);
+                    this.trend = this.beta * (this.level - prevLevel) + (1 - this.beta) * this.trend;
+                }
+            }
+        }
+        
+
+        // Echo State Network實作
+        class EchoStateNetwork {
+            constructor() {
+                this.reservoirSize = 50;
+                this.inputScaling = 0.1;
+                this.spectralRadius = 0.9;
+                this.leakingRate = 0.3;
+                this.regularization = 1e-6;
+                
+                // 初始化權重矩陣
+                this.initializeWeights();
+                this.state = new Array(this.reservoirSize).fill(0);
+                this.outputWeights = null;
+            }
+            
+            initializeWeights() {
+                // 輸入權重 (隨機生成)
+                this.inputWeights = [];
+                for (let i = 0; i < this.reservoirSize; i++) {
+                    this.inputWeights[i] = (Math.random() - 0.5) * 2 * this.inputScaling;
+                }
+                
+                // Reservoir權重矩陣
+                this.reservoirWeights = [];
+                for (let i = 0; i < this.reservoirSize; i++) {
+                    this.reservoirWeights[i] = [];
+                    for (let j = 0; j < this.reservoirSize; j++) {
+                        this.reservoirWeights[i][j] = (Math.random() - 0.5) * 2;
+                    }
+                }
+                
+                // 調整光譜半徑
+                this.adjustSpectralRadius();
+            }
+            
+            adjustSpectralRadius() {
+                // 簡化的光譜半徑調整 (使用最大行和估計)
+                let maxRowSum = 0;
+                for (let i = 0; i < this.reservoirSize; i++) {
+                    let rowSum = 0;
+                    for (let j = 0; j < this.reservoirSize; j++) {
+                        rowSum += Math.abs(this.reservoirWeights[i][j]);
+                    }
+                    maxRowSum = Math.max(maxRowSum, rowSum);
+                }
+                
+                // 調整權重以達到所需的光譜半徑
+                const scaleFactor = maxRowSum > 0 ? (this.spectralRadius / maxRowSum) : 1;
+                for (let i = 0; i < this.reservoirSize; i++) {
+                    for (let j = 0; j < this.reservoirSize; j++) {
+                        this.reservoirWeights[i][j] *= scaleFactor;
+                    }
+                }
+            }
+
+            predict(data, steps) {
+                if (data.length < 3) throw new Error('ESN需要至少3個數據點');
+                
+                // 正規化數據
+                const minVal = Math.min(...data);
+                const maxVal = Math.max(...data);
+                const range = maxVal - minVal || 1;
+                const normalizedData = data.map(x => (x - minVal) / range);
+                
+                // 收集訓練數據
+                const X = []; // 狀態矩陣
+                const Y = []; // 目標值
+                
+                // 重置狀態
+                this.state = new Array(this.reservoirSize).fill(0);
+                
+                // 運行reservoir並收集狀態
+                for (let t = 0; t < normalizedData.length - 1; t++) {
+                    this.updateState(normalizedData[t]);
+                    X.push([...this.state]); // 複製當前狀態
+                    Y.push(normalizedData[t + 1]);
+                }
+                
+                // 訓練輸出權重 (線性回歸)
+                this.outputWeights = this.ridgeRegression(X, Y);
+                
+                // 預測
+                const predictions = [];
+                let currentInput = normalizedData[normalizedData.length - 1];
+                
+                for (let i = 0; i < steps; i++) {
+                    this.updateState(currentInput);
+                    const prediction = this.computeOutput();
+                    predictions.push(prediction * range + minVal); // 反正規化
+                    currentInput = prediction; // 使用預測值作為下一個輸入
+                }
+                
+                return predictions;
+            }
+            
+            updateState(input) {
+                const newState = new Array(this.reservoirSize);
+                
+                for (let i = 0; i < this.reservoirSize; i++) {
+                    let sum = this.inputWeights[i] * input;
+                    for (let j = 0; j < this.reservoirSize; j++) {
+                        sum += this.reservoirWeights[i][j] * this.state[j];
+                    }
+                    newState[i] = (1 - this.leakingRate) * this.state[i] + 
+                                  this.leakingRate * Math.tanh(sum);
+                }
+                
+                this.state = newState;
+            }
+            
+            computeOutput() {
+                if (!this.outputWeights) return 0;
+                
+                let output = 0;
+                for (let i = 0; i < this.reservoirSize; i++) {
+                    output += this.outputWeights[i] * this.state[i];
+                }
+                return output;
+            }
+            
+            ridgeRegression(X, Y) {
+                const n = X.length;
+                const m = X[0].length;
+                
+                // 計算 X^T * X + λI
+                const XTX = [];
+                for (let i = 0; i < m; i++) {
+                    XTX[i] = [];
+                    for (let j = 0; j < m; j++) {
+                        let sum = 0;
+                        for (let k = 0; k < n; k++) {
+                            sum += X[k][i] * X[k][j];
+                        }
+                        XTX[i][j] = sum + (i === j ? this.regularization : 0);
+                    }
+                }
+                
+                // 計算 X^T * Y  
+                const XTY = [];
+                for (let i = 0; i < m; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < n; j++) {
+                        sum += X[j][i] * Y[j];
+                    }
+                    XTY[i] = sum;
+                }
+                
+                // 簡化的線性求解 (使用高斯消去法)
+                return this.gaussianElimination(XTX, XTY);
+            }
+            
+            gaussianElimination(A, b) {
+                const n = A.length;
+                
+                // 前向消去
+                for (let i = 0; i < n; i++) {
+                    // 找到主元
+                    let maxRow = i;
+                    for (let k = i + 1; k < n; k++) {
+                        if (Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) {
+                            maxRow = k;
+                        }
+                    }
+                    
+                    // 交換行
+                    [A[maxRow], A[i]] = [A[i], A[maxRow]];
+                    [b[maxRow], b[i]] = [b[i], b[maxRow]];
+                    
+                    // 使下三角部分為0
+                    for (let k = i + 1; k < n; k++) {
+                        const pivot = A[i][i] === 0 ? 1e-12 : A[i][i];
+                        const factor = A[k][i] / pivot;
+                        for (let j = i; j < n; j++) {
+                            A[k][j] -= factor * A[i][j];
+                        }
+                        b[k] -= factor * b[i];
+                    }
+                }
+                
+                // 回代求解
+                const x = new Array(n);
+                for (let i = n - 1; i >= 0; i--) {
+                    x[i] = b[i];
+                    for (let j = i + 1; j < n; j++) {
+                        x[i] -= A[i][j] * x[j];
+                    }
+                    const pivot = A[i][i] === 0 ? 1e-12 : A[i][i];
+                    x[i] /= pivot;
+                }
+                
+                return x;
+            }
+            
+            update(newData) {
+                // 重新初始化並訓練模型
+                if (newData.length < 3) return;
+                
+                this.state = new Array(this.reservoirSize).fill(0);
+                this.outputWeights = null;
+                
+                // 重新訓練
+                this.predict(newData, 1); // 這會重新訓練模型
+            }
+        }
+
+        // 非阻斷錯誤顯示
+        function showError(message) {
+            errorMessages.push(message);
+            renderErrors();
+        }
+        function clearErrors() {
+            errorMessages = [];
+            renderErrors();
+        }
+        function renderErrors() {
+            const box = document.getElementById('errorBox');
+            if (!box) return;
+            if (errorMessages.length === 0) {
+                box.style.display = 'none';
+                box.textContent = '';
+            } else {
+                box.style.display = 'block';
+                box.textContent = errorMessages.join('\n');
+            }
+        }
+
+
+        /**
+         * 通用 API 抓取數值（支援巢狀 key，用 '.' 分隔）
+         * @param {string} url - API URL
+         * @param {string[]} keys - 優先抓取的欄位 key，例如 ['value','heartRate','main.temp']
+         * @returns {Promise<number|null>} - 抓到的數值或 null
+         */
+        async function fetchValueFromApi(url, keys = ['value','data','v','main.temp']) {
+            try {
+                const res = await fetch(url, { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                const json = await res.json();
+                let value = null;
+
+                // Helper: 根據 "main.temp" 取得巢狀欄位
+                function getNested(obj, path) {
+                    return path.split('.').reduce((o, k) => (o && k in o ? o[k] : undefined), obj);
+                }
+
+                if (typeof json === 'number') {
+                    value = json;
+                } else if (json && typeof json === 'object') {
+                    for (const key of keys) {
+                        const candidate = parseFloat(getNested(json, key));
+                        if (Number.isFinite(candidate)) {
+                            value = candidate;
+                            break;
+                        }
+                    }
+                }
+
+                if (!Number.isFinite(value)) throw new Error('API 回傳非數值');
+
+                return value;
+
+            } catch (e) {
+                showError('API 取得數據失敗：' + (e?.message ?? '未知錯誤'));
+                return null;
+            }
+        }
+
+
+        // API 連接：每秒取得新數據，追加到輸入中
+        async function fetchOneValueFromApi(url) {
+            try {
+                //先嘗試第一種解析方式
+                const value1 = fetchValueFromApi(url);
+                if (value1 != null) return value1;
+
+                //第二種解析方式    
+                const res = await fetch(url, { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                
+                
+                
+                    const json = await res.json();   // ✅ 直接解析 JSON
+                    let candidate = null;
+
+                    if (typeof json === 'number') {
+                        candidate = json;
+                    } else if (json && typeof json === 'object') {
+                        candidate =
+                
+
+                                // 典型天氣 API（如 OpenWeather）
+                                (json.main && json.main.temp) ??
+                                // 其他常見命名
+                                json.temp ?? json.temperature ??
+                                // 可能在 current/temp
+                                (json.current && json.current.temp) ??
+                                // 可能在 list[0].main.temp
+                                (Array.isArray(json.list) && json.list[0] && json.list[0].main && json.list[0].main.temp) ??
+                                // 可能在 hourly[0].temp
+                                (Array.isArray(json.hourly) && json.hourly[0] && json.hourly[0].temp) ??
+                                // 之前的回退鍵名
+                                json.value ?? json.data ?? json.y ?? json.v ?? null;
+                        }
+
+                    const value = parseFloat(candidate);
+                    if (!Number.isFinite(value)) throw new Error('API 回傳非數值');
+                    return value;
+
+
+            } catch (e) {
+                showError('API 取得數據失敗：' + (e && e.message ? e.message : '未知錯誤'));
+                return null;
+            }
+        }
+
+        function toggleApiConnection() {
+            const btn = document.getElementById('connectApiBtn');
+            const url = (document.getElementById('apiUrlInput')?.value || '').trim();
+            const freqSelect = document.getElementById('apiFreqSelect');
+            const intervalMs = freqSelect ? parseInt(freqSelect.value) : 1000;
+            if (!apiTimer) {
+                if (!url) { showError('請先輸入 API URL'); return; }
+                btn.textContent = '停止連接 / Stop';
+                btn.style.color = 'red';
+                apiTimer = setInterval(async () => {
+                    const val = await fetchOneValueFromApi(url);
+                    if (val == null) return;
+                    const inputEl = document.getElementById('dataInput');
+                    const cur = inputEl.value.trim();
+                    inputEl.value = cur ? (cur + ',' + val) : String(val);
+                    autoPredict();
+                }, intervalMs);
+                // 若在連線中調整頻率，立即重啟
+                if (freqSelect) {
+                    freqSelect.onchange = () => {
+                        if (apiTimer) {
+                            clearInterval(apiTimer);
+                            apiTimer = null;
+                            btn.textContent = '連接 API / Connect API';
+                            btn.style.color = '#667eea';
+                            toggleApiConnection();
+                        }
+                    };
+                }
+            } else {
+                clearInterval(apiTimer);
+                apiTimer = null;
+                btn.textContent = '連接 API / Connect API';
+                btn.style.color = '#667eea';
+            }
+        }
+    </script>
+</body>
+</html>
+
+)rawliteral";
+
+#endif // INDEX_HTML_H
