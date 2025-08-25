@@ -1572,17 +1572,18 @@
             try {
                 const res = await fetch(url, { cache: 'no-store' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
-                const text = await res.text();
-                // 嘗試解析為純數值，若為 JSON 嘗試讀取常見欄位
-                let value = parseFloat(text.trim());
-                if (isNaN(value)) {
-                    try {
-                        const json = JSON.parse(text);
-                        let candidate = null;
-                        if (typeof json === 'number') {
-                            candidate = json;
-                        } else if (json && typeof json === 'object') {
-                            candidate =
+                
+                
+                
+                    const json = await res.json();   // ✅ 直接解析 JSON
+                    let candidate = null;
+
+                    if (typeof json === 'number') {
+                        candidate = json;
+                    } else if (json && typeof json === 'object') {
+                        candidate =
+                
+
                                 // 典型天氣 API（如 OpenWeather）
                                 (json.main && json.main.temp) ??
                                 // 其他常見命名
@@ -1596,11 +1597,12 @@
                                 // 之前的回退鍵名
                                 json.value ?? json.data ?? json.y ?? json.v ?? null;
                         }
-                        value = parseFloat(candidate);
-                    } catch {}
-                }
-                if (!Number.isFinite(value)) throw new Error('API 回傳非數值');
-                return value;
+
+                    const value = parseFloat(candidate);
+                    if (!Number.isFinite(value)) throw new Error('API 回傳非數值');
+                    return value;
+
+
             } catch (e) {
                 showError('API 取得數據失敗：' + (e && e.message ? e.message : '未知錯誤'));
                 return null;
