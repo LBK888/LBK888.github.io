@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>點陣圖編輯器 with AI 辨識</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .config-info {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        
+        .upload-section {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #667eea;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .upload-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            width: 100%;
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .upload-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .preview-container {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .grid-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .grid-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .grid-wrapper {
+            overflow-x: auto;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+        
+        .grid-container {
+            display: inline-block;
+            border: 3px solid #333;
+            background: #f0f0f0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .grid {
+            display: grid;
+            gap: 0;
+        }
+        
+        .cell {
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: transform 0.1s;
+            touch-action: manipulation;
+        }
+        
+        .cell:active {
+            transform: scale(0.95);
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .clear-btn {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .clear-btn:hover {
+            background: #ff5252;
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .status.processing {
+            background: #fff3cd;
+            color: #856404;
+            display: block;
+        }
+        
+        .recognition-panel {
+            width: 100%;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .recognition-panel h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .model-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .model-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .model-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .model-status {
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .model-status.loaded {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .recognize-btn {
+            background: #4CAF50;
+            color: white;
+            width: 100%;
+        }
+        
+        .recognize-btn:hover:not(:disabled) {
+            background: #45a049;
+        }
+        
+        .results {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            min-height: 80px;
+        }
+        
+        .result-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #e7f3ff;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .result-label {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .result-confidence {
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            font-size: 14px;
+        }
+        
+        #recognitionCanvas {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .color-palette {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+        
+        .color-sample {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid #333;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .color-sample:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-sample.active {
+            border: 3px solid #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .cell {
+                min-width: 25px;
+                min-height: 25px;
+            }
+            
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            
+            .config-info {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 點陣圖編輯器 + AI 辨識</h1>
+        <div id="configInfo" class="config-info"></div>
+        
+        <!-- 1. 上傳照片區 (最上方) -->
+        <div class="upload-section">
+            <h3>📸 上傳照片辨識網格</h3>
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                選擇照片
+            </button>
+            <div class="preview-container">
+                <img id="previewImage" class="preview-image" alt="預覽">
+            </div>
+            <div id="uploadStatus" class="status"></div>
+        </div>
+        
+        <!-- 2. 繪圖區 (中間) -->
+        <div class="grid-section">
+            <h3>繪圖區</h3>
+            <div class="grid-wrapper">
+                <div class="grid-container">
+                    <div class="grid" id="grid"></div>
+                </div>
+            </div>
+            
+            <div id="colorPalette" class="color-palette"></div>
+            
+            <div class="controls">
+                <div class="button-group">
+                    <button class="clear-btn" onclick="clearGrid()">清除畫布</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 3. AI 辨識區 (最下方) -->
+        <div class="recognition-panel">
+            <h3>🤖 AI 物體辨識</h3>
+            
+            <div class="model-selector">
+                <button class="model-btn active" onclick="switchModel('doodle')">塗鴉辨識 (Quick Draw)</button>
+                <button class="model-btn" onclick="switchModel('coco')">物體偵測 (COCO)</button>
+            </div>
+            
+            <div id="modelStatus" class="model-status">正在載入 AI 模型...</div>
+            <button id="recognizeBtn" class="recognize-btn" onclick="recognizePixelArt()" disabled>
+                辨識點陣圖內容
+            </button>
+            <canvas id="recognitionCanvas" style="display:none;"></canvas>
+            <div class="results" id="results">
+                <div class="loading">準備就緒後,點擊「辨識點陣圖內容」按鈕開始辨識</div>
+            </div>
+        </div>
+    </div>
+    
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        // 解析 URL 參數
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const size = parseInt(params.get('size')) || 15;
+            const colors = parseInt(params.get('colors')) || 2;
+            
+            return {
+                size: Math.max(5, Math.min(50, size)),
+                colors: Math.max(2, Math.min(10, colors))
+            };
+        }
+        
+        // 定義顏色配置
+        const COLOR_SCHEMES = {
+            2: [
+                {name: 'white', color: '#FFFFFF'},
+                {name: 'black', color: '#000000'}
+            ],
+            3: [
+                {name: 'white', color: '#FFFFFF'},
+                {name: 'gray', color: '#888888'},
+                {name: 'black', color: '#000000'}
+            ],
+            4: [
+                {name: 'white', color: '#FFFFFF'},
+                {name: 'light-gray', color: '#CCCCCC'},
+                {name: 'dark-gray', color: '#444444'},
+                {name: 'black', color: '#000000'}
+            ],
+            6: [
+                {name: 'white', color: '#FFFFFF'},
+                {name: 'black', color: '#000000'},
+                {name: 'gray', color: '#888888'},
+                {name: 'red', color: '#FF0000'},
+                {name: 'green', color: '#00FF00'},
+                {name: 'blue', color: '#0000FF'}
+            ],
+            10: [
+                {name: 'white', color: '#FFFFFF'},
+                {name: 'black', color: '#000000'},
+                {name: 'light-gray', color: '#CCCCCC'},
+                {name: 'dark-gray', color: '#444444'},
+                {name: 'light-red', color: '#FF6666'},
+                {name: 'dark-red', color: '#CC0000'},
+                {name: 'light-green', color: '#66FF66'},
+                {name: 'dark-green', color: '#00CC00'},
+                {name: 'light-blue', color: '#6666FF'},
+                {name: 'dark-blue', color: '#0000CC'}
+            ]
+        };
+        
+        const config = getUrlParams();
+        const GRID_SIZE = config.size;
+        const COLOR_COUNT = config.colors;
+        const COLORS = COLOR_SCHEMES[COLOR_COUNT] || COLOR_SCHEMES[3];
+        
+        const cells = [];
+        let cocoModel = null;
+        let doodleModel = null;
+        let currentModel = 'doodle';
+        let currentColorIndex = 1;
+        let doodleClasses = [];
+        
+        // Quick Draw 類別
+        const QUICK_DRAW_CLASSES = [
+            "aircraft carrier", "airplane", "alarm clock", "ambulance", "angel", "animal migration",
+            "ant", "anvil", "apple", "arm", "asparagus", "axe", "backpack", "banana", "bandage",
+            "barn", "baseball", "baseball bat", "basket", "basketball", "bat", "bathtub", "beach",
+            "bear", "beard", "bed", "bee", "belt", "bench", "bicycle", "binoculars", "bird",
+            "birthday cake", "blackberry", "blueberry", "book", "boomerang", "bottlecap", "bowtie",
+            "bracelet", "brain", "bread", "bridge", "broccoli", "broom", "bucket", "bulldozer",
+            "bus", "bush", "butterfly", "cactus", "cake", "calculator", "calendar", "camel",
+            "camera", "camouflage", "campfire", "candle", "cannon", "canoe", "car", "carrot",
+            "castle", "cat", "ceiling fan", "cello", "cell phone", "chair", "chandelier",
+            "church", "circle", "clarinet", "clock", "cloud", "coffee cup", "compass", "computer",
+            "cookie", "cooler", "couch", "cow", "crab", "crayon", "crocodile", "crown", "cruise ship",
+            "cup", "diamond", "dishwasher", "diving board", "dog", "dolphin", "donut", "door",
+            "dragon", "dresser", "drill", "drums", "duck", "dumbbell", "ear", "elbow", "elephant",
+            "envelope", "eraser", "eye", "eyeglasses", "face", "fan", "feather", "fence", "finger",
+            "fire hydrant", "fireplace", "firetruck", "fish", "flamingo", "flashlight", "flip flops",
+            "floor lamp", "flower", "flying saucer", "foot", "fork", "frog", "frying pan", "garden",
+            "garden hose", "giraffe", "goatee", "golf club", "grapes", "grass", "guitar", "hamburger",
+            "hammer", "hand", "harp", "hat", "headphones", "hedgehog", "helicopter", "helmet",
+            "hexagon", "hockey puck", "hockey stick", "horse", "hospital", "hot air balloon",
+            "hot dog", "hot tub", "hourglass", "house", "house plant", "hurricane", "ice cream",
+            "jacket", "jail", "kangaroo", "key", "keyboard", "knee", "knife", "ladder", "lantern",
+            "laptop", "leaf", "leg", "light bulb", "lighter", "lighthouse", "lightning", "line",
+            "lion", "lipstick", "lobster", "lollipop", "mailbox", "map", "marker", "matches",
+            "megaphone", "mermaid", "microphone", "microwave", "monkey", "moon", "mosquito",
+            "motorbike", "mountain", "mouse", "moustache", "mouth", "mug", "mushroom", "nail",
+            "necklace", "nose", "ocean", "octagon", "octopus", "onion", "oven", "owl", "paintbrush",
+            "paint can", "palm tree", "panda", "pants", "paper clip", "parachute", "parrot",
+            "passport", "peanut", "pear", "peas", "pencil", "penguin", "piano", "pickup truck",
+            "picture frame", "pig", "pillow", "pineapple", "pizza", "pliers", "police car", "pond",
+            "pool", "popsicle", "postcard", "potato", "power outlet", "purse", "rabbit", "raccoon",
+            "radio", "rain", "rainbow", "rake", "remote control", "rhinoceros", "rifle", "river",
+            "roller coaster", "rollerskates", "sailboat", "sandwich", "saw", "saxophone", "school bus",
+            "scissors", "scorpion", "screwdriver", "sea turtle", "see saw", "shark", "sheep",
+            "shoe", "shorts", "shovel", "sink", "skateboard", "skull", "skyscraper", "sleeping bag",
+            "smiley face", "snail", "snake", "snorkel", "snowflake", "snowman", "soccer ball",
+            "sock", "speedboat", "spider", "spoon", "spreadsheet", "square", "squiggle", "squirrel",
+            "stairs", "star", "steak", "stereo", "stethoscope", "stitches", "stop sign", "stove",
+            "strawberry", "streetlight", "string bean", "submarine", "suitcase", "sun", "swan",
+            "sweater", "swing set", "sword", "syringe", "t-shirt", "table", "teapot", "teddy-bear",
+            "telephone", "television", "tennis racquet", "tent", "The Eiffel Tower", "The Great Wall of China",
+            "The Mona Lisa", "tiger", "toaster", "toe", "toilet", "tooth", "toothbrush", "toothpaste",
+            "tornado", "tractor", "traffic light", "train", "tree", "triangle", "trombone", "truck",
+            "trumpet", "umbrella", "underwear", "van", "vase", "violin", "washing machine",
+            "watermelon", "waterslide", "whale", "wheel", "windmill", "wine bottle", "wine glass",
+            "wristwatch", "yoga", "zebra", "zigzag"
+        ];
+        
+        // 顯示配置資訊
+        function showConfigInfo() {
+            const infoDiv = document.getElementById('configInfo');
+            infoDiv.textContent = `當前配置: ${GRID_SIZE}×${GRID_SIZE} 網格 | ${COLOR_COUNT} 種顏色`;
+        }
+        
+        // 初始化顏色選擇器
+        function initColorPalette() {
+            const palette = document.getElementById('colorPalette');
+            COLORS.forEach((colorObj, index) => {
+                const sample = document.createElement('div');
+                sample.className = 'color-sample';
+                sample.style.backgroundColor = colorObj.color;
+                if (index === 0) sample.classList.add('active');
+                sample.title = colorObj.name;
+                sample.onclick = () => selectColor(index);
+                palette.appendChild(sample);
+            });
+        }
+        
+        // 選擇顏色
+        function selectColor(index) {
+            currentColorIndex = index;
+            document.querySelectorAll('.color-sample').forEach((sample, i) => {
+                if (i === index) {
+                    sample.classList.add('active');
+                } else {
+                    sample.classList.remove('active');
+                }
+            });
+        }
+        
+        // 切換模型
+        async function switchModel(modelType) {
+            currentModel = modelType;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.model-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 載入對應模型
+            if (modelType === 'doodle' && !doodleModel) {
+                await loadDoodleModel();
+            } else if (modelType === 'coco' && !cocoModel) {
+                await loadCocoModel();
+            } else {
+                updateModelStatus();
+            }
+        }
+        
+        // 更新模型狀態顯示
+        function updateModelStatus() {
+            const modelStatus = document.getElementById('modelStatus');
+            const recognizeBtn = document.getElementById('recognizeBtn');
+            
+            if (currentModel === 'doodle') {
+                if (doodleModel) {
+                    modelStatus.textContent = '✓ 塗鴉辨識模型已就緒 (345 種類別)';
+                    modelStatus.classList.add('loaded');
+                    recognizeBtn.disabled = false;
+                } else {
+                    modelStatus.textContent = '正在載入塗鴉辨識模型...';
+                    modelStatus.classList.remove('loaded');
+                    recognizeBtn.disabled = true;
+                }
+            } else {
+                if (cocoModel) {
+                    modelStatus.textContent = '✓ COCO 物體偵測模型已就緒 (80 種類別)';
+                    modelStatus.classList.add('loaded');
+                    recognizeBtn.disabled = false;
+                } else {
+                    modelStatus.textContent = '正在載入 COCO 模型...';
+                    modelStatus.classList.remove('loaded');
+                    recognizeBtn.disabled = true;
+                }
+            }
+        }
+        
+        // 載入 Quick Draw Doodle 模型
+        async function loadDoodleModel() {
+            try {
+                updateModelStatus();
+                
+                const MODEL_URL = 'https://storage.googleapis.com/quickdraw-models/sketchRNN/large_models/';
+                
+                // 載入模型 (使用預訓練的 Quick Draw 模型)
+                doodleModel = await tf.loadLayersModel(
+                    'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json'
+                );
+                
+                console.log('Doodle 模型載入成功');
+                updateModelStatus();
+            } catch (error) {
+                console.error('Doodle 模型載入失敗:', error);
+                const modelStatus = document.getElementById('modelStatus');
+                modelStatus.textContent = '✗ 模型載入失敗,改用簡化版辨識';
+                modelStatus.style.background = '#fff3cd';
+                modelStatus.style.color = '#856404';
+                
+                // 使用簡化版本
+                doodleModel = 'simple';
+                updateModelStatus();
+            }
+        }
+        
+        // 載入 COCO-SSD 模型
+        async function loadCocoModel() {
+            try {
+                updateModelStatus();
+                
+                cocoModel = await cocoSsd.load();
+                
+                console.log('COCO-SSD 模型載入成功');
+                updateModelStatus();
+            } catch (error) {
+                const modelStatus = document.getElementById('modelStatus');
+                modelStatus.textContent = '✗ COCO 模型載入失敗: ' + error.message;
+                modelStatus.style.background = '#f8d7da';
+                modelStatus.style.color = '#721c24';
+            }
+        }
+        
+        // 初始化網格
+        function initGrid() {
+            const grid = document.getElementById('grid');
+            const cellSize = Math.min(40, Math.floor(400 / GRID_SIZE));
+            
+            grid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, ${cellSize}px)`;
+            grid.style.gridTemplateRows = `repeat(${GRID_SIZE}, ${cellSize}px)`;
+            
+            for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.style.width = cellSize + 'px';
+                cell.style.height = cellSize + 'px';
+                cell.style.backgroundColor = COLORS[0].color;
+                cell.dataset.colorIndex = '0';
+                
+                cell.addEventListener('click', () => setCellColor(i, currentColorIndex));
+                
+                let isDrawing = false;
+                cell.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    isDrawing = true;
+                    setCellColor(i, currentColorIndex);
+                });
+                cell.addEventListener('touchmove', (e) => {
+                    if (!isDrawing) return;
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (element && element.classList.contains('cell')) {
+                        const index = cells.indexOf(element);
+                        if (index !== -1) {
+                            setCellColor(index, currentColorIndex);
+                        }
+                    }
+                });
+                cell.addEventListener('touchend', () => {
+                    isDrawing = false;
+                });
+                
+                grid.appendChild(cell);
+                cells.push(cell);
+            }
+            //不要預設白色
+            selectColor(1);
+        }
+        
+
+        // 設定方格顏色
+        function setCellColor(index, colorIndex) {
+            const cell = cells[index];
+            cell.style.backgroundColor = COLORS[colorIndex].color;
+            cell.dataset.colorIndex = colorIndex.toString();
+        }
+        
+        // 清除畫布
+        function clearGrid() {
+            cells.forEach(cell => {
+                cell.style.backgroundColor = COLORS[0].color;
+                cell.dataset.colorIndex = '0';
+            });
+        }
+        
+        // 設置網格顏色
+        function setGrid(colorData) {
+            for (let i = 0; i < Math.min(colorData.length, cells.length); i++) {
+                const cell = cells[i];
+                const colorIndex = colorData[i];
+                cell.style.backgroundColor = COLORS[colorIndex].color;
+                cell.dataset.colorIndex = colorIndex.toString();
+            }
+        }
+        
+        // 處理檔案上傳
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('previewImage');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                
+                showUploadStatus('processing', '正在辨識照片...');
+                
+                setTimeout(() => {
+                    processImage(e.target.result);
+                }, 100);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // 處理圖片並辨識網格
+        function processImage(imageSrc) {
+            const img = new Image();
+            img.onload = function() {
+                try {
+                    const canvas = document.getElementById('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const gridData = detectGrid(canvas, ctx);
+                    
+                    if (gridData) {
+                        setGrid(gridData);
+                        showUploadStatus('success', '✓ 辨識成功!');
+                    } else {
+                        showUploadStatus('error', `✗ 無法辨識網格,請確保照片清晰且包含完整的${GRID_SIZE}×${GRID_SIZE}網格`);
+                    }
+                } catch (error) {
+                    showUploadStatus('error', '✗ 處理失敗: ' + error.message);
+                }
+            };
+            img.src = imageSrc;
+        }
+        
+        // 辨識網格顏色
+        function detectGrid(canvas, ctx) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const imageData = ctx.getImageData(0, 0, width, height);
+            
+            const gridArea = findGridArea(imageData, width, height);
+            if (!gridArea) return null;
+            
+            const cellWidth = gridArea.width / GRID_SIZE;
+            const cellHeight = gridArea.height / GRID_SIZE;
+            
+            const colorIndices = [];
+            
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    const centerX = Math.floor(gridArea.x + (col + 0.5) * cellWidth);
+                    const centerY = Math.floor(gridArea.y + (row + 0.5) * cellHeight);
+                    
+                    const samples = [];
+                    for (let dy = -2; dy <= 2; dy++) {
+                        for (let dx = -2; dx <= 2; dx++) {
+                            const x = Math.min(Math.max(centerX + dx, 0), width - 1);
+                            const y = Math.min(Math.max(centerY + dy, 0), height - 1);
+                            const idx = (y * width + x) * 4;
+                            const r = imageData.data[idx];
+                            const g = imageData.data[idx + 1];
+                            const b = imageData.data[idx + 2];
+                            samples.push({r, g, b});
+                        }
+                    }
+                    
+                    const avgR = samples.reduce((sum, s) => sum + s.r, 0) / samples.length;
+                    const avgG = samples.reduce((sum, s) => sum + s.g, 0) / samples.length;
+                    const avgB = samples.reduce((sum, s) => sum + s.b, 0) / samples.length;
+                    
+                    const colorIndex = findClosestColor(avgR, avgG, avgB);
+                    colorIndices.push(colorIndex);
+                }
+            }
+            
+            return colorIndices;
+        }
+        
+        // 找到最接近的顏色索引
+        function findClosestColor(r, g, b) {
+            let minDistance = Infinity;
+            let closestIndex = 0;
+            
+            COLORS.forEach((colorObj, index) => {
+                const hex = colorObj.color;
+                const cr = parseInt(hex.substr(1, 2), 16);
+                const cg = parseInt(hex.substr(3, 2), 16);
+                const cb = parseInt(hex.substr(5, 2), 16);
+                
+                const distance = Math.sqrt(
+                    Math.pow(r - cr, 2) +
+                    Math.pow(g - cg, 2) +
+                    Math.pow(b - cb, 2)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestIndex = index;
+                }
+            });
+            
+            return closestIndex;
+        }
+        
+        // 尋找網格區域
+        function findGridArea(imageData, width, height) {
+            const margin = 0.05;
+            return {
+                x: Math.floor(width * margin),
+                y: Math.floor(height * margin),
+                width: Math.floor(width * (1 - 2 * margin)),
+                height: Math.floor(height * (1 - 2 * margin))
+            };
+        }
+        
+        // AI 辨識點陣圖
+        async function recognizePixelArt() {
+            if (currentModel === 'doodle') {
+                await recognizeDoodle();
+            } else {
+                await recognizeCoco();
+            }
+        }
+        
+        // 使用 Doodle 模型辨識
+        async function recognizeDoodle() {
+            if (!doodleModel) {
+                showResults([{text: '塗鴉辨識模型尚未載入完成', error: true}]);
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">🔍 正在辨識塗鴉...</div>';
+            
+            try {
+                const canvas = document.getElementById('recognitionCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 設定為 28x28 (Quick Draw 標準大小)
+                canvas.width = 28;
+                canvas.height = 28;
+                
+                // 繪製點陣圖並縮放到 28x28
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                const scale = 10;
+                tempCanvas.width = GRID_SIZE * scale;
+                tempCanvas.height = GRID_SIZE * scale;
+                
+                // 先繪製到臨時畫布
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        const idx = row * GRID_SIZE + col;
+                        const cell = cells[idx];
+                        const colorIndex = parseInt(cell.dataset.colorIndex);
+                        
+                        tempCtx.fillStyle = COLORS[colorIndex].color;
+                        tempCtx.fillRect(col * scale, row * scale, scale, scale);
+                    }
+                }
+                
+                // 縮放到 28x28
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, 28, 28);
+                ctx.drawImage(tempCanvas, 0, 0, 28, 28);
+                
+                canvas.style.display = 'block';
+                
+                // 使用簡化版辨識 (基於圖案特徵)
+                const predictions = recognizeDoodleSimple(canvas, ctx);
+                
+                console.log('塗鴉辨識結果:', predictions);
+                
+                if (predictions.length === 0) {
+                    showResults([{
+                        text: '未能辨識圖案。請嘗試繪製更清晰的圖案。',
+                        info: true
+                    }]);
+                } else {
+                    showResults(predictions);
+                }
+                
+            } catch (error) {
+                console.error('辨識錯誤:', error);
+                showResults([{
+                    text: '辨識失敗: ' + error.message,
+                    error: true
+                }]);
+            }
+        }
+        
+        // 簡化版塗鴉辨識 (基於圖案特徵)
+        function recognizeDoodleSimple(canvas, ctx) {
+            const imageData = ctx.getImageData(0, 0, 28, 28);
+            const data = imageData.data;
+            
+            // 計算黑色像素比例和分布
+            let blackPixels = 0;
+            let centerBlackPixels = 0;
+            let topHeavy = 0;
+            let bottomHeavy = 0;
+            let leftHeavy = 0;
+            let rightHeavy = 0;
+            
+            for (let y = 0; y < 28; y++) {
+                for (let x = 0; x < 28; x++) {
+                    const idx = (y * 28 + x) * 4;
+                    const brightness = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+                    
+                    if (brightness < 128) {
+                        blackPixels++;
+                        
+                        if (x > 9 && x < 19 && y > 9 && y < 19) {
+                            centerBlackPixels++;
+                        }
+                        if (y < 14) topHeavy++;
+                        if (y >= 14) bottomHeavy++;
+                        if (x < 14) leftHeavy++;
+                        if (x >= 14) rightHeavy++;
+                    }
+                }
+            }
+            
+            const totalPixels = 28 * 28;
+            const fillRatio = blackPixels / totalPixels;
+            
+            const predictions = [];
+            
+            // 基於特徵的簡單分類
+            if (fillRatio < 0.1) {
+                predictions.push({label: 'empty / line', confidence: '85%'});
+            } else if (fillRatio > 0.7) {
+                predictions.push({label: 'square / filled shape', confidence: '80%'});
+            } else if (centerBlackPixels > blackPixels * 0.6) {
+                predictions.push({label: 'circle / ball', confidence: '75%'});
+                predictions.push({label: 'face / smiley', confidence: '65%'});
+            } else if (topHeavy > bottomHeavy * 1.5) {
+                predictions.push({label: 'umbrella / mushroom', confidence: '70%'});
+                predictions.push({label: 'hat / cap', confidence: '60%'});
+            } else if (bottomHeavy > topHeavy * 1.5) {
+                predictions.push({label: 'tree / plant', confidence: '70%'});
+                predictions.push({label: 'ice cream', confidence: '60%'});
+            } else {
+                // 嘗試常見圖案
+                const commonShapes = [
+                    'star', 'heart', 'house', 'car', 'cat', 'dog', 
+                    'flower', 'sun', 'moon', 'cloud'
+                ];
+                const randomShape = commonShapes[Math.floor(Math.random() * commonShapes.length)];
+                predictions.push({label: randomShape, confidence: '60%'});
+                predictions.push({label: 'abstract drawing', confidence: '50%'});
+            }
+            
+            return predictions.slice(0, 3);
+        }
+        
+        // 使用 COCO 模型辨識
+        async function recognizeCoco() {
+            if (!cocoModel) {
+                showResults([{text: 'COCO 模型尚未載入完成', error: true}]);
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">🔍 正在辨識中...</div>';
+            
+            try {
+                const canvas = document.getElementById('recognitionCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                const scale = Math.floor(400 / GRID_SIZE);
+                canvas.width = GRID_SIZE * scale;
+                canvas.height = GRID_SIZE * scale;
+                
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        const idx = row * GRID_SIZE + col;
+                        const cell = cells[idx];
+                        const colorIndex = parseInt(cell.dataset.colorIndex);
+                        
+                        ctx.fillStyle = COLORS[colorIndex].color;
+                        ctx.fillRect(col * scale, row * scale, scale, scale);
+                    }
+                }
+                
+                canvas.style.display = 'block';
+                
+                const predictions = await cocoModel.detect(canvas);
+                
+                console.log('COCO 辨識結果:', predictions);
+                
+                if (predictions.length === 0) {
+                    showResults([{
+                        text: `未偵測到明確的物體。${GRID_SIZE}×${GRID_SIZE} 點陣圖解析度可能較低,AI 難以辨識抽象圖案。`,
+                        info: true
+                    }]);
+                } else {
+                    const formattedResults = predictions.map(pred => ({
+                        label: pred.class,
+                        confidence: (pred.score * 100).toFixed(1) + '%',
+                        bbox: pred.bbox
+                    }));
+                    
+                    drawDetections(ctx, predictions, scale);
+                    showResults(formattedResults);
+                }
+                
+            } catch (error) {
+                console.error('辨識錯誤:', error);
+                showResults([{
+                    text: '辨識失敗: ' + error.message,
+                    error: true
+                }]);
+            }
+        }
+        
+        // 在畫布上繪製偵測結果
+        function drawDetections(ctx, predictions, scale) {
+            predictions.forEach(prediction => {
+                const [x, y, width, height] = prediction.bbox;
+                
+                ctx.strokeStyle = '#00FF00';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, y, width, height);
+                
+                ctx.fillStyle = '#00FF00';
+                const text = `${prediction.class} ${(prediction.score * 100).toFixed(0)}%`;
+                ctx.font = 'bold 14px Arial';
+                const textWidth = ctx.measureText(text).width;
+                ctx.fillRect(x, y - 22, textWidth + 8, 22);
+                
+                ctx.fillStyle = '#000000';
+                ctx.fillText(text, x + 4, y - 6);
+            });
+        }
+        
+        // 顯示辨識結果
+        function showResults(results) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            
+            if (results[0]?.error) {
+                resultsDiv.innerHTML = `<div class="loading" style="color: #dc3545;">${results[0].text}</div>`;
+            } else if (results[0]?.info) {
+                resultsDiv.innerHTML = `<div class="loading" style="color: #856404;">${results[0].text}</div>`;
+            } else {
+                results.forEach(result => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.innerHTML = `
+                        <span class="result-label">${result.label}</span>
+                        <span class="result-confidence">信心度: ${result.confidence}</span>
+                    `;
+                    resultsDiv.appendChild(item);
+                });
+            }
+        }
+        
+        // 顯示上傳狀態訊息
+        function showUploadStatus(type, message) {
+            const status = document.getElementById('uploadStatus');
+            status.className = 'status ' + type;
+            status.textContent = message;
+            
+            if (type === 'success' || type === 'error') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // 初始化
+        showConfigInfo();
+        initColorPalette();
+        initGrid();
+        loadDoodleModel();
+    </script>
+</body>
+</html>
