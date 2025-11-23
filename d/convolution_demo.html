@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNN 卷積運算互動教學</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .grading-mode-indicator {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .intro {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .intro h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .exercise {
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            background: #fafafa;
+        }
+        
+        .exercise-title {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .input-section {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .input-section label {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .input-section input {
+            padding: 10px 15px;
+            font-size: 1.1em;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            width: 100px;
+            text-align: center;
+        }
+        
+        .input-section button {
+            padding: 10px 30px;
+            font-size: 1.1em;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+        
+        .input-section button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .grid-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .grid-item {
+            text-align: center;
+        }
+        
+        .grid-item h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .grid {
+            display: inline-grid;
+            gap: 2px;
+            background: #ddd;
+            padding: 5px;
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .cell.highlight {
+            border: 3px solid #ff6b6b;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
+            z-index: 10;
+            transform: scale(1.1);
+        }
+        
+        .cell.black {
+            background: #000;
+            color: white;
+        }
+        
+        .cell.white {
+            background: #fff;
+        }
+        
+        .cell.clickable {
+            cursor: pointer;
+        }
+        
+        .cell.clickable:hover {
+            transform: scale(1.1);
+        }
+        
+        .cell.answer-cell {
+            background: #90EE90 !important;
+            border: 2px solid #228B22;
+            font-weight: bold;
+        }
+        
+        .cell.answer-cell.black {
+            background: #000 !important;
+            color: #90EE90;
+            border: 2px solid #90EE90;
+        }
+        
+        .kernel-grid .cell {
+            width: 50px;
+            height: 50px;
+            font-size: 1em;
+        }
+        
+        .operator {
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .kernel-selector {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .kernel-selector h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .kernel-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .kernel-btn {
+            padding: 12px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .kernel-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .kernel-btn.selected {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .kernel-btn strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .action-buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .action-buttons button {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            margin: 0 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-calculate {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-calculate:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-check {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-check:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+        
+        .btn-reset {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .animation-area {
+            background: #f0f8ff;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border: 3px solid #4CAF50;
+            display: none;
+        }
+        
+        .animation-area.show {
+            display: block;
+        }
+        
+        .animation-title {
+            color: #28a745;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .animation-content {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .calculation-display {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #28a745;
+            min-width: 300px;
+        }
+        
+        .calculation-display h4 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        
+        .calculation-step {
+            font-size: 1.1em;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .result-area {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result-area.show {
+            display: block;
+        }
+        
+        .result-area.correct {
+            background: #d4edda;
+            border: 2px solid #28a745;
+        }
+        
+        .result-area.incorrect {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+        
+        .result-area h3 {
+            margin-bottom: 15px;
+        }
+        
+        .comparison {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .note {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .answer-legend {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 2px solid #4caf50;
+            text-align: center;
+        }
+        
+        .answer-legend strong {
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 CNN 卷積運算互動教學</h1>
+        
+        <div id="gradingIndicator" style="display: none;" class="grading-mode-indicator">
+            📝 教師批改模式 - 答案已顯示在輸出網格中
+        </div>
+        
+        <div class="intro">
+            <h2>📚 卷積運算概念</h2>
+            <p>在影像辨識中,CNN 的「卷積層 (Convolution Layer)」會使用一個小小的「濾波器 (filter / kernel)」在圖片上滑動,計算出每個區域的特徵。</p>
+            <p><strong>運算方式:</strong>輸入矩陣 × 濾波器矩陣 → 輸出特徵圖</p>
+            <p>每次「濾波器」放到輸入的一小塊上,把對應位置的數字相乘再相加,就是一個新的輸出值。</p>
+        </div>
+        
+        <!-- 第一題:基礎練習 -->
+        <div class="exercise">
+            <div class="exercise-title">📝 第一題:基礎練習(固定濾波器)</div>
+            
+            <div class="grid-container">
+                <div class="grid-item">
+                    <h3>原始圖像 (Ori. Img.)</h3>
+                    <div class="grid" id="inputGrid1" style="grid-template-columns: repeat(8, 40px);"></div>
+                </div>
+                
+                <div class="operator">×</div>
+                
+                <div class="grid-item">
+                    <h3>濾波器 (Kernel)</h3>
+                    <div class="grid kernel-grid" id="kernelGrid1" style="grid-template-columns: repeat(3, 50px);"></div>
+                    <div class="note" style="margin-top: 10px;">
+                        Prewitt X (垂直邊緣檢測)
+                    </div>
+                </div>
+                
+                <div class="operator">→</div>
+                
+                <div class="grid-item">
+                    <h3>輸出結果 (Filtered Img.)</h3>
+                    <div class="grid" id="outputGrid1" style="grid-template-columns: repeat(6, 40px);"></div>
+                    <div class="note">
+                        <strong>填寫說明:</strong><br>
+                        四捨五入後取整數<br>
+                        大於等於1的格子塗黑<br>
+                        點擊格子切換黑白
+                    </div>
+                    <div id="answerLegend1" class="answer-legend" style="display: none;">
+                        <strong>✅ 綠色背景 = 正確答案(批改模式)</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="animation-area" id="animationArea1">
+                <div class="animation-title">🎬 卷積計算動畫演示</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar1"></div>
+                </div>
+                <div class="animation-content">
+                    <div class="grid-item">
+                        <h4>當前計算位置</h4>
+                        <div class="grid" id="animationInput1" style="grid-template-columns: repeat(8, 40px);"></div>
+                    </div>
+                    <div class="calculation-display">
+                        <h4>📊 計算過程</h4>
+                        <div id="calculationSteps1"></div>
+                    </div>
+                    <div class="grid-item">
+                        <h4>輸出結果累積</h4>
+                        <div class="grid" id="animationOutput1" style="grid-template-columns: repeat(6, 40px);"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn-calculate" onclick="calculateConvolution(1)">🧮 計算卷積(顯示動畫)</button>
+                <button class="btn-check" onclick="checkAnswer(1)">✓ 檢查答案</button>
+            </div>
+            
+            <div class="result-area" id="resultArea1"></div>
+        </div>
+        
+        <!-- 第二題:學號相關 -->
+        <div class="exercise">
+            <div class="exercise-title">📝 第二題:根據學號繪製與計算</div>
+            
+            <div class="input-section">
+                <label>請輸入學號後兩碼:</label>
+                <input type="text" id="studentId" maxlength="2" placeholder="XX">
+                <button onclick="startExercise2()">開始第二題</button>
+            </div>
+            
+            <div id="exercise2Content" style="display: none;">
+                <div class="kernel-selector">
+                    <h3>🎯 選擇濾波器(根據學號第二碼):</h3>
+                    <div class="kernel-buttons" id="kernelButtons"></div>
+                </div>
+                
+                <div class="grid-container">
+                    <div class="grid-item">
+                        <h3>原始圖像 (Ori. Img.)</h3>
+                        <div class="grid" id="inputGrid2" style="grid-template-columns: repeat(8, 40px);"></div>
+                        <div class="note">
+                            <strong>繪製說明:</strong><br>
+                            根據學號第一碼自動繪製<br>
+                            黑色 = 1,無色 = 0
+                        </div>
+                    </div>
+                    
+                    <div class="operator">×</div>
+                    
+                    <div class="grid-item">
+                        <h3>濾波器 (Kernel)</h3>
+                        <div class="grid kernel-grid" id="kernelGrid2" style="grid-template-columns: repeat(3, 50px);"></div>
+                    </div>
+                    
+                    <div class="operator">→</div>
+                    
+                    <div class="grid-item">
+                        <h3>輸出結果 (Filtered Img.)</h3>
+                        <div class="grid" id="outputGrid2" style="grid-template-columns: repeat(6, 40px);"></div>
+                        <div class="note">
+                            <strong>填寫說明:</strong><br>
+                            四捨五入後取整數<br>
+                            大於等於1的格子塗黑<br>
+                            點擊格子切換黑白
+                        </div>
+                        <div id="answerLegend2" class="answer-legend" style="display: none;">
+                            <strong>✅ 綠色背景 = 正確答案(批改模式)</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="animation-area" id="animationArea2">
+                    <div class="animation-title">🎬 卷積計算動畫演示</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar2"></div>
+                    </div>
+                    <div class="animation-content">
+                        <div class="grid-item">
+                            <h4>當前計算位置</h4>
+                            <div class="grid" id="animationInput2" style="grid-template-columns: repeat(8, 40px);"></div>
+                        </div>
+                        <div class="calculation-display">
+                            <h4>📊 計算過程</h4>
+                            <div id="calculationSteps2"></div>
+                        </div>
+                        <div class="grid-item">
+                            <h4>輸出結果累積</h4>
+                            <div class="grid" id="animationOutput2" style="grid-template-columns: repeat(6, 40px);"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn-calculate" onclick="calculateConvolution(2)">🧮 計算卷積(顯示動畫)</button>
+                    <button class="btn-check" onclick="checkAnswer(2)">✓ 檢查答案</button>
+                    <button class="btn-reset" onclick="resetExercise()">🔄 重新開始</button>
+                </div>
+                
+                <div class="result-area" id="resultArea2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 檢查是否為批改模式
+        const urlParams = new URLSearchParams(window.location.search);
+        const isGradingMode = urlParams.get('grading') === 'true';
+        
+        if (isGradingMode) {
+            document.getElementById('gradingIndicator').style.display = 'block';
+        }
+
+        const kernels = {
+            0: { name: '高強度邊緣檢測', matrix: [[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]] },
+            1: { name: '銳化 (Sharpen)', matrix: [[0, -1, 0], [-1, 5, -1], [0, -1, 0]] },
+            2: { name: '平滑/均值模糊 (Box Blur)', matrix: [[1/9, 1/9, 1/9], [1/9, 1/9, 1/9], [1/9, 1/9, 1/9]] },
+            3: { name: '邊緣檢測 (Laplacian)', matrix: [[0, 1, 0], [1, -4, 1], [0, 1, 0]] },
+            4: { name: '垂直邊緣檢測 (Sobel X)', matrix: [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]] },
+            5: { name: '水平邊緣檢測 (Sobel Y)', matrix: [[-1, -1, -1], [0, 0, 0], [1, 1, 1]] },
+            6: { name: 'Prewitt X (垂直邊緣)', matrix: [[-2, -1, 0], [-1, 0, 1], [0, 1, 2]] },
+            7: { name: 'Prewitt Y (水平邊緣)', matrix: [[1, 2, 1], [0, 0, 0], [-1, -2, -1]] },
+            8: { name: '對角邊緣檢測 (45°)', matrix: [[1, 0, -1], [0, 0, 0], [-1, 0, 1]] },
+            9: { name: '對角邊緣檢測 (135°)', matrix: [[-1, -1, 2], [-1, 2, -1], [2, -1, -1]] }
+        };
+
+        const patterns = {
+            0: [[0,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1],[1,1,1,0,0,1,1,1],[1,1,1,0,0,1,1,1],[1,1,1,0,0,1,1,1],[1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,0]],
+            1: [[0,0,0,1,1,1,0,0],[0,0,1,1,1,1,0,0],[0,1,1,1,1,1,0,0],[0,0,0,1,1,1,0,0],[0,0,0,1,1,1,0,0],[0,0,0,1,1,1,0,0],[0,0,0,1,1,1,0,0],[0,0,0,1,1,1,0,0]],
+            2: [[0,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1],[1,1,1,0,0,1,1,1],[0,0,0,0,1,1,1,0],[0,0,1,1,1,0,0,0],[1,1,1,0,0,0,0,0],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1]],
+            3: [[1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1],[0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,0],[0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,0]],
+            4: [[1,1,1,0,1,1,1,0],[1,1,1,0,1,1,1,0],[1,1,1,0,1,1,1,0],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[0,0,0,0,1,1,1,0],[0,0,0,0,1,1,1,0],[0,0,0,0,1,1,1,0]],
+            5: [[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,0,0,0,0,0],[1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1],[0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,0]],
+            6: [[0,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1],[1,1,1,0,0,0,0,0],[1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1],[1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,0]],
+            7: [[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[0,0,0,0,0,1,1,1],[0,0,0,0,1,1,1,0],[0,0,0,1,1,1,0,0],[0,0,1,1,1,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,1,1,0,0,0]],
+            8: [[0,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1],[1,1,1,0,0,1,1,1],[0,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,0],[1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,0]],
+            9: [[0,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1],[1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1],[0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,0]]
+        };
+
+        // 第一題固定使用的圖案和kernel
+        const exercise1Pattern = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,1,1,1,1,1,0],[0,0,1,1,1,1,1,0],[0,0,1,1,1,1,1,0],[0,0,0,1,1,1,1,0],[0,0,0,0,1,1,0,0],[0,0,0,0,0,0,0,0]];
+        const exercise1Kernel = [[1, 0, -1], [1, 0, -1], [1, 0, -1]];
+
+        let exercise2Pattern = [];
+        let exercise2Kernel = [];
+        let correctOutput1 = [];
+        let correctOutput2 = [];
+
+        // 初始化第一題
+        window.onload = function() {
+            initExercise1();
+        };
+
+        function initExercise1() {
+            createGrid('inputGrid1', exercise1Pattern, false);
+            createKernelGrid('kernelGrid1', exercise1Kernel);
+            createOutputGrid('outputGrid1', 1);
+            
+            // 如果是批改模式,自動計算並顯示答案
+            if (isGradingMode) {
+                autoCalculateAndShowAnswer(1);
+            }
+        }
+
+        function createGrid(gridId, pattern, clickable) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    
+                    if (pattern[i][j] === 1) {
+                        cell.classList.add('black');
+                        cell.textContent = '1';
+                    } else {
+                        cell.classList.add('white');
+                        cell.textContent = '0';
+                    }
+                    
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function createKernelGrid(gridId, kernel) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    const val = kernel[i][j];
+                    cell.textContent = val % 1 === 0 ? val : val.toFixed(2);
+                    cell.style.background = '#f0f0f0';
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function createOutputGrid(gridId, exerciseNum) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell white clickable';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.textContent = '';
+                    cell.onclick = () => toggleOutputCell(cell);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function toggleOutputCell(cell) {
+            if (cell.classList.contains('black')) {
+                cell.classList.remove('black');
+                cell.classList.add('white');
+                cell.textContent = '';
+            } else {
+                cell.classList.remove('white');
+                cell.classList.add('black');
+                cell.textContent = '1';
+            }
+        }
+
+        function startExercise2() {
+            const id = document.getElementById('studentId').value;
+            if (id.length !== 2 || !/^\d{2}$/.test(id)) {
+                alert('請輸入正確的兩位數字學號後兩碼!');
+                return;
+            }
+
+            const firstDigit = parseInt(id[0]);
+            const secondDigit = parseInt(id[1]);
+
+            exercise2Pattern = patterns[firstDigit];
+            
+            document.getElementById('exercise2Content').style.display = 'block';
+            
+            createKernelButtons(secondDigit);
+            createGrid('inputGrid2', exercise2Pattern, false);
+            createOutputGrid('outputGrid2', 2);
+            
+            // 如果是批改模式,自動計算並顯示答案
+            if (isGradingMode) {
+                setTimeout(() => {
+                    autoCalculateAndShowAnswer(2);
+                }, 100);
+            }
+            
+            document.getElementById('exercise2Content').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function createKernelButtons(recommendedIndex) {
+            const container = document.getElementById('kernelButtons');
+            container.innerHTML = '';
+            
+            Object.keys(kernels).forEach(key => {
+                const btn = document.createElement('div');
+                btn.className = 'kernel-btn';
+                if (parseInt(key) === recommendedIndex) {
+                    btn.classList.add('selected');
+                    exercise2Kernel = kernels[recommendedIndex].matrix;
+                    createKernelGrid('kernelGrid2', exercise2Kernel);
+                }
+                btn.innerHTML = `<strong>${key}: ${kernels[key].name}</strong>`;
+                btn.onclick = () => selectKernel(parseInt(key));
+                container.appendChild(btn);
+            });
+        }
+
+        function selectKernel(index) {
+            exercise2Kernel = kernels[index].matrix;
+            
+            document.querySelectorAll('.kernel-btn').forEach((btn, i) => {
+                if (parseInt(Object.keys(kernels)[i]) === index) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+            
+            createKernelGrid('kernelGrid2', exercise2Kernel);
+            document.getElementById('resultArea2').classList.remove('show');
+            document.getElementById('animationArea2').classList.remove('show');
+            
+            // 如果是批改模式,重新計算並顯示答案
+            if (isGradingMode && exercise2Pattern.length > 0) {
+                autoCalculateAndShowAnswer(2);
+            }
+        }
+
+        function convolve(input, kernel, row, col) {
+            let sum = 0;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    sum += input[row + i][col + j] * kernel[i][j];
+                }
+            }
+            return Math.round(sum);
+        }
+
+        // 自動計算並顯示答案(批改模式專用)
+        function autoCalculateAndShowAnswer(exerciseNum) {
+            let pattern, kernel, outputGridId, answerLegendId;
+            
+            if (exerciseNum === 1) {
+                pattern = exercise1Pattern;
+                kernel = exercise1Kernel;
+                outputGridId = 'outputGrid1';
+                answerLegendId = 'answerLegend1';
+            } else {
+                if (exercise2Kernel.length === 0) return;
+                pattern = exercise2Pattern;
+                kernel = exercise2Kernel;
+                outputGridId = 'outputGrid2';
+                answerLegendId = 'answerLegend2';
+            }
+
+            const correctOutput = [];
+            
+            // 計算正確答案
+            for (let i = 0; i < 6; i++) {
+                correctOutput[i] = [];
+                for (let j = 0; j < 6; j++) {
+                    const result = convolve(pattern, kernel, i, j);
+                    correctOutput[i][j] = result;
+                }
+            }
+
+            // 儲存正確答案
+            if (exerciseNum === 1) {
+                correctOutput1 = correctOutput;
+            } else {
+                correctOutput2 = correctOutput;
+            }
+
+            // 顯示答案在輸出網格
+            displayAnswerInGrid(outputGridId, correctOutput);
+            
+            // 顯示答案說明
+            document.getElementById(answerLegendId).style.display = 'block';
+        }
+
+        function displayAnswerInGrid(gridId, correctOutput) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell answer-cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    
+                    const value = correctOutput[i][j];
+                    const shouldBeBlack = value >= 1;
+                    
+                    if (shouldBeBlack) {
+                        cell.classList.add('black');
+                        cell.textContent = value;
+                    } else {
+                        cell.textContent = value;
+                    }
+                    
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        async function calculateConvolution(exerciseNum) {
+            let pattern, kernel, animationInputId, animationOutputId, calculationStepsId, progressBarId, animationAreaId;
+            
+            if (exerciseNum === 1) {
+                pattern = exercise1Pattern;
+                kernel = exercise1Kernel;
+                animationInputId = 'animationInput1';
+                animationOutputId = 'animationOutput1';
+                calculationStepsId = 'calculationSteps1';
+                progressBarId = 'progressBar1';
+                animationAreaId = 'animationArea1';
+            } else {
+                if (exercise2Kernel.length === 0) {
+                    alert('請先選擇濾波器!');
+                    return;
+                }
+                pattern = exercise2Pattern;
+                kernel = exercise2Kernel;
+                animationInputId = 'animationInput2';
+                animationOutputId = 'animationOutput2';
+                calculationStepsId = 'calculationSteps2';
+                progressBarId = 'progressBar2';
+                animationAreaId = 'animationArea2';
+            }
+
+            // 顯示動畫區域
+            document.getElementById(animationAreaId).classList.add('show');
+            document.getElementById(animationAreaId).scrollIntoView({ behavior: 'smooth' });
+
+            // 初始化動畫網格
+            createGrid(animationInputId, pattern, false);
+            createAnimationOutputGrid(animationOutputId);
+
+            const correctOutput = [];
+            const totalSteps = 36; // 6x6
+            let currentStep = 0;
+
+            for (let i = 0; i < 6; i++) {
+                correctOutput[i] = [];
+                for (let j = 0; j < 6; j++) {
+                    currentStep++;
+                    
+                    // 更新進度條
+                    const progress = (currentStep / totalSteps) * 100;
+                    document.getElementById(progressBarId).style.width = progress + '%';
+                    document.getElementById(progressBarId).textContent = `${currentStep}/${totalSteps}`;
+
+                    // 高亮當前計算區域
+                    highlightConvolutionArea(animationInputId, i, j);
+
+                    // 計算卷積值
+                    const result = convolve(pattern, kernel, i, j);
+                    correctOutput[i][j] = result;
+
+                    // 顯示計算過程
+                    showCalculationSteps(calculationStepsId, pattern, kernel, i, j, result);
+
+                    // 更新輸出網格
+                    updateAnimationOutput(animationOutputId, i, j, result);
+
+                    // 等待一段時間讓使用者看清楚
+                    await sleep(800);
+                }
+            }
+
+            // 儲存正確答案
+            if (exerciseNum === 1) {
+                correctOutput1 = correctOutput;
+            } else {
+                correctOutput2 = correctOutput;
+            }
+
+            alert('卷積計算完成!請在右側輸出網格中塗黑答案(數值≥1的格子塗黑),然後點擊「檢查答案」!');
+        }
+
+        function highlightConvolutionArea(gridId, row, col) {
+            const cells = document.querySelectorAll(`#${gridId} .cell`);
+            
+            // 移除所有高亮
+            cells.forEach(cell => cell.classList.remove('highlight'));
+
+            // 高亮當前3x3區域
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const cellRow = row + i;
+                    const cellCol = col + j;
+                    const cellIndex = cellRow * 8 + cellCol;
+                    if (cells[cellIndex]) {
+                        cells[cellIndex].classList.add('highlight');
+                    }
+                }
+            }
+        }
+
+        function showCalculationSteps(stepsId, input, kernel, row, col, result) {
+            const stepsDiv = document.getElementById(stepsId);
+            let html = `<div class="calculation-step"><strong>位置 (${row}, ${col}):</strong><br>`;
+            
+            let calculation = '';
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const inputVal = input[row + i][col + j];
+                    const kernelVal = kernel[i][j];
+                    const product = inputVal * kernelVal;
+                    
+                    if (calculation !== '') calculation += ' + ';
+                    calculation += `(${inputVal} × ${kernelVal % 1 === 0 ? kernelVal : kernelVal.toFixed(2)})`;
+                }
+            }
+            
+            html += calculation + `<br>= <strong style="color: #28a745;">${result}</strong>`;
+            html += `<br>塗黑:${result >= 1 ? '<span style="color: green;">是 ✓</span>' : '<span style="color: red;">否 ✗</span>'}</div>`;
+            
+            stepsDiv.innerHTML = html;
+        }
+
+        function createAnimationOutputGrid(gridId) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell white';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.textContent = '';
+                    cell.style.fontSize = '0.8em';
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function updateAnimationOutput(gridId, row, col, value) {
+            const cells = document.querySelectorAll(`#${gridId} .cell`);
+            const cellIndex = row * 6 + col;
+            const cell = cells[cellIndex];
+            
+            if (cell) {
+                cell.textContent = value;
+                if (value >= 1) {
+                    cell.classList.remove('white');
+                    cell.classList.add('black');
+                } else {
+                    cell.classList.remove('black');
+                    cell.classList.add('white');
+                }
+                
+                // 添加閃爍效果
+                cell.style.transform = 'scale(1.3)';
+                setTimeout(() => {
+                    cell.style.transform = 'scale(1)';
+                }, 300);
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function checkAnswer(exerciseNum) {
+            const correctOutput = exerciseNum === 1 ? correctOutput1 : correctOutput2;
+            const outputGridId = exerciseNum === 1 ? 'outputGrid1' : 'outputGrid2';
+            const resultAreaId = exerciseNum === 1 ? 'resultArea1' : 'resultArea2';
+            
+            if (correctOutput.length === 0) {
+                alert('請先點擊「計算卷積」按鈕!');
+                return;
+            }
+
+            const userOutput = [];
+            const cells = document.querySelectorAll(`#${outputGridId} .cell`);
+            
+            cells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                if (!userOutput[row]) userOutput[row] = [];
+                userOutput[row][col] = cell.classList.contains('black') ? 1 : 0;
+            });
+
+            let correct = true;
+            let correctCount = 0;
+            let totalCells = 36;
+
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    const shouldBeBlack = correctOutput[i][j] >= 1;
+                    const isBlack = userOutput[i][j] === 1;
+                    if (shouldBeBlack === isBlack) {
+                        correctCount++;
+                    } else {
+                        correct = false;
+                    }
+                }
+            }
+
+            displayResult(exerciseNum, correct, correctCount, totalCells, correctOutput);
+        }
+
+        function displayResult(exerciseNum, correct, correctCount, totalCells, correctOutput) {
+            const resultAreaId = exerciseNum === 1 ? 'resultArea1' : 'resultArea2';
+            const resultArea = document.getElementById(resultAreaId);
+
+            resultArea.classList.add('show');
+            
+            if (correct) {
+                resultArea.className = 'result-area show correct';
+                resultArea.innerHTML = `
+                    <h3>🎉 恭喜!第${exerciseNum}題答案完全正確!</h3>
+                    <p>你成功完成了卷積運算!正確率:${correctCount}/${totalCells}</p>
+                `;
+            } else {
+                resultArea.className = 'result-area show incorrect';
+                resultArea.innerHTML = `
+                    <h3>✖ 第${exerciseNum}題答案有誤,請再試一次</h3>
+                    <p>正確率:${correctCount}/${totalCells} (${Math.round(correctCount/totalCells*100)}%)</p>
+                    <div class="comparison">
+                        <div class="grid-item">
+                            <h4>正確答案(數值)</h4>
+                            <div class="grid" style="grid-template-columns: repeat(6, 40px);">
+                                ${generateCorrectAnswerGrid(correctOutput)}
+                            </div>
+                        </div>
+                        <div class="grid-item">
+                            <h4>正確答案(塗黑)</h4>
+                            <div class="grid" style="grid-template-columns: repeat(6, 40px);">
+                                ${generateCorrectVisualGrid(correctOutput)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            resultArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateCorrectAnswerGrid(correctOutput) {
+            let html = '';
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    const val = correctOutput[i][j];
+                    html += `<div class="cell" style="background: ${val >= 1 ? '#000' : '#fff'}; color: ${val >= 1 ? '#fff' : '#000'};">${val}</div>`;
+                }
+            }
+            return html;
+        }
+
+        function generateCorrectVisualGrid(correctOutput) {
+            let html = '';
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    const val = correctOutput[i][j];
+                    const shouldBeBlack = val >= 1;
+                    html += `<div class="cell ${shouldBeBlack ? 'black' : 'white'}">${shouldBeBlack ? '1' : '0'}</div>`;
+                }
+            }
+            return html;
+        }
+
+        function resetExercise() {
+            if (confirm('確定要重新開始嗎?這將清除所有答案。')) {
+                document.getElementById('studentId').value = '';
+                document.getElementById('exercise2Content').style.display = 'none';
+                document.getElementById('resultArea2').classList.remove('show');
+                document.getElementById('animationArea2').classList.remove('show');
+                exercise2Pattern = [];
+                exercise2Kernel = [];
+                correctOutput2 = [];
+            }
+        }
+    </script>
+</body>
+</html>
