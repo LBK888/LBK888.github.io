@@ -519,7 +519,7 @@
             
             <div id="exercise2Content" style="display: none;">
                 <div class="kernel-selector">
-                    <h3>🎯 選擇濾波器(根據學號第二碼):</h3>
+                    <h3>🎯 選擇濾波器(根據學號第一碼):</h3>
                     <div class="kernel-buttons" id="kernelButtons"></div>
                 </div>
                 
@@ -529,7 +529,7 @@
                         <div class="grid" id="inputGrid2" style="grid-template-columns: repeat(8, 40px);"></div>
                         <div class="note">
                             <strong>繪製說明:</strong><br>
-                            根據學號第一碼自動繪製<br>
+                            根據學號第二碼自動繪製<br>
                             黑色 = 1,無色 = 0
                         </div>
                     </div>
@@ -729,11 +729,11 @@
             const firstDigit = parseInt(id[0]);
             const secondDigit = parseInt(id[1]);
 
-            exercise2Pattern = patterns[firstDigit];
+            exercise2Pattern = patterns[secondDigit];
             
             document.getElementById('exercise2Content').style.display = 'block';
             
-            createKernelButtons(secondDigit);
+            createKernelButtons(firstDigit);
             createGrid('inputGrid2', exercise2Pattern, false);
             createOutputGrid('outputGrid2', 2);
             
