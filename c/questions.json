@@ -1,0 +1,1306 @@
+{
+    "questions": [
+        {
+            "id": 1,
+            "category": "英文詞意",
+            "content": "Processivity (for Kinesin)",
+            "options": [
+                "The ability of a motor protein to detach quickly from its filament.",
+                "The coordinated movement of multiple motor proteins.",
+                "The ability of a motor protein to move long distances along a filament before detaching.",
+                "A single molecule can walk continuously along a microtubule for long distance."
+            ],
+            "answer": 2,
+            "difficulty": 0.8,
+            "time_limit": 25
+        },
+        {
+            "id": 2,
+            "category": "英文詞意",
+            "content": "Glycosylation",
+            "options": [
+                "The conversion of glycogen to glucose.",
+                "The formation of peptide bonds in protein synthesis.",
+                "The removal of lipids from membranes.",
+                "The process of adding sugar chains to proteins or lipids."
+            ],
+            "answer": 3,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 3,
+            "category": "英文詞意",
+            "content": "Endocytosis",
+            "options": [
+                "The release of molecules outside the cell.",
+                "The uptake of materials by forming vesicles from the plasma membrane.",
+                "The passive movement of ions across the membrane.",
+                "The production of ATP using oxygen."
+            ],
+            "answer": 1,
+            "difficulty": 0.35,
+            "time_limit": 20
+        },
+        {
+            "id": 4,
+            "category": "英文詞意",
+            "content": "Cytoskeleton",
+            "options": [
+                "A cell's external matrix for adhesion.",
+                "A dynamic network of protein filaments providing structure and movement.",
+                "A membrane system for protein synthesis.",
+                "The DNA packaging complex inside the nucleus."
+            ],
+            "answer": 1,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 5,
+            "category": "英文詞意",
+            "content": "Ribosome",
+            "options": [
+                "An enzyme that degrades proteins.",
+                "An organelle that synthesizes proteins using mRNA templates.",
+                "A vesicle involved in lipid transport.",
+                "A complex regulating cell cycle checkpoints."
+            ],
+            "answer": 1,
+            "difficulty": 0.3,
+            "time_limit": 20
+        },
+        {
+            "id": 6,
+            "category": "英文詞意",
+            "content": "Kinesin",
+            "options": [
+                "A microtubule-based motor protein that moves cargo toward the plus-end.",
+                "A protein that anchors actin filaments.",
+                "A transcription factor regulating DNA repair.",
+                "A membrane receptor for growth factors."
+            ],
+            "answer": 0,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 7,
+            "category": "英文詞意",
+            "content": "Organelle",
+            "options": [
+                "A membrane-surrounded structure with specific cellular functions.",
+                "A protein complex for degrading misfolded proteins.",
+                "A channel for ion transport.",
+                "A short region of DNA containing gene clusters."
+            ],
+            "answer": 0,
+            "difficulty": 0.25,
+            "time_limit": 20
+        },
+        {
+            "id": 8,
+            "category": "英文詞意",
+            "content": "Ligand",
+            "options": [
+                "A protein that degrades RNA.",
+                "A structure for forming microtubules.",
+                "A lipid forming the plasma membrane.",
+                "A molecule that binds to a receptor to trigger signaling."
+            ],
+            "answer": 3,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 9,
+            "category": "英文詞意",
+            "content": "Exocytosis",
+            "options": [
+                "The breakdown of old organelles.",
+                "The process of protruding flagella.",
+                "The release of vesicle contents outside the cell.",
+                "The construction of the cell wall."
+            ],
+            "answer": 2,
+            "difficulty": 0.35,
+            "time_limit": 20
+        },
+        {
+            "id": 10,
+            "category": "英文詞意",
+            "content": "Chaperone (Protein repairing)",
+            "options": [
+                "A protein that destroys damaged DNA.",
+                "A protein that helps other proteins fold correctly.",
+                "A motor protein for vesicle transport.",
+                "A membrane pump that exports ions."
+            ],
+            "answer": 1,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 11,
+            "category": "英文詞意",
+            "content": "Nucleolus",
+            "options": [
+                "A site for ribosome assembly inside the nucleus.",
+                "A vesicle for lipid storage.",
+                "A membrane channel for Ca2+ transport.",
+                "A motor protein binding site."
+            ],
+            "answer": 0,
+            "difficulty": 0.45,
+            "time_limit": 25
+        },
+        {
+            "id": 12,
+            "category": "英文詞意",
+            "content": "Intermediate filament",
+            "options": [
+                "A medium-sized cytoskeleton fiber providing mechanical strength.",
+                "The thickest cytoskeleton element for chromosome segregation.",
+                "A membrane-bound vesicle carrying enzymes.",
+                "A ribonucleoprotein complex synthesizing RNA."
+            ],
+            "answer": 0,
+            "difficulty": 0.6,
+            "time_limit": 30
+        },
+        {
+            "id": 13,
+            "category": "英文詞意",
+            "content": "Centrosome",
+            "options": [
+                "The site of ATP production.",
+                "The microtubule-organizing center of the cell.",
+                "A membrane receptor for growth factors.",
+                "A lipid anchor for membrane proteins."
+            ],
+            "answer": 1,
+            "difficulty": 0.65,
+            "time_limit": 30
+        },
+        {
+            "id": 14,
+            "category": "英文詞意",
+            "content": "Endomembrane system",
+            "options": [
+                "A network involved in protein and lipid transport through vesicles.",
+                "A structure for DNA packaging.",
+                "A group of ribozymes involved in RNA editing.",
+                "A type of intermediate filament."
+            ],
+            "answer": 0,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 15,
+            "category": "英文詞意",
+            "content": "Cell adhesion",
+            "options": [
+                "The breakdown of cell membranes.",
+                "The process by which cells attach to each other.",
+                "The metabolic formation of glycogen.",
+                "The active pumping of ions."
+            ],
+            "answer": 1,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 16,
+            "category": "中文詞意",
+            "content": "Microfilament",
+            "options": [
+                "細胞骨架中負責抵抗張力的鋼纜狀結構",
+                "由微管蛋白組成的纖維",
+                "最小型的細胞骨架纖維，參與肌肉收縮和細胞運動",
+                "構成細胞核膜的結構"
+            ],
+            "answer": 2,
+            "difficulty": 0.35,
+            "time_limit": 20
+        },
+        {
+            "id": 17,
+            "category": "中文詞意",
+            "content": "Kinesin",
+            "options": [
+                "沿著微管往正端運輸細胞貨物的馬達蛋白",
+                "負責修補受損蛋白質的酶",
+                "細胞膜上的離子通道",
+                "合成脂質的酵素"
+            ],
+            "answer": 0,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 18,
+            "category": "中文詞意",
+            "content": "Lysosome",
+            "options": [
+                "負責蛋白質合成的胞器",
+                "含有分解酶、負責分解大分子的胞器",
+                "微管的組裝中心",
+                "細胞對外分泌的囊泡"
+            ],
+            "answer": 1,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 19,
+            "category": "中文詞意",
+            "content": "Cell membrane receptor",
+            "options": [
+                "專門水解 ATP 的酵素",
+                "能與配體結合並啟動細胞訊號傳遞的膜蛋白",
+                "負責微管裝配的蛋白質",
+                "參與光合作用的色素分子"
+            ],
+            "answer": 1,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 20,
+            "category": "中文詞意",
+            "content": "Endocytosis",
+            "options": [
+                "細胞利用囊泡將物質吸收進入細胞的機制",
+                "細胞將內容物排出胞外的過程",
+                "細胞膜自動修補的過程",
+                "粒線體生成 ATP 的機制"
+            ],
+            "answer": 0,
+            "difficulty": 0.3,
+            "time_limit": 20
+        },
+        {
+            "id": 21,
+            "category": "中文詞意",
+            "content": "Nuclear membrane",
+            "options": [
+                "控制細胞膜通透性的結構",
+                "包覆細胞核的雙層膜結構，具有核孔",
+                "儲存細胞能量的膜系統",
+                "參與蛋白質折疊的膜蛋白"
+            ],
+            "answer": 1,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 22,
+            "category": "中文詞意",
+            "content": "Actin",
+            "options": [
+                "構成微管的蛋白質",
+                "構成微絲的主要蛋白質，參與細胞運動",
+                "促進 DNA 複製的酶",
+                "負責調節離子濃度的幫浦"
+            ],
+            "answer": 1,
+            "difficulty": 0.35,
+            "time_limit": 20
+        },
+        {
+            "id": 23,
+            "category": "中文詞意",
+            "content": "Glycogen",
+            "options": [
+                "細胞外基質中的主要纖維",
+                "動物細胞儲存葡萄糖的多醣",
+                "參與蛋白質修飾的脂質",
+                "細胞膜通道蛋白"
+            ],
+            "answer": 1,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 24,
+            "category": "中文詞意",
+            "content": "Cell cycle checkpoint",
+            "options": [
+                "負責檢查 DNA 是否完全複製或是否受損的監控機制",
+                "檢查細胞分化程度的儀器",
+                "核糖體組裝的場所",
+                "測量細胞大小的區域"
+            ],
+            "answer": 0,
+            "difficulty": 0.6,
+            "time_limit": 30
+        },
+        {
+            "id": 25,
+            "category": "中文詞意",
+            "content": "Golgi apparatus",
+            "options": [
+                "負責核酸合成的胞器",
+                "細胞產生 ATP 的場所",
+                "負責蛋白質修飾、分類與運輸的胞器",
+                "細胞遺傳物質的主要儲存地"
+            ],
+            "answer": 2,
+            "difficulty": 0.45,
+            "time_limit": 25
+        },
+        {
+            "id": 26,
+            "category": "中文詞意",
+            "content": "Extracellular matrix",
+            "options": [
+                "細胞核中的 RNA 合成平台",
+                "由蛋白纖維與多醣組成、提供細胞支持與訊號的平台",
+                "微絲的主要聚集區域",
+                "離子通道的來源"
+            ],
+            "answer": 1,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 27,
+            "category": "中文詞意",
+            "content": "Vacuole",
+            "options": [
+                "植物細胞中維持膨壓的重要胞器",
+                "動物細胞主要的 ATP 工廠",
+                "細胞骨架的組裝中心",
+                "生產蛋白質的裝置"
+            ],
+            "answer": 0,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 28,
+            "category": "中文詞意",
+            "content": "Protein synthesis",
+            "options": [
+                "脂質在 ER 中分解的過程",
+                "葡萄糖聚合的過程",
+                "根據 mRNA 序列製造蛋白質的過程",
+                "核膜解體的過程"
+            ],
+            "answer": 2,
+            "difficulty": 0.25,
+            "time_limit": 20
+        },
+        {
+            "id": 29,
+            "category": "中文詞意",
+            "content": "Plasma",
+            "options": [
+                "參與肌肉收縮的蛋白質",
+                "細胞內液體",
+                "細胞外液的主要成分，是血液中的液態部分",
+                "細胞核內的基質"
+            ],
+            "answer": 2,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 30,
+            "category": "中文詞意",
+            "content": "Cell volume regulation",
+            "options": [
+                "細胞破裂時的必然反應",
+                "細胞維持滲透平衡與體積穩定的機制",
+                "檢查蛋白質折疊的過程",
+                "控制 DNA 包裝密度的過程"
+            ],
+            "answer": 1,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 31,
+            "category": "選詞",
+            "content": "有一種蛋白質主要功用為磷酸化其他蛋白質:",
+            "options": [
+                "Protease(蛋白酶)",
+                "Kinase(激酶)",
+                "Integrins(整合素)",
+                "Ligands(配體)"
+            ],
+            "answer": 1,
+            "difficulty": 0.3,
+            "time_limit": 20
+        },
+        {
+            "id": 32,
+            "category": "選詞",
+            "content": "負責將蛋白質折疊至正確構型的是:",
+            "options": [
+                "Chaperone(伴護蛋白)",
+                "Tubulin(微管蛋白)",
+                "Actin(肌動蛋白)",
+                "Ligase(連接酶)"
+            ],
+            "answer": 0,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 33,
+            "category": "選詞",
+            "content": "細胞骨架中能抵抗拉力、提供細胞強度的是:",
+            "options": [
+                "Microfilament(微絲)",
+                "Intermediate filament(中間絲)",
+                "Centromere(著絲點)",
+                "Microtubule(微管)"
+            ],
+            "answer": 1,
+            "difficulty": 0.65,
+            "time_limit": 30
+        },
+        {
+            "id": 34,
+            "category": "選詞",
+            "content": "主要負責胞外基質與細胞連結的膜蛋白是:",
+            "options": [
+                "Integrins(整合素)",
+                "Ribosomes(核糖體)",
+                "Histones(組蛋白)",
+                "Dynein(動力蛋白)"
+            ],
+            "answer": 0,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 35,
+            "category": "選詞",
+            "content": "基因表現後，負責將蛋白質進一步修飾與包裝的胞器是:",
+            "options": [
+                "Golgi apparatus(高基氏體)",
+                "Smooth ER(光滑內質網)",
+                "Nucleus(細胞核)",
+                "Peroxisome(過氧化體)"
+            ],
+            "answer": 0,
+            "difficulty": 0.35,
+            "time_limit": 20
+        },
+        {
+            "id": 36,
+            "category": "選詞",
+            "content": "負責脂質合成與解毒反應的胞器是:",
+            "options": [
+                "Golgi(高基氏體)",
+                "Rough ER(粗糙內質網)",
+                "Lysosome(溶體)",
+                "Smooth ER(光滑內質網)"
+            ],
+            "answer": 3,
+            "difficulty": 0.35,
+            "time_limit": 20
+        },
+        {
+            "id": 37,
+            "category": "選詞",
+            "content": "負責胞吞作用中囊泡切離細胞膜的是:",
+            "options": [
+                "Dynamin(動力蛋白)",
+                "ATP synthase(ATP 合酶)",
+                "Myosin(肌球蛋白)",
+                "Keratin(角蛋白)"
+            ],
+            "answer": 0,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 38,
+            "category": "選詞",
+            "content": "細胞用於感應外界訊號並引發細胞反應的是:",
+            "options": [
+                "Receptors(受器)",
+                "Proteasome(蛋白酶體)",
+                "Nucleosome(核小體)",
+                "Vacuole(液胞)"
+            ],
+            "answer": 0,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 39,
+            "category": "選詞",
+            "content": "能沿著微管負向端運輸物質的是:",
+            "options": [
+                "Dynein(動力蛋白)",
+                "Kinesin(驅動蛋白)",
+                "Myosin(肌球蛋白)",
+                "Actin(肌動蛋白)"
+            ],
+            "answer": 0,
+            "difficulty": 0.7,
+            "time_limit": 30
+        },
+        {
+            "id": 40,
+            "category": "選詞",
+            "content": "負責 DNA 修補的酶群大多屬於:",
+            "options": [
+                "Helicase(解旋酶)",
+                "Polymerase(聚合酶)",
+                "Ligase(連接酶)",
+                "Repair enzymes(修補酶)"
+            ],
+            "answer": 3,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 41,
+            "category": "選詞",
+            "content": "細胞能感應光線的蛋白通常位於:",
+            "options": [
+                "Photoreceptors(光受器)",
+                "Proteasome(蛋白酶體)",
+                "Cilia(纖毛)",
+                "Golgi(高基氏體)"
+            ],
+            "answer": 0,
+            "difficulty": 0.45,
+            "time_limit": 25
+        },
+        {
+            "id": 42,
+            "category": "選詞",
+            "content": "參與免疫反應、能中和外來抗原的分子是:",
+            "options": [
+                "Interferons(干擾素)",
+                "Glycogen(肝醣)",
+                "Antibody(抗體)",
+                "Ligand(配體)"
+            ],
+            "answer": 2,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 43,
+            "category": "選詞",
+            "content": "能降解標記受損蛋白質的複合體是:",
+            "options": [
+                "Ribosome(核糖體)",
+                "Centrosome(中心體)",
+                "Lysosome(溶體)",
+                "Proteasome(蛋白酶體)"
+            ],
+            "answer": 3,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 44,
+            "category": "選詞",
+            "content": "細胞骨架中由tublin蛋白形成並參與細胞分裂的是:",
+            "options": [
+                "Microtubules(微管)",
+                "Actin filaments(微絲)",
+                "Intermediate filaments(中間絲)",
+                "Lipid rafts(脂筏)"
+            ],
+            "answer": 0,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 45,
+            "category": "選詞",
+            "content": "細胞攝入大量液體的行為稱為:",
+            "options": [
+                "Exocytosis(外泌作用)",
+                "Autophagy(自噬作用)",
+                "Pinocytosis(胞飲作用)",
+                "Phagocytosis(胞噬作用)"
+            ],
+            "answer": 2,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 46,
+            "category": "英文情境",
+            "content": "Eukaryotic flagellum is a hair-like appendage that helps cells move, thus flagella:",
+            "options": [
+                "are moved by lipid rafts",
+                "are as long as neuron axons",
+                "must contain motor proteins",
+                "don't require ATP"
+            ],
+            "answer": 2,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 47,
+            "category": "英文情境",
+            "content": "A cell needs to degrade damaged proteins quickly. It should use:",
+            "options": [
+                "microtubules",
+                "ribosomes",
+                "lysosomes",
+                "proteasomes"
+            ],
+            "answer": 3,
+            "difficulty": 0.45,
+            "time_limit": 25
+        },
+        {
+            "id": 48,
+            "category": "英文情境",
+            "content": "A vesicle carrying newly modified proteins moves from Golgi to the membrane. This process is:",
+            "options": [
+                "endocytosis",
+                "DNA replication",
+                "exocytosis",
+                "osmosis"
+            ],
+            "answer": 2,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 49,
+            "category": "英文情境",
+            "content": "A mutation causes actin filaments to become unstable. The cell will have problems with:",
+            "options": [
+                "protein folding",
+                "ATP production",
+                "DNA repair",
+                "muscle contraction and movement"
+            ],
+            "answer": 3,
+            "difficulty": 0.6,
+            "time_limit": 30
+        },
+        {
+            "id": 50,
+            "category": "英文情境",
+            "content": "If a cell cannot form microtubules, it will fail in:",
+            "options": [
+                "protein synthesis",
+                "ligand release",
+                "lipid digestion",
+                "chromosome separation during mitosis"
+            ],
+            "answer": 3,
+            "difficulty": 0.75,
+            "time_limit": 30
+        },
+        {
+            "id": 51,
+            "category": "英文情境",
+            "content": "A cell is exposed to a hormone. The hormone binds to:",
+            "options": [
+                "microfilament",
+                "ribosome",
+                "nucleolus",
+                "ligand receptor"
+            ],
+            "answer": 3,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 52,
+            "category": "英文情境",
+            "content": "A researcher observes ATP-dependent movement along microtubules. The protein responsible is likely:",
+            "options": [
+                "actin",
+                "kinase",
+                "kinesin",
+                "photoreceptor"
+            ],
+            "answer": 2,
+            "difficulty": 0.55,
+            "time_limit": 25
+        },
+        {
+            "id": 53,
+            "category": "英文情境",
+            "content": "If the nuclear membrane breaks down too early, the cell will fail to:",
+            "options": [
+                "store glycogen",
+                "build microtubules",
+                "digest damaged proteins",
+                "protect chromosomes"
+            ],
+            "answer": 3,
+            "difficulty": 0.6,
+            "time_limit": 30
+        },
+        {
+            "id": 54,
+            "category": "英文情境",
+            "content": "A cell produces a protein but it is misfolded. The cell will use:",
+            "options": [
+                "chaperones",
+                "lipid rafts",
+                "chloroplasts",
+                "lysosomes"
+            ],
+            "answer": 0,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 55,
+            "category": "英文情境",
+            "content": "A white blood cell engulfs a bacterium. This process is:",
+            "options": [
+                "pinocytosis",
+                "translation",
+                "phagocytosis",
+                "osmosis"
+            ],
+            "answer": 2,
+            "difficulty": 0.45,
+            "time_limit": 25
+        },
+        {
+            "id": 56,
+            "category": "英文情境",
+            "content": "A cell’s microtubules become extremely short. Transport of vesicles will be affected because:",
+            "options": [
+                "lysosomes push vesicles",
+                "flagella detach vesicles",
+                "motor proteins move along microtubules",
+                "vesicles need DNA"
+            ],
+            "answer": 2,
+            "difficulty": 0.7,
+            "time_limit": 30
+        },
+        {
+            "id": 57,
+            "category": "英文情境",
+            "content": "If smooth ER is damaged, the cell will have problems with:",
+            "options": [
+                "protein translation",
+                "ATP generation",
+                "lipid synthesis",
+                "chromosome separation"
+            ],
+            "answer": 2,
+            "difficulty": 0.4,
+            "time_limit": 20
+        },
+        {
+            "id": 58,
+            "category": "英文情境",
+            "content": "A cell receives an extracellular signal. The signal must cross the membrane using:",
+            "options": [
+                "nucleoli",
+                "ribosomes",
+                "carrier proteins or receptors",
+                "lysosomes"
+            ],
+            "answer": 2,
+            "difficulty": 0.5,
+            "time_limit": 25
+        },
+        {
+            "id": 59,
+            "category": "英文情境",
+            "content": "A cell stores large amounts of glucose as a polymer. The molecule is:",
+            "options": [
+                "cytosol",
+                "DNA",
+                "glycogen",
+                "tubulin"
+            ],
+            "answer": 2,
+            "difficulty": 0.25,
+            "time_limit": 20
+        },
+        {
+            "id": 60,
+            "category": "英文情境",
+            "content": "A mutation prevents intermediate filaments from forming. This will weaken:",
+            "options": [
+                "exocytosis",
+                "translation of mRNA",
+                "mechanical strength of the cell",
+                "membrane fluidity"
+            ],
+            "answer": 2,
+            "difficulty": 0.75,
+            "time_limit": 30
+        },
+        {
+            "id": 61,
+            "category": "中文詞意",
+            "content": "Cytoskeleton",
+            "options": [
+                " 儲存細胞遺傳物質的區域，由單體聚合成長鏈狀",
+                "由蛋白質組成的內部支架，維持細胞形狀並參與運動和運輸",
+                "產生細胞能量的結構",
+                "合成脂質的場所"
+            ],
+            "answer": 1,
+            "difficulty": 0.19,
+            "time_limit": 25
+        },
+        {
+            "id": 62,
+            "category": "中文詞意",
+            "content": "mitochondria",
+            "options": [
+                "控制細胞運動的結構",
+                "合成蛋白質的場所",
+                "進行細胞呼吸以產生能量的細胞器",
+                "儲存細胞遺傳信息的區域"
+            ],
+            "answer": 2,
+            "difficulty": 0.18,
+            "time_limit": 20
+        },
+        {
+            "id": 63,
+            "category": "英文詞意",
+            "content": "Drug detoxification",
+            "options": [
+                "The process of synthesizing steroid hormones. (B) The breakdown of glycogen into glucose",
+                "A function of smooth ER that often involves adding hydroxyl groups to make hydrophobic drugs more soluble",
+                "選項3",
+                "選項4"
+            ],
+            "answer": 0,
+            "difficulty": 0.5,
+            "time_limit": 30
+        },
+        {
+            "id": 64,
+            "category": "英文詞意",
+            "content": "Processivity (for DNA polymerase)",
+            "options": [
+                "The proofreading activity of polymerase",
+                "The breaking of hydrogen bonds in DNA",
+                "The ability of the enzyme to add only one nucleotide before falling off",
+                "The ability of an enzyme to move long distances on DNA without detaching"
+            ],
+            "answer": 3,
+            "difficulty": 0.82,
+            "time_limit": 30
+        },
+        {
+            "id": 65,
+            "category": "英文詞意",
+            "content": "Organelle",
+            "options": [
+                "A fragment of cell membrane",
+                "A complex of sugars used for signaling",
+                "A type of protein that binds ATP",
+                "A small structure inside a cell that performs specific functions"
+            ],
+            "answer": 3,
+            "difficulty": 0.18,
+            "time_limit": 20
+        },
+        {
+            "id": 66,
+            "category": "英文詞意",
+            "content": "Glycosylation",
+            "options": [
+                "Adding carbohydrates to proteins or lipids",
+                "Breaking down glucose for energy",
+                "Removing misfolded proteins",
+                "Exporting proteins outside the cell"
+            ],
+            "answer": 0,
+            "difficulty": 0.72,
+            "time_limit": 30
+        },
+        {
+            "id": 67,
+            "category": "英文詞意",
+            "content": "Microtubule nucleation",
+            "options": [
+                "The shortening of microtubules",
+                "The sliding of actin filaments",
+                "The rotation of centrosomes",
+                "The initial formation of microtubules from tubulin"
+            ],
+            "answer": 3,
+            "difficulty": 0.81,
+            "time_limit": 30
+        },
+        {
+            "id": 68,
+            "category": "英文詞意",
+            "content": "Exocytosis",
+            "options": [
+                "A type of cell division",
+                "A process where cells take in material",
+                "The duplication of organelles",
+                "A process where vesicles release contents outside the cell"
+            ],
+            "answer": 3,
+            "difficulty": 0.28,
+            "time_limit": 20
+        },
+        {
+            "id": 69,
+            "category": "英文詞意",
+            "content": "Lysosome",
+            "options": [
+                "An organelle for protein synthesis",
+                "A storage compartment for lipids",
+                "A vesicle that digests macromolecules and waste",
+                "A protein channel in the membrane"
+            ],
+            "answer": 2,
+            "difficulty": 0.22,
+            "time_limit": 20
+        },
+        {
+            "id": 70,
+            "category": "英文詞意",
+            "content": "Cell cycle checkpoint",
+            "options": [
+                "A protein that degrades cyclins",
+                "A region of microtubule growth",
+                "A boundary surrounding the nucleus",
+                "A point where the cell evaluates conditions before proceeding"
+            ],
+            "answer": 3,
+            "difficulty": 0.81,
+            "time_limit": 25
+        },
+        {
+            "id": 71,
+            "category": "英文詞意",
+            "content": "Extracellular matrix (ECM)",
+            "options": [
+                "A membrane channel for ion exchange",
+                "A storage space for calcium inside cells",
+                "A network of proteins and polysaccharides outside cells",
+                "A region near the nucleus"
+            ],
+            "answer": 2,
+            "difficulty": 0.36,
+            "time_limit": 20
+        },
+        {
+            "id": 72,
+            "category": "中文詞意",
+            "content": "Endoplasmic Reticulum",
+            "options": [
+                "儲存葡萄糖的胞器",
+                "細胞中負責分解脂肪的胞器",
+                "細胞內運輸 DNA 的結構",
+                "負責蛋白質折疊、修飾或脂質合成的膜狀網路"
+            ],
+            "answer": 3,
+            "difficulty": 0.33,
+            "time_limit": 20
+        },
+        {
+            "id": 73,
+            "category": "中文詞意",
+            "content": "Centrosome",
+            "options": [
+                "啟動細胞凋亡的蛋白複合體",
+                "微管的主要核化中心",
+                "核糖體的組裝地點",
+                "細胞膜上專門接收訊號的區域"
+            ],
+            "answer": 1,
+            "difficulty": 0.71,
+            "time_limit": 30
+        },
+        {
+            "id": 74,
+            "category": "中文詞意",
+            "content": "Endocytosis",
+            "options": [
+                "細胞將物質排出",
+                "細胞藉由囊泡將外界物質吞入",
+                "核膜破裂的過程",
+                "細胞骨架解聚的過程"
+            ],
+            "answer": 1,
+            "difficulty": 0.25,
+            "time_limit": 20
+        },
+        {
+            "id": 75,
+            "category": "中文詞意",
+            "content": "Intermediate filament",
+            "options": [
+                "在細胞分裂時形成紡錘體的纖維",
+                "負責細胞肌肉收縮的纖維",
+                "提供細胞抗拉強度的纖維蛋白",
+                "由微管蛋白組成的長管狀結構"
+            ],
+            "answer": 2,
+            "difficulty": 0.78,
+            "time_limit": 30
+        },
+        {
+            "id": 76,
+            "category": "中文詞意",
+            "content": "Extracellular Matrix",
+            "options": [
+                "細胞運輸囊泡的網路",
+                "細胞用來儲存養分的空腔",
+                "細胞核外的脂質雙層",
+                "由膠原蛋白、多醣等組成，提供支撐與訊號調控"
+            ],
+            "answer": 3,
+            "difficulty": 0.41,
+            "time_limit": 25
+        },
+        {
+            "id": 77,
+            "category": "中文詞意",
+            "content": "Golgi apparatus",
+            "options": [
+                "細胞運動的主要動力來源",
+                "負責脂肪儲存的區域",
+                "合成 DNA 的胞器",
+                "修飾、分選與包裝蛋白質的膜性胞器"
+            ],
+            "answer": 3,
+            "difficulty": 0.15,
+            "time_limit": 20
+        },
+        {
+            "id": 78,
+            "category": "選詞",
+            "content": "Which protein mainly stabilizes microtubules?",
+            "options": [
+                "Actin",
+                "Kinesin",
+                "Myosin",
+                "Tau"
+            ],
+            "answer": 3,
+            "difficulty": 0.85,
+            "time_limit": 30
+        },
+        {
+            "id": 79,
+            "category": "選詞",
+            "content": "負責將蛋白質運送到溶體的標記分子是：",
+            "options": [
+                "ATPase",
+                "Mannose-6-phosphate",
+                "Integrin",
+                "Chaperone"
+            ],
+            "answer": 1,
+            "difficulty": 0.77,
+            "time_limit": 30
+        },
+        {
+            "id": 80,
+            "category": "選詞",
+            "content": "主要參與細胞肌肉收縮的蛋白質是：",
+            "options": [
+                "Tubulin",
+                "Collagen",
+                "Elastin",
+                "Actin"
+            ],
+            "answer": 3,
+            "difficulty": 0.25,
+            "time_limit": 20
+        },
+        {
+            "id": 81,
+            "category": "選詞",
+            "content": "一種能將新生蛋白協助折疊成正確構型的蛋白質",
+            "options": [
+                "Protease",
+                "Integrin",
+                "Dynein",
+                "Chaperone"
+            ],
+            "answer": 3,
+            "difficulty": 0.69,
+            "time_limit": 25
+        },
+        {
+            "id": 82,
+            "category": "選詞",
+            "content": "主要負責胞吐囊泡移動的馬達蛋白",
+            "options": [
+                "Myosin II",
+                "Actin",
+                "Keratin",
+                "Kinesin"
+            ],
+            "answer": 3,
+            "difficulty": 0.76,
+            "time_limit": 30
+        },
+        {
+            "id": 83,
+            "category": "選詞",
+            "content": "可感受並結合訊號分子的膜蛋白稱為",
+            "options": [
+                "Integrin",
+                "Ligase",
+                "Hemoglobin",
+                "Receptor"
+            ],
+            "answer": 3,
+            "difficulty": 0.24,
+            "time_limit": 20
+        },
+        {
+            "id": 84,
+            "category": "選詞",
+            "content": "主要結構由 tubulin 組成的是",
+            "options": [
+                "Extracellular fiber",
+                "Intermediate filament",
+                "Microfilament",
+                "Microtubule"
+            ],
+            "answer": 3,
+            "difficulty": 0.39,
+            "time_limit": 25
+        },
+        {
+            "id": 85,
+            "category": "選詞",
+            "content": "Which protein powers cilia beating?",
+            "options": [
+                "Keratin",
+                "Myosin I",
+                "Dynein",
+                "Actin"
+            ],
+            "answer": 2,
+            "difficulty": 0.89,
+            "time_limit": 30
+        },
+        {
+            "id": 86,
+            "category": "英文情境",
+            "content": "A vesicle moves from the ER to the Golgi. This movement requires:",
+            "options": [
+                "Kinesin walking along microtubules",
+                "ATP synthesis in mitochondria only",
+                "Actin polymerization",
+                "DNA replication"
+            ],
+            "answer": 0,
+            "difficulty": 0.74,
+            "time_limit": 30
+        },
+        {
+            "id": 87,
+            "category": "英文情境",
+            "content": "If a cell loses its integrins, it will most likely fail to:",
+            "options": [
+                "Produce ATP",
+                "Synthesize DNA",
+                "Attach to extracellular matrix",
+                "Divide the nucleus"
+            ],
+            "answer": 2,
+            "difficulty": 0.84,
+            "time_limit": 30
+        },
+        {
+            "id": 88,
+            "category": "英文情境",
+            "content": "A lysosomal enzyme reaches the wrong destination. Which process likely failed?",
+            "options": [
+                "Addition of mannose-6-phosphate",
+                "ATP hydrolysis",
+                "Transcription",
+                "Protein degradation"
+            ],
+            "answer": 0,
+            "difficulty": 0.88,
+            "time_limit": 30
+        },
+        {
+            "id": 89,
+            "category": "英文情境",
+            "content": "A cell extends its membrane forward to crawl. This requires:",
+            "options": [
+                "RNA export",
+                "Actin polymerization at the leading edge",
+                "Microtubule depolymerization only",
+                "DNA condensation"
+            ],
+            "answer": 1,
+            "difficulty": 0.52,
+            "time_limit": 25
+        },
+        {
+            "id": 90,
+            "category": "英文情境",
+            "content": "A neuron needs long-distance transport of vesicles. It mainly uses:",
+            "options": [
+                "Actin filaments",
+                "Intermediate filaments",
+                "Kinesin on microtubules",
+                "Keratin bundles"
+            ],
+            "answer": 2,
+            "difficulty": 0.47,
+            "time_limit": 25
+        },
+        {
+            "id": 91,
+            "category": "英文情境",
+            "content": "A cell exposed to toxins increases smooth ER activity. This is because smooth ER:",
+            "options": [
+                "Synthesizes RNA",
+                "Detoxifies harmful molecules",
+                "Replicates DNA",
+                "Generates ATP"
+            ],
+            "answer": 1,
+            "difficulty": 0.58,
+            "time_limit": 25
+        },
+        {
+            "id": 92,
+            "category": "英文情境",
+            "content": "Flagella require ATP because:",
+            "options": [
+                "Nucleus controls the flagella directly",
+                "Actin pushes the flagellum outward",
+                "Membrane lipids rotate using ATP",
+                "Dynein uses ATP for bending motion"
+            ],
+            "answer": 3,
+            "difficulty": 0.79,
+            "time_limit": 30
+        },
+        {
+            "id": 93,
+            "category": "英文情境",
+            "content": "A cell fails to pass the G1 checkpoint. This means the cell:",
+            "options": [
+                "Has completed mitosis",
+                "Did not meet conditions for DNA replication",
+                "Will begin cytokinesis",
+                "Cannot synthesize lipids"
+            ],
+            "answer": 1,
+            "difficulty": 0.31,
+            "time_limit": 20
+        }
+    ]
+}
