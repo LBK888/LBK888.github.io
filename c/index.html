@@ -1279,16 +1279,16 @@
                 let analysis = "";
 
                 if (score >= 120) {
-                    analysis = "恭喜你！你的綜合理解能力非常優秀，在各個領域都展現了卓越的表現。";
-                } else if (score >= 100) {
-                    analysis = "你的表現相當不錯！具備良好的基礎理解能力，能夠應對大多數日常挑戰。";
-                } else if (score >= 85) {
+                    analysis = "恭喜你！你的中英詞彙能力非常優秀，在各個領域都展現了卓越的表現。";
+                } else if (score >= 105) {
+                    analysis = "你的表現相當不錯！具備良好的基礎詞彙能力，能夠應對大多數日常挑戰。";
+                } else if (score >= 90) {
                     analysis = "你的表現中規中矩，雖然有些領域需要加強，但整體能力尚可。";
                 } else {
-                    analysis = "你可能需要在某些領域多加練習，特別是閱讀理解和邏輯思考方面。";
+                    analysis = "你可能需要在某些領域多加練習，特別是對於詞彙閱讀理解和應用思考方面。";
                 }
 
-                analysis += `\n\n你在「${top[0]}」方面表現最為優異，加權得分率達到 ${Math.round(top[1] * 100)}%。`;
+                analysis += `\n\n你在「${top[0]}」方面表現最為優異，答題正確率達到 ${Math.round(top[1] * 100)}%。`;
 
                 if (weak[1] < 0.6) {
                     analysis += `建議多加強「${weak[0]}」相關的練習，這將有助於提升你的整體能力。`;
@@ -1471,8 +1471,8 @@
             // Update badge
             let badge = '潛力無限';
             if (results.score >= 130) badge = '全能天才';
-            else if (results.score >= 115) badge = '邏輯大師';
-            else if (results.score >= 100) badge = '理解達人';
+            else if (results.score >= 115) badge = '詞彙大師';
+            else if (results.score >= 100) badge = '雙語高手';
             document.getElementById('rank-badge').textContent = badge;
 
             // Update analysis
