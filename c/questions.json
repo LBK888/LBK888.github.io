@@ -913,14 +913,14 @@
         {
             "id": 66,
             "category": "英文詞意",
-            "content": "Glycosylation",
+            "content": "Glycolysis",
             "options": [
                 "Adding carbohydrates to proteins or lipids",
                 "Breaking down glucose for energy",
                 "Removing misfolded proteins",
                 "Exporting proteins outside the cell"
             ],
-            "answer": 0,
+            "answer": 1,
             "difficulty": 0.72,
             "time_limit": 30
         },
@@ -1137,7 +1137,7 @@
         {
             "id": 82,
             "category": "選詞",
-            "content": "主要負責胞吐囊泡移動的馬達蛋白",
+            "content": "主要負責exocytosis vesicle移動的motor protein是",
             "options": [
                 "Myosin II",
                 "Actin",
