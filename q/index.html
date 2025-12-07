@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>功能性文盲大測驗 - Demo</title>
-    <meta name="description" content="測驗你在語文、數理、生活與邏輯上的真實能力">
+    <meta name="description" content="測驗你在語文、數理、生活與邏輯上的理解能力">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* ===== CSS Reset & Base ===== */
@@ -354,6 +354,11 @@
             font-size: 0.75rem;
         }
 
+        .difficulty-badge.entry {
+            background: #dcfce7;
+            color: #168ea3;
+        }
+
         .difficulty-badge.easy {
             background: #dcfce7;
             color: #16a34a;
@@ -361,12 +366,17 @@
 
         .difficulty-badge.medium {
             background: #fef3c7;
-            color: #d97706;
+            color: #d9a806;
         }
 
         .difficulty-badge.hard {
             background: #fee2e2;
             color: #dc2626;
+        }
+
+        .difficulty-badge.extreme {
+            background: #fee2e2;
+            color: #dc2666;
         }
 
         .progress-bar {
@@ -440,9 +450,11 @@
             color: var(--text-dark);
         }
 
-        .option-btn:hover:not(:disabled) {
-            border-color: var(--primary);
-            background: #eef2ff;
+        @media (hover: hover) {
+            .option-btn:hover:not(:disabled) {
+                border-color: var(--primary);
+                background: #eef2ff;
+            }
         }
 
         .option-btn:disabled {
@@ -467,9 +479,11 @@
             transition: var(--transition);
         }
 
-        .option-btn:hover:not(:disabled) .option-letter {
-            background: var(--primary);
-            color: var(--white);
+        @media (hover: hover) {
+            .option-btn:hover:not(:disabled) .option-letter {
+                background: var(--primary);
+                color: var(--white);
+            }
         }
 
         .option-btn.correct {
@@ -940,15 +954,17 @@
             // 測驗題數
             TOTAL_QUESTIONS: 20,
 
-            // 難度範圍設定 (根據正確率調整)
-            DIFFICULTY_RANGES: {
-                easy: { min: 0, max: 0.4 },      // 正確率 > 70%
-                medium: { min: 0.3, max: 0.6 },   // 正確率 50-70%
-                hard: { min: 0.5, max: 1.0 }      // 正確率 < 50%
-            },
+            // 五個難度級距設定 (tier 0-4)
+            DIFFICULTY_TIERS: [
+                { min: 0, max: 0.2, name: '入門', level: 'entry' },
+                { min: 0.2, max: 0.4, name: '簡單', level: 'easy' },
+                { min: 0.4, max: 0.6, name: '中等', level: 'medium' },
+                { min: 0.6, max: 0.8, name: '困難', level: 'hard' },
+                { min: 0.8, max: 1.0, name: '挑戰', level: 'extreme' }
+            ],
 
-            // 初始難度
-            INITIAL_DIFFICULTY: 'medium'
+            // 初始難度級別 (0-4，對應五個級距，預設從中間開始)
+            INITIAL_DIFFICULTY_TIER: 2
         };
 
         // ===================================================================
@@ -965,7 +981,8 @@
             timeLeft: 0,
             timerInterval: null,
             processing: false,
-            currentDifficulty: CONFIG.INITIAL_DIFFICULTY
+            currentDifficultyTier: CONFIG.INITIAL_DIFFICULTY_TIER,  // 當前難度級別 (0-4)
+            lastAnswerCorrect: null  // 上一題是否答對
         };
 
         // ===================================================================
@@ -1015,7 +1032,7 @@
         }
 
         // ===================================================================
-        // ADAPTIVE DIFFICULTY - 根據正確率調整難度
+        // ADAPTIVE DIFFICULTY - 根據上一題答對/答錯調整難度級別
         // ===================================================================
         function calculateAccuracy() {
             if (quizState.answers.length === 0) return 0.5; // 初始假設 50%
@@ -1023,38 +1040,46 @@
             return correct / quizState.answers.length;
         }
 
-        function getDifficultyLevel(accuracy) {
-            if (accuracy > 0.7) {
-                return 'hard';      // 表現好 → 提高難度
-            } else if (accuracy < 0.5) {
-                return 'easy';      // 表現差 → 降低難度
+        function adjustDifficultyTier(isCorrect) {
+            // 根據上一題答對/答錯調整難度級別
+            if (isCorrect) {
+                // 答對：升一個級距 (最高到 4)
+                quizState.currentDifficultyTier = Math.min(4, quizState.currentDifficultyTier + 1);
+            } else {
+                // 答錯：降一個級距 (最低到 0)
+                quizState.currentDifficultyTier = Math.max(0, quizState.currentDifficultyTier - 1);
             }
-            return 'medium';
         }
 
-        function getDifficultyRange(level) {
-            return CONFIG.DIFFICULTY_RANGES[level] || CONFIG.DIFFICULTY_RANGES.medium;
+        function getCurrentDifficultyTier() {
+            return CONFIG.DIFFICULTY_TIERS[quizState.currentDifficultyTier];
         }
 
-        function getDifficultyLabel(level) {
-            const labels = { easy: '簡單', medium: '中等', hard: '困難' };
-            return labels[level] || '中等';
+        function getDifficultyLabel() {
+            const tier = getCurrentDifficultyTier();
+            return tier ? tier.name : '中等';
+        }
+
+        function getDifficultyLevel() {
+            const tier = getCurrentDifficultyTier();
+            return tier ? tier.level : 'medium';
         }
 
         // ===================================================================
         // QUESTION SELECTION - 隨機抽取題目（不重複）
         // ===================================================================
         function selectNextQuestion() {
-            const accuracy = calculateAccuracy();
-            const difficultyLevel = getDifficultyLevel(accuracy);
-            const range = getDifficultyRange(difficultyLevel);
+            // 如果有上一題的答案，根據結果調整難度
+            if (quizState.lastAnswerCorrect !== null) {
+                adjustDifficultyTier(quizState.lastAnswerCorrect);
+            }
 
-            quizState.currentDifficulty = difficultyLevel;
+            const tier = getCurrentDifficultyTier();
 
             // 篩選符合難度範圍且未使用過的題目
             let candidates = questionBank.filter(q =>
-                q.difficulty >= range.min &&
-                q.difficulty <= range.max &&
+                q.difficulty >= tier.min &&
+                q.difficulty <= tier.max &&
                 !quizState.usedQuestionIds.has(q.id)
             );
 
@@ -1097,7 +1122,8 @@
                     timeLeft: 0,
                     timerInterval: null,
                     processing: false,
-                    currentDifficulty: CONFIG.INITIAL_DIFFICULTY
+                    currentDifficultyTier: CONFIG.INITIAL_DIFFICULTY_TIER,
+                    lastAnswerCorrect: null
                 };
 
                 const firstQuestion = selectNextQuestion();
@@ -1138,6 +1164,9 @@
                     weightedScore: weightedScore
                 });
 
+                // 記錄本題答對/答錯，供下一題選題時調整難度
+                quizState.lastAnswerCorrect = isCorrect;
+
                 quizState.currentIndex++;
 
                 if (quizState.currentIndex >= CONFIG.TOTAL_QUESTIONS) {
@@ -1170,17 +1199,17 @@
 
             // 計算結果
             getResults: function () {
-                // 動態提取類別
-                const categories = extractCategories();
+                // 動態提取題庫中的所有類別
+                const allCategories = extractCategories();
                 const categoryScores = {};
 
                 // 初始化所有類別的分數結構
-                categories.forEach(cat => {
+                allCategories.forEach(cat => {
                     categoryScores[cat] = { weightedTotal: 0, maxWeighted: 0, count: 0 };
                 });
 
                 let totalWeightedScore = 0;
-                let totalMaxWeighted = 0;
+                const totalQuestions = quizState.answers.length;
 
                 quizState.answers.forEach(ans => {
                     const cat = categoryScores[ans.category];
@@ -1190,27 +1219,32 @@
                         cat.weightedTotal += ans.weightedScore;
                         cat.count++;
 
-                        totalMaxWeighted += maxScore;
                         totalWeightedScore += ans.weightedScore;
                     }
                 });
 
-                // 計算各類別得分比例 (0-1)
+                // 計算各類別得分比例 (0-1)，只保留有作答的類別
                 const categoryResults = {};
                 for (const [key, val] of Object.entries(categoryScores)) {
-                    categoryResults[key] = val.maxWeighted > 0
-                        ? val.weightedTotal / val.maxWeighted
-                        : 0;
+                    // 只保留有作答的類別（count > 0）
+                    if (val.count > 0) {
+                        categoryResults[key] = val.maxWeighted > 0
+                            ? val.weightedTotal / val.maxWeighted
+                            : 0;
+                    }
                 }
 
-                // IQ-style scoring (100 為基準)
-                const rawScore = totalMaxWeighted > 0 ? totalWeightedScore / totalMaxWeighted : 0;
-                const iqScore = Math.round(60 + rawScore * 80); // 60-140 range
+                // 新計分邏輯：總加權分數 / 題目數
+                // 原始分數範圍: 0 ~ 200 (每題答對最高可得 100*2 = 200 分，平均下來最高200)
+                const rawScore = totalQuestions > 0 ? totalWeightedScore / totalQuestions : 0;
+                // 將 0-200 的原始分數映射到 60-140 的 IQ 風格分數
+                const iqScore = Math.round(60 + (rawScore / 200) * 80); // 60-140 range
 
                 // 模擬排名百分比
-                const rankPercent = Math.min(99, Math.round(rawScore * 95 + Math.random() * 5));
+                const normalizedScore = rawScore / 200; // 0-1 範圍
+                const rankPercent = Math.min(99, Math.round(normalizedScore * 95 + Math.random() * 5));
 
-                // 生成分析文字
+                // 生成分析文字（只使用有作答的類別）
                 const sortedCategories = Object.entries(categoryResults)
                     .sort((a, b) => b[1] - a[1]);
                 const topCategory = sortedCategories[0];
@@ -1318,8 +1352,9 @@
             // Update difficulty indicator
             const accuracy = calculateAccuracy();
             const difficultyBadge = document.getElementById('difficulty-badge');
-            difficultyBadge.textContent = getDifficultyLabel(quizState.currentDifficulty);
-            difficultyBadge.className = 'difficulty-badge ' + quizState.currentDifficulty;
+            const tierInfo = getCurrentDifficultyTier();
+            difficultyBadge.textContent = getDifficultyLabel();
+            difficultyBadge.className = 'difficulty-badge ' + getDifficultyLevel();
             document.getElementById('accuracy-display').textContent =
                 `（正確率: ${Math.round(accuracy * 100)}%）`;
 
@@ -1379,6 +1414,12 @@
 
         function handleAnswer(selectedIndex, isTimeout = false) {
             if (quizState.processing) return;
+
+            // Fix: 移除手機版可能的 Focus 殘留，避免下一題出現藍色外框
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+
             quizState.processing = true;
             clearInterval(quizState.timerInterval);
 
