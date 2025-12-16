@@ -8,7 +8,7 @@
                 "The ability of a motor protein to detach quickly from its filament.",
                 "The coordinated movement of multiple motor proteins.",
                 "The ability of a motor protein to move long distances along a filament before detaching.",
-                "A single molecule can walk continuously along a microtubule for long distance."
+                "A single molecule can walk continuously along a microtubule for long distances."
             ],
             "answer": 2,
             "difficulty": 0.8,
@@ -777,7 +777,7 @@
             "options": [
                 "lysosomes push vesicles",
                 "flagella detach vesicles",
-                "motor proteins move along microtubules",
+                "motor proteins move along with microtubules",
                 "vesicles need DNA"
             ],
             "answer": 2,
