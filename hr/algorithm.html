@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>演算法說明 - 心跳影像分析器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-6 border-b pb-4">
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                演算法說明 Algorithm Description
+            </h1>
+            <a href="index.html"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                返回 Back
+            </a>
+        </div>
+
+        <div class="space-y-8 text-gray-700">
+            <section>
+                <h2 class="text-xl font-bold mb-3 text-blue-700 border-l-4 border-blue-500 pl-3">1. 影像對齊 (Motion
+                    Tracking)</h2>
+                <p class="mb-2 leading-relaxed">
+                    為了處理手機拍攝時的晃動，本系統使用 <strong>絕對差值和 (Sum of Absolute Differences, SAD)</strong> 演算法進行影像對齊：
+                </p>
+                <ul class="list-disc pl-6 space-y-2 bg-blue-50 p-4 rounded-lg">
+                    <li><span class="font-semibold">原理：</span> 在每一張影像中，搜尋與「第一幀心臟區域模板」最相似的區塊。</li>
+                    <li><span class="font-semibold">優化：</span> 相比傳統的互相關 (NCC)，SAD 計算速度更快，能達到即時處理的效果。</li>
+                    <li><span class="font-semibold">抗震：</span> 透過持續追蹤初始選定的特徵點，消除手部晃動造成的雜訊。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-bold mb-3 text-blue-700 border-l-4 border-blue-500 pl-3">2. 訊號提取 (Signal
+                    Extraction)</h2>
+                <p class="mb-2 leading-relaxed">
+                    從校正後的影像中提取光體積變化描記圖法 (rPPG) 訊號：
+                </p>
+                <ul class="list-disc pl-6 space-y-2 bg-gray-50 p-4 rounded-lg">
+                    <li>提取每一幀中心臟區域 (Region of Interest, ROI) 的 <strong>綠色通道 (Green Channel)</strong> 強度。</li>
+                    <li><span class="font-semibold">原因：</span> 血液中的血紅素對綠光 (約 530nm) 的吸收率最高，因此綠色通道包含最強的心跳脈動訊息。</li>
+                    <li>將每一幀的平均綠光強度連接起來，形成原始的時間序列訊號。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-bold mb-3 text-blue-700 border-l-4 border-blue-500 pl-3">3. 訊號處理流程 (Signal
+                    Processing Pipeline)</h2>
+                <div class="space-y-4">
+                    <div class="bg-white border text-gray-800 p-4 rounded-lg shadow-sm">
+                        <strong class="text-blue-600 block mb-1">Step 1: 去趨勢 (Detrending)</strong>
+                        使用線性回歸 (Linear Regression) 移除訊號中的線性漂移 (例如光線緩慢變化)。
+                    </div>
+                    <div class="bg-white border text-gray-800 p-4 rounded-lg shadow-sm">
+                        <strong class="text-blue-600 block mb-1">Step 2: 帶通濾波 (Bandpass Filtering)</strong>
+                        <ul>
+                            <li><strong>高通 (High-pass):</strong> 透過減去移動平均值 (Moving Average Subtraction) 來移除低頻雜訊 (< 0.7
+                                    Hz)。</li>
+                            <li><strong>低通 (Low-pass):</strong> 使用平滑濾波器 (Smoothing) 移除高頻雜訊 (> 3-4 Hz)，保留 42-210 BPM
+                                的心率頻段。</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-bold mb-3 text-blue-700 border-l-4 border-blue-500 pl-3">4. 峰值檢測與指標計算 (Peak
+                    Detection & Metrics)</h2>
+                <ul class="list-disc pl-6 space-y-2 bg-indigo-50 p-4 rounded-lg">
+                    <li><strong>動態閾值 (Dynamic Thresholding):</strong> 根據訊號振幅自動調整檢測門檻，適應不同亮度的影片。</li>
+                    <li><strong>不反應期 (Refractory Period):</strong> 限制兩個心跳間的最小距離，避免誤判雙峰。</li>
+                    <li><strong>HR (Heart Rate):</strong> 計算平均 R-R 間期 (心跳間隔)，換算為每分鐘心跳數 (BPM)。</li>
+                    <li><strong>HRV (Heart Rate Variability):</strong> 計算 R-R 間期的標準差 (SDNN) 與均方根差 (RMSSD)，反映自律神經系統的活性。
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+</body>
+
+</html>
