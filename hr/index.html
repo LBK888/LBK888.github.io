@@ -83,6 +83,19 @@
                         style="width: 0%"></div>
                 </div>
 
+                <!-- Duration Selector -->
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <label for="durationSelect" class="text-sm font-medium text-gray-700">分析時長 Analysis
+                        Duration:</label>
+                    <select id="durationSelect"
+                        class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
+                        <option value="10" selected>10 秒 (Seconds)</option>
+                        <option value="30">30 秒 (Seconds)</option>
+                        <option value="60">60 秒 (Seconds)</option>
+                        <option value="full">全部 Full Video</option>
+                    </select>
+                </div>
+
                 <button id="analyzeBtn" disabled
                     class="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-semibold text-lg transition shadow-md bg-gray-300 text-gray-500 cursor-not-allowed">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
@@ -97,6 +110,14 @@
             <!-- Results Section (Hidden initially) -->
             <div id="resultsSection" class="hidden space-y-6 mt-8">
                 <h2 class="text-2xl font-bold text-gray-800 border-b pb-2">分析結果 Analysis Results</h2>
+
+                <!-- Result Video Container -->
+                <div
+                    class="bg-gray-900 rounded-lg overflow-hidden relative aspect-video flex items-center justify-center">
+                    <video id="resultVideo" controls class="w-full h-full object-contain"></video>
+                    <div class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded">分析過程回放 Replay
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div

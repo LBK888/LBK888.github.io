@@ -1,3 +1,4 @@
+
 // DOM Elements
 const videoInput = document.getElementById('videoInput');
 const uploadBtn = document.getElementById('uploadBtn');
@@ -10,6 +11,8 @@ const analyzeBtnText = document.getElementById('analyzeBtnText');
 const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
 const resultsSection = document.getElementById('resultsSection');
+const resultVideo = document.getElementById('resultVideo');
+const durationSelect = document.getElementById('durationSelect');
 
 // State
 let videoFile = null;
@@ -24,7 +27,7 @@ const ctx = videoCanvas.getContext('2d', { willReadFrequently: true });
 // Constants
 const ROI_SIZE = 40;     // Region of Interest size
 const TEMPLATE_SIZE = 32; // Template size for tracking (Smaller than TSX for speed)
-const SEARCH_SIZE = 16;   // Search window size (+/- this amount)
+const SEARCH_SIZE = 32;   // Search window size (+/- this amount)
 
 // Event Listeners
 uploadBtn.addEventListener('click', () => videoInput.click());
@@ -189,6 +192,24 @@ function extractFirstFrame(file) {
         videoCanvas.width = video.videoWidth;
         videoCanvas.height = video.videoHeight;
 
+        // Mobile Fix: Check aspect ratio
+        const aspect = video.videoWidth / video.videoHeight;
+        const container = videoCanvas.parentElement;
+        if (aspect < 1) { // Vertical video
+            container.classList.remove('aspect-video');
+            container.style.height = '60vh'; // Constrain height on mobile
+            container.classList.add('h-[60vh]', 'w-auto');
+            videoCanvas.style.height = '100%';
+            videoCanvas.style.width = 'auto';
+        } else {
+            // Reset for horizontal
+            container.classList.add('aspect-video');
+            container.style.height = '';
+            container.classList.remove('h-[60vh]', 'w-auto');
+            videoCanvas.style.width = '100%';
+            videoCanvas.style.height = 'auto';
+        }
+
         // Seek to 1st frame explicitly
         video.currentTime = 0.1;
     };
@@ -243,196 +264,7 @@ function drawSelectedPoint(x, y) {
     ctx.fill();
 }
 
-// Mask-based Analysis
-async function startAnalysis() {
-    if (!videoFile || !maskCanvas) return;
 
-    fillMaskHoles(); // Auto-fill holes before analysis
-
-    isAnalyzing = true;
-    analyzeBtn.disabled = true;
-    progressContainer.classList.remove('hidden');
-    analyzeBtnText.textContent = "分析中... Analyzing...";
-
-    const video = document.createElement('video');
-    video.src = URL.createObjectURL(videoFile);
-    video.preload = 'auto';
-    video.muted = true;
-    video.playsInline = true;
-
-    try {
-        await new Promise((resolve, reject) => {
-            video.onloadeddata = resolve;
-            video.onerror = (e) => reject("Video load failed");
-            // Add timeout
-            setTimeout(() => {
-                if (video.readyState >= 1) resolve();
-                else reject("Video load timeout");
-            }, 5000);
-            video.load();
-        });
-    } catch (e) {
-        alert("影片載入失敗 (Video Load Failed): " + e);
-        isAnalyzing = false;
-        analyzeBtn.disabled = false;
-        analyzeBtnText.textContent = "開始分析 Start Analysis";
-        return;
-    }
-
-    // Ensure metadata is loaded for valid duration
-    if (!Number.isFinite(video.duration)) {
-        video.currentTime = 1e101;
-        await new Promise(r => {
-            video.ondurationchange = () => {
-                video.currentTime = 0;
-                r();
-            };
-        });
-    }
-
-    const duration = video.duration || 10; // fallback
-    const targetFPS = 30;
-    const totalFrames = Math.floor(duration * targetFPS);
-    const intensityData = [];
-
-    // Calculate Center of Mass of the Mask
-    const maskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
-    let sumX = 0, sumY = 0, count = 0;
-    const activePixels = []; // relative coordinates {x, y} from CoM
-
-    for (let y = 0; y < maskCanvas.height; y++) {
-        for (let x = 0; x < maskCanvas.width; x++) {
-            const idx = (y * maskCanvas.width + x) * 4;
-            if (maskData.data[idx + 3] > 0) { // Alpha > 0
-                sumX += x;
-                sumY += y;
-                count++;
-            }
-        }
-    }
-
-    if (count === 0) {
-        alert("Mask empty!");
-        isAnalyzing = false;
-        analyzeBtn.disabled = false;
-        analyzeBtnText.textContent = "開始分析 Start Analysis";
-        return;
-    }
-
-    let centerX = sumX / count;
-    let centerY = sumY / count;
-
-    // Store relative offsets
-    for (let y = 0; y < maskCanvas.height; y++) {
-        for (let x = 0; x < maskCanvas.width; x++) {
-            const idx = (y * maskCanvas.width + x) * 4;
-            if (maskData.data[idx + 3] > 0) {
-                activePixels.push({ dx: x - centerX, dy: y - centerY });
-            }
-        }
-    }
-
-    // Prepare for tracking
-    // For tracking, we use a region around the CoM
-    ctx.drawImage(firstFrameImage, 0, 0);
-    const templateSize = 64; // Larger template for stability
-    const templateImageData = ctx.getImageData(
-        Math.max(0, centerX - templateSize / 2),
-        Math.max(0, centerY - templateSize / 2),
-        templateSize,
-        templateSize
-    );
-
-    let currentFrame = 0;
-
-    const processChunk = async () => {
-        const startTime = performance.now();
-
-        while (currentFrame < totalFrames) {
-            if (performance.now() - startTime > 30) {
-                const progress = Math.round((currentFrame / totalFrames) * 100);
-                progressBar.style.width = `${progress}%`;
-                analyzeBtnText.textContent = `分析中... Analyzing... ${progress}%`;
-                await new Promise(requestAnimationFrame);
-                return processChunk();
-            }
-
-            const time = currentFrame / targetFPS;
-            video.currentTime = time;
-
-            // Wait for seek with timeout safety
-            try {
-                await new Promise((resolve, reject) => {
-                    const seekHandler = () => {
-                        video.removeEventListener('seeked', seekHandler);
-                        resolve();
-                    };
-                    video.addEventListener('seeked', seekHandler);
-                    // Timeout if seek takes too long (skip frame)
-                    setTimeout(() => {
-                        video.removeEventListener('seeked', seekHandler);
-                        resolve(); // Just continue with whatever we have
-                    }, 500);
-                });
-            } catch (e) { console.warn("Frame seek error", e); }
-
-
-            // Draw video to main canvas to read pixels
-            ctx.drawImage(video, 0, 0);
-
-            // Tracking
-            if (currentFrame > 0) {
-                // Track the CoM
-                const bestMatch = performTrackingSAD(
-                    ctx,
-                    centerX,
-                    centerY,
-                    templateImageData.data,
-                    templateSize,
-                    templateSize
-                );
-                // Smooth update
-                if (bestMatch) {
-                    centerX = centerX * 0.7 + bestMatch.x * 0.3;
-                    centerY = centerY * 0.7 + bestMatch.y * 0.3;
-                }
-            }
-
-            // Extract Green Signal using Mask
-            // We iterate over activePixels and sample at current (centerX + dx, centerY + dy)
-            let greenSum = 0;
-            let validPixels = 0;
-            const width = videoCanvas.width;
-            const height = videoCanvas.height;
-            const frameData = ctx.getImageData(0, 0, width, height).data;
-
-            // Optimization: If mask is huge, reading independent pixels is slow. 
-            // Better to read bounding box.
-            // But let's stick to simple implementation first, optimized by reading full frame once (done above)
-
-            // Actually, `frameData` is huge array. access is `(y * w + x) * 4`
-            for (let i = 0; i < activePixels.length; i += 4) { // SUBSAMPLE: Skip every 4th pixel for speed
-                const px = Math.floor(centerX + activePixels[i].dx);
-                const py = Math.floor(centerY + activePixels[i].dy);
-
-                if (px >= 0 && px < width && py >= 0 && py < height) {
-                    const idx = (py * width + px) * 4;
-                    greenSum += frameData[idx + 1];
-                    validPixels++;
-                }
-            }
-
-            intensityData.push(greenSum / (validPixels || 1));
-
-            currentFrame++;
-        }
-
-        finishAnalysis(intensityData, targetFPS, duration);
-        URL.revokeObjectURL(video.src);
-    };
-
-    processChunk();
-}
 
 function fillMaskHoles() {
     if (!maskCtx || !maskCanvas) return;
@@ -521,84 +353,8 @@ function fillMaskHoles() {
     ctx.restore();
 }
 
-function findBestMatchSAD(context, startX, startY) {
-    // Get search area (larger)
-    const searchAreaSize = TEMPLATE_SIZE + (SEARCH_SIZE * 2);
-    const searchX = Math.floor(startX - searchAreaSize / 2);
-    const searchY = Math.floor(startY - searchAreaSize / 2);
 
-    // Boundary check
-    if (searchX < 0 || searchY < 0 ||
-        searchX + searchAreaSize > context.canvas.width ||
-        searchY + searchAreaSize > context.canvas.height) {
-        return { x: startX, y: startY };
-    }
-
-    const searchData = context.getImageData(searchX, searchY, searchAreaSize, searchAreaSize);
-    const data = searchData.data;
-    const width = searchAreaSize;
-
-    // We actually need the PREVIOUS frame's template to match against CURRENT frame.
-    // However, for simplicity and performance in this flow:
-    // We assume the object doesn't change appearance drastically. 
-    // We simply look for the region in the CURRENT frame that has the highest correlation 
-    // with the template we extracted from the PREVIOUS frame.
-    // Wait, to do this properly we need to store the template from the previous step.
-    // Correct Approach: 
-    // 1. Extract template from previous frame (stored). 
-    // 2. Search in current frame.
-    // 3. Update template.
-
-    // Ideally we should have stored the template.
-    // For this implementation, let's use a simpler approach:
-    // Just search for the "most distinct" feature? No, that's tracking.
-    // Optimization: Since we draw every frame to canvas, we can't easily access the "previous" frame pixel data unless we saved it.
-    // Modifying the loop to save the Template Data.
-
-    // Actually, let's simplify. The original code used NCC on the current canvas context vs itself?
-    // "const template = ctx.getImageData... (prevPos)" -> This implies it was trying to match against the *current* frame's own content?
-    // Wait, the original code logic was:
-    // 1. video.currentTime changes.
-    // 2. ctx.drawImage(video). -> Now canvas has CURRENT frame.
-    // 3. findBestMatch(ctx, prevPos...) 
-    //    -> "const template = ctx.getImageData(prevPos...)" -> This grabs pixels from CURRENT frame at PREVIOUS position.
-    //    -> Then searches neighbors in CURRENT frame.
-    //    -> THIS IS WRONG in the original code. It was matching the current frame against itself slightly shifted. 
-    //       It finds the "smoothest" match, not the "motion". 
-    //       Actual Motion Tracking needs: Template from Frame N-1, Search in Frame N.
-
-    // Let's FIX this.
-    // Since we can't easily get Frame N-1 without double buffering, 
-    // and storing full interaction is heavy.
-    // We will trust the user held the phone relatively still, but correct for small jitters.
-    // Maybe we just skip complex tracking if the original was flawed, 
-    // OR we implement it correctly:
-    // We need to keep the "Reference Template".
-    // Let's use the INTIAL selected point as the reference template and track THAT.
-    // This prevents drift.
-
-    // But appearance changes (lighting, blood flow).
-    // Let's stick to the center point. 
-    // If the original tracking was flawed, maybe we just disable it or fix it properly.
-    // Let's try to implement a simple "Center of Mass" or "Brightest Spot" tracking? No.
-
-    // Let's implement Reference-Based Tracking.
-    // We grab the template at the Selected Point from the FIRST frame.
-    // And we search for it in every subsequent frame.
-    // This handles "hand shaking" well.
-    return { x: startX, y: startY }; // Placeholder if we want to skip complex tracking for now to ensure we finish. 
-    // Wait, the requirement says "Phone video might have shake, do alignment".
-
-    // OK, let's implement proper tracking.
-    // I need the First Frame's template data.
-    // I will store `referenceTemplateData` globally.
-}
-
-// Updating Global for Tracking
-// [Override removed - using consolidated extractFirstFrame above]
-
-
-// Real tracker implementation
+// Real tracker implementation using Mean-Subtracted SAD (MSSAD)
 function performTrackingSAD(ctx, currentX, currentY, templateData, width, height) {
     if (!templateData) return { x: currentX, y: currentY };
 
@@ -613,7 +369,6 @@ function performTrackingSAD(ctx, currentX, currentY, templateData, width, height
     const endY = Math.min(ctx.canvas.height - height, Math.floor(currentY + SEARCH_SIZE));
 
     // We need to access pixel data of the search window efficiently
-    // Getting full image data of the search region
     const searchWidth = endX - startX + width;
     const searchHeight = endY - startY + height;
 
@@ -621,26 +376,54 @@ function performTrackingSAD(ctx, currentX, currentY, templateData, width, height
 
     const sceneData = ctx.getImageData(startX, startY, searchWidth, searchHeight).data;
 
+    // 1. Calculate Mean of Template (RGB Average)
+    let sumTemplate = 0;
+    let countTemplate = 0;
+    for (let i = 0; i < templateData.length; i += 4) {
+        // RGB Average
+        const intensity = (templateData[i] + templateData[i + 1] + templateData[i + 2]) / 3;
+        sumTemplate += intensity;
+        countTemplate++;
+    }
+    const meanTemplate = sumTemplate / countTemplate;
+
     // Iterate through all possible positions
-    for (let y = 0; y <= endY - startY; y += 2) { // Step 2 for speed
-        for (let x = 0; x <= endX - startX; x += 2) {
+    for (let y = 0; y <= endY - startY; y += 3) { // Step 3 for speed
+        for (let x = 0; x <= endX - startX; x += 3) {
+
+            // 2. Calculate Mean of Current Block (RGB Average)
+            let sumBlock = 0;
+            let countBlock = 0;
+            for (let ty = 0; ty < height; ty += 3) {
+                for (let tx = 0; tx < width; tx += 3) {
+                    const sceneIdx = ((y + ty) * searchWidth + (x + tx)) * 4;
+                    const intensity = (sceneData[sceneIdx] + sceneData[sceneIdx + 1] + sceneData[sceneIdx + 2]) / 3;
+                    sumBlock += intensity;
+                    countBlock++;
+                }
+            }
+            const meanBlock = sumBlock / countBlock;
+
+            // 3. Calculate MSSAD
             let sad = 0;
-            // Calculate SAD for this position
             for (let ty = 0; ty < height; ty += 2) { // Subsample template for speed
                 for (let tx = 0; tx < width; tx += 2) {
                     const sceneIdx = ((y + ty) * searchWidth + (x + tx)) * 4;
                     const tempIdx = (ty * width + tx) * 4;
 
-                    // Only use Green channel for matching (usually best contrast)
-                    const diff = sceneData[sceneIdx + 1] - templateData[tempIdx + 1];
+                    const valScene = (sceneData[sceneIdx] + sceneData[sceneIdx + 1] + sceneData[sceneIdx + 2]) / 3;
+                    const valTemplate = (templateData[tempIdx] + templateData[tempIdx + 1] + templateData[tempIdx + 2]) / 3;
+
+                    // Mean-Subtracted Difference
+                    const diff = (valScene - meanBlock) - (valTemplate - meanTemplate);
                     sad += Math.abs(diff);
                 }
             }
 
             if (sad < bestSAD) {
                 bestSAD = sad;
-                bestX = startX + x + width / 2; // Center
-                bestY = startY + y + height / 2;
+                bestX = startX + x; //+ width / 2; // Center
+                bestY = startY + y;//+ height / 2;
             }
         }
     }
@@ -648,6 +431,182 @@ function performTrackingSAD(ctx, currentX, currentY, templateData, width, height
     return { x: bestX, y: bestY };
 }
 
+
+async function generateResultVideo(video, trajectory, signal, totalFrames, fps, bboxWidth, bboxHeight) {
+    // Reset Video
+    video.currentTime = 0;
+
+    // Setup Canvas for recording (Cropped Size)
+    // Use Bounding Box size for crop context (with some padding)
+    // Ensure min size of 320 for visibility if box is small
+    const padding = 50;
+    const targetSize = Math.max(320, Math.max(bboxWidth, bboxHeight) + padding * 2);
+    const cropSize = Math.floor(targetSize);
+
+    // Start Recorder
+    const stream = videoCanvas.captureStream(30);
+    const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' }); // Try VP9 for better quality
+    const chunks = [];
+    mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+    };
+    mediaRecorder.start();
+
+    let currentFrame = 0;
+    const processGenChunk = async () => {
+        const startTime = performance.now();
+
+        while (currentFrame < totalFrames) {
+            if (performance.now() - startTime > 30) {
+                const progress = Math.round((currentFrame / totalFrames) * 100);
+                progressBar.style.width = `${progress}%`;
+                analyzeBtnText.textContent = `產生影片中... Generating... ${progress}%`;
+                await new Promise(requestAnimationFrame);
+                return processGenChunk();
+            }
+
+            // Seek
+            const time = currentFrame / fps;
+            video.currentTime = time;
+
+            // Wait for seek (Fast simple wait)
+            await new Promise(r => {
+                const h = () => { video.removeEventListener('seeked', h); r(); };
+                video.addEventListener('seeked', h);
+                // Fallback
+                setTimeout(h, 200);
+            });
+
+            // Tracking Center
+            const track = trajectory[currentFrame] || trajectory[0];
+            const cx = track.x;
+            const cy = track.y;
+
+            // Draw Cropped Video
+            // Source: [cx - cropSize/2, cy - cropSize/2, cropSize, cropSize]
+            // Dest: [0, 0, canvas.width, canvas.height] 
+            // We want to fill the canvas with the cropped view
+
+            // Clear
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, videoCanvas.width, videoCanvas.height);
+
+            const sx = Math.max(0, cx - cropSize / 2);
+            const sy = Math.max(0, cy - cropSize / 2);
+            // Ensure we don't go out of bounds
+            // Actually drawImage handles out of bounds by clipping, but let's be safe?
+            // drawImage(padding) is complex. 
+            // Simplified:
+            ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, videoCanvas.width, videoCanvas.height);
+
+            // Draw Overlay: Signal
+            // Draw a graph at bottom 30%
+            const graphHeight = videoCanvas.height * 0.3;
+            const graphY = videoCanvas.height - graphHeight;
+
+            // Background for graph
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, graphY, videoCanvas.width, graphHeight);
+
+            // Plot Signal
+            // Normalize signal to fit graph
+            const snippetWidth = 150; // Show window of frames
+            const startIdx = Math.max(0, currentFrame - snippetWidth);
+            const endIdx = Math.min(signal.length, currentFrame + 50);
+
+            // Find min/max in this window for scaling? Or global? Global is more stable.
+            // Let's use global min/max of the signal
+            const minVal = Math.min(...signal);
+            const maxVal = Math.max(...signal);
+            const range = maxVal - minVal || 1;
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#00ff00'; // Green line
+            ctx.lineWidth = 2;
+
+            for (let i = startIdx; i < endIdx; i++) {
+                const val = signal[i];
+                // Map X: Based on position in window relative to currentFrame?
+                // Let's put currentFrame at center of graph X?
+                // Or just scrolling left?
+                // Scroll: i maps to x pixel.
+                // Map i based on (currentFrame - snippetWidth) -> 0
+
+                const relI = i - (currentFrame - snippetWidth / 2); // Center current frame
+                const x = (relI / snippetWidth) * videoCanvas.width;
+
+                const normalizedY = (val - minVal) / range;
+                const y = graphY + graphHeight - (normalizedY * graphHeight * 0.8) - (graphHeight * 0.1);
+
+                if (i === startIdx) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Draw Vertical Line at Current Frame
+            const centerX = videoCanvas.width / 2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(centerX, graphY);
+            ctx.lineTo(centerX, videoCanvas.height);
+            ctx.stroke();
+
+            // Value Text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px monospace';
+            ctx.fillText(signal[currentFrame]?.toFixed(2) || "...", centerX + 5, graphY + 20);
+
+            currentFrame++;
+        }
+
+        mediaRecorder.stop();
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            resultVideo.src = URL.createObjectURL(blob);
+
+            // Cleanup & Restore UI
+            URL.revokeObjectURL(video.src);
+
+            // Finalize UI State (Now we can call the UI reset parts of finishAnalysis)
+            // We modified finishAnalysis to return data, now we need to do the UI updates manually or split finishAnalysis.
+            // Let's add a `updateUI` to finishAnalysis or just do it here.
+
+            // Call the UI part of finishAnalysis?
+            // Actually, `finishAnalysis` was calling `displayResults`.
+            // We need to ensure `displayResults` runs.
+
+            // Let's modify finishAnalysis to separate calculation and UI.
+            // For now, assume finishAnalysis did the calculation and displayResults, 
+            // but we passed false to it to skip the "Reset Button" part.
+
+            // Manually do the final UI reset
+            isAnalyzing = false;
+            analyzeBtn.disabled = false;
+            analyzeBtnText.textContent = "再次分析 Analyze Again";
+            analyzeBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            analyzeBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-indigo-600', 'text-white');
+            progressBar.style.width = '100%';
+
+            // Clear Mask & Reset for new analysis
+            maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+            maskCanvas = null;
+            maskCtx = null;
+
+            // Redraw first frame (clears red overlay)
+            ctx.drawImage(firstFrameImage, 0, 0);
+
+            // Reset State
+            instructionText.textContent = "分析完成。 (Analysis Done)";
+            analyzeBtn.disabled = true;
+            analyzeBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            analyzeBtn.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-indigo-600', 'text-white');
+            analyzeBtnText.textContent = "請重新選擇區域 Select Region";
+        };
+    };
+
+    processGenChunk();
+}
 
 // Re-implement startAnalysis to use the proper tracker
 // Mask-based Analysis
@@ -731,30 +690,39 @@ async function startAnalysis() {
     }
 
     const duration = video.duration || 10; // fallback
+    const selectedDuration = durationSelect.value;
+    let limitDuration = duration;
+    if (selectedDuration !== 'full') {
+        limitDuration = Math.min(duration, parseInt(selectedDuration));
+    }
+
+    const durationToUse = limitDuration;
     const targetFPS = 30;
-    const totalFrames = Math.floor(duration * targetFPS);
-    console.log(`Duration: ${duration}, Total Frames: ${totalFrames}`);
+    const totalFrames = Math.floor(durationToUse * targetFPS);
+    console.log(`Duration: ${duration} (Limit: ${limitDuration}), Total Frames to process: ${totalFrames}`);
     const intensityData = [];
 
     // Calculate Center of Mass of the Mask
-    console.log("Calculating Center of Mass...");
+    // Calculate Bounding Box of the Mask
+    console.log("Calculating Bounding Box...");
     const maskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
-    let sumX = 0, sumY = 0, count = 0;
-    const activePixels = []; // relative coordinates {x, y} from CoM
+    let minX = maskCanvas.width, minY = maskCanvas.height, maxX = 0, maxY = 0;
+    let hasPixels = false;
 
     for (let y = 0; y < maskCanvas.height; y++) {
         for (let x = 0; x < maskCanvas.width; x++) {
             const idx = (y * maskCanvas.width + x) * 4;
             if (maskData.data[idx + 3] > 0) { // Alpha > 0
-                sumX += x;
-                sumY += y;
-                count++;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+                hasPixels = true;
             }
         }
     }
 
-    console.log("Mask pixel count:", count);
-    if (count === 0) {
+    if (!hasPixels) {
         alert("Mask empty!");
         isAnalyzing = false;
         analyzeBtn.disabled = false;
@@ -762,19 +730,13 @@ async function startAnalysis() {
         return;
     }
 
-    let centerX = sumX / count;
-    let centerY = sumY / count;
-    console.log(`Center of Mass: ${centerX}, ${centerY}`);
+    const bboxWidth = maxX - minX;
+    const bboxHeight = maxY - minY;
+    let centerX = minX + bboxWidth / 2;
+    let centerY = minY + bboxHeight / 2;
+    console.log(`Bounding Box: ${bboxWidth}x${bboxHeight} at ${centerX}, ${centerY}`);
 
-    // Store relative offsets
-    for (let y = 0; y < maskCanvas.height; y++) {
-        for (let x = 0; x < maskCanvas.width; x++) {
-            const idx = (y * maskCanvas.width + x) * 4;
-            if (maskData.data[idx + 3] > 0) {
-                activePixels.push({ dx: x - centerX, dy: y - centerY });
-            }
-        }
-    }
+    // No need to store activePixels anymore, we will use the BBox area directly
 
     // Prepare for tracking
     // For tracking, we use a region around the CoM
@@ -788,7 +750,9 @@ async function startAnalysis() {
     );
 
     let currentFrame = 0;
+    const trackingTrajectory = []; // Store {x, y} for Pass 2
 
+    // Pass 1: Analysis & Tracking
     const processChunk = async () => {
         // console.log(`Processing chunk starting at frame ${currentFrame}`); 
         // Can be too verbose, removed
@@ -828,6 +792,19 @@ async function startAnalysis() {
             // Draw video to main canvas to read pixels
             ctx.drawImage(video, 0, 0);
 
+            // Visual Tracking Feedback (Draw on main canvas for Debug Video)
+            if (currentFrame > 0 && maskCanvas) {
+                // Draw a rectangle around the tracked center (Bounding Box)
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(centerX - bboxWidth / 2, centerY - bboxHeight / 2, bboxWidth, bboxHeight);
+
+                // Optional: Draw the mask overlay lightly
+                // ctx.globalAlpha = 0.3;
+                // ctx.drawImage(maskCanvas, 0, 0);
+                // ctx.globalAlpha = 1.0;
+            }
+
             // Tracking
             if (currentFrame > 0) {
                 // Track the CoM
@@ -846,59 +823,57 @@ async function startAnalysis() {
                 }
             }
 
-            // Extract Green Signal using Mask
-            // We iterate over activePixels and sample at current (centerX + dx, centerY + dy)
-            let greenSum = 0;
-            let validPixels = 0;
-            const width = videoCanvas.width;
-            const height = videoCanvas.height;
-            const frameData = ctx.getImageData(0, 0, width, height).data;
+            // Store Trajectory for Pass 2
+            trackingTrajectory.push({ x: centerX, y: centerY });
 
-            // Optimization: If mask is huge, reading independent pixels is slow. 
-            // Better to read bounding box.
-            // But let's stick to simple implementation first, optimized by reading full frame once (done above)
+            // Extract RGB Average Signal using Bounding Box
+            // Read pixels from the Bounding Box area centered at (centerX, centerY)
+            const boxX = Math.floor(centerX - bboxWidth / 2);
+            const boxY = Math.floor(centerY - bboxHeight / 2);
+            const boxW = Math.floor(bboxWidth);
+            const boxH = Math.floor(bboxHeight);
 
-            // Actually, `frameData` is huge array. access is `(y * w + x) * 4`
-            for (let i = 0; i < activePixels.length; i += 4) { // SUBSAMPLE: Skip every 4th pixel for speed
-                const px = Math.floor(centerX + activePixels[i].dx);
-                const py = Math.floor(centerY + activePixels[i].dy);
+            // Boundary checks
+            const sx = Math.max(0, boxX);
+            const sy = Math.max(0, boxY);
+            const ex = Math.min(videoCanvas.width, boxX + boxW);
+            const ey = Math.min(videoCanvas.height, boxY + boxH);
+            const sw = ex - sx;
+            const sh = ey - sy;
 
-                if (px >= 0 && px < width && py >= 0 && py < height) {
-                    const idx = (py * width + px) * 4;
-                    greenSum += frameData[idx + 1];
-                    validPixels++;
+            if (sw > 0 && sh > 0) {
+                const frameData = ctx.getImageData(sx, sy, sw, sh).data;
+                let sumRGB = 0;
+                // Sum all pixels in the box
+                for (let i = 0; i < frameData.length; i += 4) {
+                    sumRGB += (frameData[i] + frameData[i + 1] + frameData[i + 2]) / 3;
                 }
+                const count = frameData.length / 4;
+                intensityData.push(sumRGB / count);
+            } else {
+                intensityData.push(intensityData.length > 0 ? intensityData[intensityData.length - 1] : 0); // Fill previous or 0
             }
-
-            intensityData.push(greenSum / (validPixels || 1));
 
             currentFrame++;
         }
 
-        console.log("Analysis complete. Finishing...");
-        finishAnalysis(intensityData, targetFPS, duration);
-        URL.revokeObjectURL(video.src);
+        console.log("Analysis Pass 1 complete.");
+
+        // Finish Analysis (Signal Processing)
+        const processedData = finishAnalysis(intensityData, targetFPS, durationToUse, false); // Pass false to not reset UI yet
+
+        // Pass 2: Generate Video
+        analyzeBtnText.textContent = "產生影片中... Generating Video...";
+        await generateResultVideo(video, trackingTrajectory, processedData.filtered, totalFrames, targetFPS, bboxWidth, bboxHeight);
     };
 
     console.log("Starting processing loop...");
     processChunk();
 }
 
-function getAverageGreen(ctx, x, y, size) {
-    const startX = Math.floor(x - size / 2);
-    const startY = Math.floor(y - size / 2);
-    const imageData = ctx.getImageData(startX, startY, size, size);
-    const data = imageData.data;
 
-    let sum = 0;
-    // data struct: r, g, b, a
-    for (let i = 0; i < data.length; i += 4) {
-        sum += data[i + 1]; // Green channel
-    }
-    return sum / (data.length / 4);
-}
 
-function finishAnalysis(rawSignal, fps, duration) {
+function finishAnalysis(rawSignal, fps, duration, resetUI = true) {
     // 1. Detrend
     const detrended = detrendSignal(rawSignal);
 
@@ -914,12 +889,31 @@ function finishAnalysis(rawSignal, fps, duration) {
     // 5. Display
     displayResults(metrics, filtered, peaks, duration);
 
-    isAnalyzing = false;
-    analyzeBtn.disabled = false;
-    analyzeBtnText.textContent = "再次分析 Analyze Again";
-    analyzeBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
-    analyzeBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-indigo-600', 'text-white');
-    progressBar.style.width = '100%';
+    if (resetUI) {
+        isAnalyzing = false;
+        analyzeBtn.disabled = false;
+        analyzeBtnText.textContent = "再次分析 Analyze Again";
+        analyzeBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+        analyzeBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-indigo-600', 'text-white');
+        progressBar.style.width = '100%';
+
+        // Clear Mask & Reset for new analysis
+        maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+        maskCanvas = null;
+        maskCtx = null;
+
+        // Redraw first frame (clears red overlay)
+        ctx.drawImage(firstFrameImage, 0, 0);
+
+        // Reset State
+        instructionText.textContent = "分析完成。 (Analysis Done)";
+        analyzeBtn.disabled = true; // Disable until new drawing
+        analyzeBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+        analyzeBtn.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-indigo-600', 'text-white');
+        analyzeBtnText.textContent = "請重新選擇區域 Select Region";
+    }
+
+    return { filtered, metrics };
 }
 
 function detrendSignal(signal) {
@@ -981,19 +975,24 @@ function processSignal(signal, fps) {
 
 function findPeaks(signal, fps) {
     const peaks = [];
-    const minDistance = Math.floor(fps * 0.5); // min 0.5s between beats (max 120 BPM allowed for raw detection? No, min is for refractory period)
-    // 0.5s = 30 frames * 0.5 = 15 frames. 
-    // If HR is 180, period is 0.33s. 0.5s is too strict.
-    // Let's use 0.3s (200 BPM)
-    const minRefractory = Math.floor(fps * 0.33);
-
-    // Dynamic thresholding
-    // Calculate local max to adapt to amplitude changes
-    const maxVal = Math.max(...signal);
-    const minVal = Math.min(...signal);
-    const threshold = maxVal * 0.3; // Simple relative threshold
+    const minRefractory = Math.floor(fps * 0.1);
+    const windowSize = minRefractory * 30;
 
     for (let i = 1; i < signal.length - 1; i++) {
+        // Calculate Local Max in the window
+        const start = Math.max(0, i - Math.floor(windowSize / 2));
+        const end = Math.min(signal.length, i + Math.floor(windowSize / 2));
+
+        let localMax = -Infinity;
+        for (let j = start; j < end; j++) {
+            if (signal[j] > localMax) localMax = signal[j];
+        }
+
+        // Dynamic threshold (50% of local max amplitude)
+        // Ensure we are looking at positive peaks relative to baseline (0)
+        // If signal is very low, localMax might be noise.
+        const threshold = localMax * 0.15;
+
         // Local maxima check
         if (signal[i] > signal[i - 1] && signal[i] > signal[i + 1]) {
             if (signal[i] > threshold) {
@@ -1023,7 +1022,7 @@ function calculateMetrics(peaks, fps) {
     }
 
     // Filter outlier R-R (simple artifact removal)
-    const validRR = rrIntervals.filter(rr => rr > 300 && rr < 1500); // 40-200 BPM range
+    const validRR = rrIntervals.filter(rr => rr > 200 && rr < 1500); // 40-300 BPM range
 
     if (validRR.length === 0) return { hr: 0, sdnn: 0, rmssd: 0 };
 
