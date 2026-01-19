@@ -33,7 +33,6 @@ videoInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     loadingMessage.textContent = "Waiting for video loading...";
     if (file && file.type.startsWith('video/')) {
-        loadingMessage.textContent = "got a video...";
         videoFile = file;
         resetState();
         analysisSection.classList.remove('hidden');
@@ -135,56 +134,100 @@ function resetState() {
 }
 
 function extractFirstFrame(file) {
+    console.log("extractFirstFrame: Started with file:", file.name, file.type, file.size);
     loadingMessage.classList.remove('hidden');
+    loadingMessage.textContent = "1/4 準備讀取 (Initializing)...";
+
+    // Create video element
     const video = document.createElement('video');
-    video.preload = 'auto'; // 'metadata' might not be enough on mobile
+    video.preload = 'auto'; // Force auto for better mobile support
     video.src = URL.createObjectURL(file);
     video.muted = true;
-    video.playsInline = true;
+    video.playsInline = true; // Critical for iOS
 
-    // Mobile-friendly loading sequence
+    // Fail-safe Timeout (5 seconds)
+    // If video loading hangs (common on some Android webviews or restricted iOS contexts),
+    // we force a fallback so the user isn't stuck.
     const loadTimeout = setTimeout(() => {
-        // Fallback if seeked doesn't fire
         if (loadingMessage.classList.contains('hidden')) return;
-        console.log("Forcing load fallback...");
-        videoCanvas.width = video.videoWidth || 640;
-        videoCanvas.height = video.videoHeight || 480;
-        ctx.drawImage(video, 0, 0);
-        firstFrameImage = new Image();
-        firstFrameImage.src = videoCanvas.toDataURL();
-        loadingMessage.classList.add('hidden');
-        URL.revokeObjectURL(video.src);
-    }, 5000); // 5s timeout
+
+        console.warn("extractFirstFrame: 5s Timeout reached. Forcing fallback display.");
+        loadingMessage.textContent = "回應逾時，嘗試強制顯示 (Timeout, forcing display)...";
+
+        // Attempt to just draw whatever state the video is in
+        try {
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                videoCanvas.width = video.videoWidth;
+                videoCanvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0);
+            } else {
+                // Even if dimensions unknown, try standard execution or just fail gracefully
+                videoCanvas.width = 640;
+                videoCanvas.height = 480;
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, 640, 480);
+                ctx.fillStyle = '#fff';
+                ctx.fillText("Preview Unavailable", 20, 50);
+            }
+
+            firstFrameImage = new Image();
+            firstFrameImage.src = videoCanvas.toDataURL();
+            loadingMessage.classList.add('hidden');
+            URL.revokeObjectURL(video.src);
+            instructionText.textContent = "已強制載入 (Force Loaded). " + instructionText.textContent;
+
+        } catch (e) {
+            console.error("Fallback failed:", e);
+            loadingMessage.textContent = "載入失敗 (Load Failed): Timeout";
+        }
+    }, 5000);
 
     video.onloadedmetadata = () => {
-        // Prepare canvas size immediately
+        console.log("extractFirstFrame: Metadata loaded.", video.videoWidth, "x", video.videoHeight, "Duration:", video.duration);
+        loadingMessage.textContent = "2/4 讀取資訊 (Metadata Loaded)...";
+
         videoCanvas.width = video.videoWidth;
         videoCanvas.height = video.videoHeight;
 
-        // Try to seek to 1st frame
+        // Seek to 1st frame explicitly
         video.currentTime = 0.1;
     };
 
+    video.onloadeddata = () => {
+        console.log("extractFirstFrame: Data loaded. ReadyState:", video.readyState);
+        loadingMessage.textContent = "3/4 緩衝完成 (Data Loaded)...";
+    };
+
     video.onseeked = () => {
+        console.log("extractFirstFrame: Seeked. Drawing frame.");
+        loadingMessage.textContent = "4/4 擷取畫面 (Capturing Frame)...";
+
         clearTimeout(loadTimeout);
+
         videoCanvas.width = video.videoWidth;
         videoCanvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
 
         firstFrameImage = new Image();
+        firstFrameImage.onload = () => {
+            console.log("extractFirstFrame: Image object ready.");
+            loadingMessage.classList.add('hidden');
+            URL.revokeObjectURL(video.src);
+        };
         firstFrameImage.src = videoCanvas.toDataURL();
-
-        loadingMessage.classList.add('hidden');
-        URL.revokeObjectURL(video.src);
     };
 
-    video.onerror = () => {
+    video.onerror = (e) => {
         clearTimeout(loadTimeout);
-        loadingMessage.textContent = "Error loading video";
-        alert("無法讀取影片，格式可能不支援 (Unable to load video)");
+        console.error("extractFirstFrame: Video Error", video.error);
+        const errCode = video.error ? video.error.code : 'Unknown';
+        const errMsg = video.error ? video.error.message : 'Unknown';
+        loadingMessage.textContent = `Error: ${errMsg} (${errCode})`;
+        alert(`無法識別影片格式或編碼 (Video Error ${errCode}).\n請確認影片是否為標準 MP4/MOV 格式。`);
     };
 
-    video.load(); // Trigger load
+    // Trigger load
+    video.load();
 }
 
 function drawSelectedPoint(x, y) {
@@ -552,39 +595,8 @@ function findBestMatchSAD(context, startX, startY) {
 }
 
 // Updating Global for Tracking
-let referenceTemplateData = null;
+// [Override removed - using consolidated extractFirstFrame above]
 
-// Override extractFirstFrame to save template
-const originalExtract = extractFirstFrame;
-extractFirstFrame = (file) => {
-    // ... logic same as above ...
-    // inside onseeked:
-    // ...
-    // Note: We can't save template here because we don't have Selected Point yet.
-    // We save template in "startAnalysis"
-    loadingMessage.classList.remove('hidden');
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.src = URL.createObjectURL(file);
-    video.muted = true;
-    video.playsInline = true;
-
-    video.onloadeddata = () => {
-        video.currentTime = 0.1;
-    };
-
-    video.onseeked = () => {
-        videoCanvas.width = video.videoWidth;
-        videoCanvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0);
-
-        firstFrameImage = new Image();
-        firstFrameImage.src = videoCanvas.toDataURL();
-
-        loadingMessage.classList.add('hidden');
-        URL.revokeObjectURL(video.src);
-    };
-};
 
 // Real tracker implementation
 function performTrackingSAD(ctx, currentX, currentY, templateData, width, height) {
