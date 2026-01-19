@@ -31,7 +31,9 @@ uploadBtn.addEventListener('click', () => videoInput.click());
 
 videoInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
+    loadingMessage.textContent = "Waiting for video loading...";
     if (file && file.type.startsWith('video/')) {
+        loadingMessage.textContent = "got a video...";
         videoFile = file;
         resetState();
         analysisSection.classList.remove('hidden');
