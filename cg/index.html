@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>功能性文盲測驗</title>
+  <meta name="description" content="測驗你在語文、數理、生活與邏輯上的理解能力">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    /* ===== CSS Reset & Base ===== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #ec4899;
+      --accent: #8b5cf6;
+      --bg-light: #f8fafc;
+      --bg-gradient: linear-gradient(135deg, #eef2ff 0%, #fce7f3 100%);
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --white: #ffffff;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-dark);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Utility Classes ===== */
+    .hidden {
+      display: none !important;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* ===== Animations ===== */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    .animate-pulse {
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    /* ===== Card Component ===== */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    /* ===== Button Component ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 32px;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--white);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: var(--text-muted);
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-share {
+      background: #3b82f6;
+      color: var(--white);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-share:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* ===== Screen: Start ===== */
+    #start-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .start-card {
+      max-width: 480px;
+      width: 100%;
+      padding: 48px 40px;
+      text-align: center;
+    }
+
+    .start-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+      letter-spacing: -0.05em;
+    }
+
+    .start-subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-card.indigo {
+      background: #eef2ff;
+    }
+
+    .stat-card.pink {
+      background: #fdf2f8;
+    }
+
+    .stat-icon {
+      width: 32px;
+      height: 32px;
+      stroke-width: 2;
+    }
+
+    .stat-card.indigo .stat-icon {
+      color: var(--primary);
+    }
+
+    .stat-card.pink .stat-icon {
+      color: var(--secondary);
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--text-light);
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    .start-note {
+      margin-top: 20px;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    .loading-text {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 12px;
+    }
+
+    /* ===== Screen: Quiz ===== */
+    #quiz-screen {
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .quiz-header {
+      max-width: 700px;
+      margin: 0 auto 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .question-counter {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .question-counter .current {
+      color: var(--secondary);
+    }
+
+    .question-counter .total {
+      color: var(--text-light);
+      font-size: 0.875rem;
+      font-weight: 400;
+    }
+
+    .timer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-full);
+      font-family: 'SF Mono', 'Consolas', monospace;
+      font-size: 1.125rem;
+      font-weight: 700;
+      transition: var(--transition);
+    }
+
+    .timer.normal {
+      background: #eef2ff;
+      color: var(--primary);
+    }
+
+    .timer.warning {
+      background: #fef2f2;
+      color: #ef4444;
+      animation: pulse 0.5s ease-in-out infinite;
+    }
+
+    .difficulty-indicator {
+      max-width: 700px;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .difficulty-badge {
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .difficulty-badge.entry {
+      background: #dcfce7;
+      color: #168ea3;
+    }
+
+    .difficulty-badge.easy {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .difficulty-badge.medium {
+      background: #fef3c7;
+      color: #d9a806;
+    }
+
+    .difficulty-badge.hard {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .difficulty-badge.extreme {
+      background: #fee2e2;
+      color: #dc2666;
+    }
+
+    .progress-bar {
+      max-width: 700px;
+      margin: 0 auto 32px;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: var(--radius-full);
+      transition: width 0.5s ease-out;
+    }
+
+    .quiz-card {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .question-area {
+      padding: 32px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .question-image-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 16px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 200px;
+      align-items: center;
+    }
+
+    .question-image-container img {
+      max-width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+    }
+
+    .category-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: var(--white);
+      border-radius: var(--radius-full);
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .question-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .options-area {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .options-area {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .option-btn {
+      position: relative;
+      padding: 20px 20px 20px 60px;
+      border: 2px solid #e2e8f0;
+      border-radius: var(--radius-lg);
+      background: var(--white);
+      text-align: left;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 1rem;
+      color: var(--text-dark);
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+    }
+
+    @media (hover: hover) {
+      .option-btn:hover:not(:disabled) {
+        border-color: var(--primary);
+        background: #eef2ff;
+      }
+    }
+
+    .option-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .option-letter {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+      color: var(--text-muted);
+      border-radius: var(--radius-full);
+      font-weight: 700;
+      transition: var(--transition);
+    }
+
+    @media (hover: hover) {
+      .option-btn:hover:not(:disabled) .option-letter {
+        background: var(--primary);
+        color: var(--white);
+      }
+    }
+
+    .option-btn.correct {
+      border-color: #22c55e;
+      background: #f0fdf4;
+      opacity: 1 !important;
+    }
+
+    .option-btn.correct .option-letter {
+      background: #22c55e;
+      color: var(--white);
+    }
+
+    .option-btn.incorrect {
+      border-color: #ef4444;
+      background: #fef2f2;
+      opacity: 1 !important;
+    }
+
+    .option-btn.incorrect .option-letter {
+      background: #ef4444;
+      color: var(--white);
+    }
+
+    .option-btn.disabled-state {
+      border-color: #e2e8f0;
+      opacity: 0.5;
+    }
+
+    .quiz-processing {
+      pointer-events: none;
+    }
+
+    /* ===== Screen: Result ===== */
+    #result-screen {
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .result-card {
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .result-header {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: var(--white);
+      padding: 40px;
+      text-align: center;
+    }
+
+    .result-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .result-header p {
+      opacity: 0.9;
+    }
+
+    .result-content {
+      padding: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+
+    @media (max-width: 768px) {
+      .result-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .score-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .score-circle {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 8px solid #eef2ff;
+    }
+
+    .score-circle::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 8px solid var(--primary);
+      border-top-color: transparent;
+      animation: spin 3s linear infinite;
+    }
+
+    .score-value {
+      font-size: 4rem;
+      font-weight: 900;
+      color: var(--text-dark);
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 0.875rem;
+      color: var(--text-light);
+    }
+
+    .rank-info {
+      text-align: center;
+    }
+
+    .rank-info p {
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .rank-percent {
+      color: var(--secondary);
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .rank-badge {
+      display: inline-block;
+      padding: 8px 20px;
+      background: #eef2ff;
+      color: var(--primary);
+      border-radius: var(--radius-full);
+      font-size: 0.875rem;
+      font-weight: 700;
+    }
+
+    /* Radar Chart */
+    .chart-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .radar-chart {
+      width: 100%;
+      max-width: 320px;
+      aspect-ratio: 1;
+    }
+
+    /* Analysis Section */
+    .analysis-section {
+      margin: 0 40px 40px;
+      padding: 24px;
+      background: #eef2ff;
+      border-radius: var(--radius-lg);
+      border: 1px solid #c7d2fe;
+    }
+
+    .analysis-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+    }
+
+    .analysis-text {
+      color: var(--text-muted);
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .analysis-text strong {
+      color: var(--primary);
+    }
+
+    /* Category Breakdown */
+    .category-breakdown {
+      margin: 0 40px 40px;
+    }
+
+    .category-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 16px;
+    }
+
+    .category-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .category-bar-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .category-bar-label {
+      width: 60px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .category-bar-track {
+      flex: 1;
+      height: 12px;
+      background: #e2e8f0;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .category-bar-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width 1s ease-out;
+    }
+
+    .category-bar-fill.language {
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    }
+
+    .category-bar-fill.math {
+      background: linear-gradient(90deg, #ec4899, #f472b6);
+    }
+
+    .category-bar-fill.life {
+      background: linear-gradient(90deg, #22c55e, #4ade80);
+    }
+
+    .category-bar-fill.logic {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .category-bar-value {
+      width: 50px;
+      text-align: right;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* Result Actions */
+    .result-actions {
+      padding: 0 40px 40px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    /* ===== Icons (SVG) ===== */
+    .icon {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    /* ===== Loading State ===== */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 1.25rem;
+      color: var(--text-muted);
+    }
+
+    .loading::after {
+      content: '';
+      width: 24px;
+      height: 24px;
+      margin-left: 12px;
+      border: 3px solid #e2e8f0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Error state */
+    .error-message {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      margin-top: 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== Start Screen ===== -->
+  <div id="start-screen" class="animate-fade-in">
+    <div class="card start-card">
+      <h1 class="start-title">功能性文盲大測驗</h1>
+      <p class="start-subtitle">
+        測驗你在語文、數理、生活與邏輯上的真實能力。<br>
+        你的理解力，真的過關了嗎？
+      </p>
+
+      <div class="stats-grid">
+        <div class="stat-card indigo">
+          <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span class="stat-label">總參與人數</span>
+          <span class="stat-value" id="stat-participants">1,234</span>
+        </div>
+        <div class="stat-card pink">
+          <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+            <polyline points="17 6 23 6 23 12" />
+          </svg>
+          <span class="stat-label">平均分數</span>
+          <span class="stat-value" id="stat-avg-score">95</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="start-btn" onclick="startQuiz()">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <polygon points="5 3 19 12 5 21 5 3" />
+        </svg>
+        開始測驗
+      </button>
+      <p class="loading-text hidden" id="loading-text">載入中...</p>
+
+      <p class="start-note">* 作答過程將採取匿名記錄，且有防作弊機制</p>
+      <div class="error-message hidden" id="error-message"></div>
+    </div>
+  </div>
+
+  <!-- ===== Quiz Screen ===== -->
+  <div id="quiz-screen" class="hidden">
+    <div class="quiz-header">
+      <div class="question-counter">
+        Question <span class="current" id="q-current">1</span>
+        <span class="total" id="q-total">/20</span>
+      </div>
+      <div class="timer normal" id="timer">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span id="timer-value">20</span>s
+      </div>
+    </div>
+
+    <div class="difficulty-indicator">
+      <span>目前難度：</span>
+      <span class="difficulty-badge medium" id="difficulty-badge">中等</span>
+      <span id="accuracy-display">（正確率: 0%）</span>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width: 5%"></div>
+    </div>
+
+    <div class="card quiz-card" id="quiz-card">
+      <div class="question-area">
+        <div id="q-image-container" class="question-image-container hidden">
+          <img id="q-image" src="" alt="Question Image" />
+        </div>
+        <span class="category-badge" id="q-category">語文</span>
+        <p class="question-text" id="q-text">載入中...</p>
+      </div>
+      <div class="options-area" id="options-area">
+        <!-- Options will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Result Screen ===== -->
+  <div id="result-screen" class="hidden">
+    <div class="card result-card animate-fade-in">
+      <div class="result-header">
+        <h2>測驗結果分析</h2>
+        <p>Functional Illiteracy Quiz Report</p>
+      </div>
+
+      <div class="result-content">
+        <div class="score-section">
+          <div class="score-circle">
+            <span class="score-value" id="final-score">0</span>
+            <span class="score-label">綜合能力指數</span>
+          </div>
+          <div class="rank-info">
+            <p>你的表現超越了 <span class="rank-percent" id="rank-percent">0%</span> 的受測者</p>
+            <span class="rank-badge" id="rank-badge">潛力無限</span>
+          </div>
+        </div>
+
+        <div class="chart-section">
+          <svg class="radar-chart" id="radar-chart" viewBox="0 0 240 240">
+            <!-- Radar chart will be drawn here -->
+          </svg>
+        </div>
+      </div>
+
+      <div class="analysis-section">
+        <h3 class="analysis-title">
+          💡 詳細分析
+        </h3>
+        <p class="analysis-text" id="analysis-text">
+          根據你的作答情況分析中...
+        </p>
+      </div>
+
+      <div class="category-breakdown">
+        <h4 class="category-title">📊 各類別得分</h4>
+        <div class="category-bars" id="category-bars">
+          <!-- Category bars will be inserted here -->
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-secondary" onclick="goHome()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          回首頁
+        </button>
+        <button class="btn btn-share" onclick="shareResult()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+          分享結果
+        </button>
+        <button class="btn btn-primary" onclick="restartQuiz()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="23 4 23 10 17 10" />
+            <polyline points="1 20 1 14 7 14" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+          再次挑戰
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===================================================================
+    // CONFIGURATION
+    // ===================================================================
+    const CONFIG = {
+      // Webhook URL (N8N endpoint)
+      WEBHOOK_URL: 'https://mistakenly-proper-zebra.ngrok-free.app/webhook/quiz',
+      // Image Base URL (where question images are served)
+      // Leave true, or provide a fixed domain if the images are hosted elsewhere
+      IMAGE_BASE_URL: 'http://127.0.0.1:8000',
+      TOTAL_QUESTIONS_DEFAULT: 20
+    };
+
+    // ===================================================================
+    // GLOBAL STATE
+    // ===================================================================
+    let quizState = {
+      anonCode: localStorage.getItem('quiz_anon_code') || '',
+      sessionId: null,
+      currentQuestion: null,
+      timeLeft: 0,
+      timerInterval: null,
+      processing: false,
+      stats: { correct: 0, total: 0 }
+    };
+
+    // ===================================================================
+    // API CLIENT (Webhook integration)
+    // ===================================================================
+    const API = {
+      async callWebhook(action, urlParams = {}) {
+        // Ensure action is a query parameter
+        const params = new URLSearchParams();
+        params.append('action', action);
+
+        // Add any other URL parameters passed in
+        for (const [key, value] of Object.entries(urlParams)) {
+          // Only stringify if object or array, otherwise put as is
+          if (typeof value === 'object' && value !== null) {
+            params.append(key, JSON.stringify(value));
+          } else if (value !== undefined && value !== null) {
+            params.append(key, value);
+          }
+        }
+
+        // Always append anon_code if exists
+        if (quizState.anonCode) {
+          params.append('anon_code', quizState.anonCode);
+        }
+        if (quizState.sessionId) {
+          params.append('session_id', quizState.sessionId);
+        }
+
+        const finalUrl = `${CONFIG.WEBHOOK_URL}?${params.toString()}`;
+
+        try {
+          const response = await fetch(finalUrl, {
+            method: 'GET', // n8n webhooks via query params usually expects GET
+            headers: {
+              'Accept': 'application/json',
+              'ngrok-skip-browser-warning': 'true'
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`伺服器錯誤: ${response.status}`);
+          }
+
+          return await response.json();
+        } catch (error) {
+          console.error('API Error:', error);
+          throw error;
+        }
+      }
+    };
+
+    // ===================================================================
+    // INITIALIZATION
+    // ===================================================================
+    document.addEventListener('DOMContentLoaded', async function () {
+      // Check if user has already done the test (Demo check)
+      try {
+        if (quizState.anonCode) {
+          const res = await API.callWebhook('check_repeat');
+          if (res && res.can_play === false) {
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('start-btn').classList.add('btn-secondary');
+            document.getElementById('start-btn').classList.remove('btn-primary');
+            document.getElementById('start-btn').innerHTML = "已完成測驗";
+
+            const errorMsg = document.getElementById('error-message');
+            errorMsg.textContent = res.message || "您已完成過測驗，感謝參與！";
+            errorMsg.classList.remove('hidden');
+          }
+        }
+
+        // Get general stats (if API supports it, otherwise use demo value)
+        document.getElementById('stat-participants').textContent = (1000 + Math.floor(Math.random() * 500)).toLocaleString();
+        document.getElementById('stat-avg-score').textContent = Math.floor(90 + Math.random() * 15);
+      } catch (e) {
+        console.warn('API error during init, but quiz will still be available:', e);
+      }
+    });
+
+    // ===================================================================
+    // QUIZ LOGIC
+    // ===================================================================
+    async function startQuiz() {
+      const startBtn = document.getElementById('start-btn');
+      const loadingText = document.getElementById('loading-text');
+      const errorMessage = document.getElementById('error-message');
+      const startScreen = document.getElementById('start-screen');
+      const quizScreen = document.getElementById('quiz-screen');
+
+      startBtn.disabled = true;
+      loadingText.classList.remove('hidden');
+      errorMessage.classList.add('hidden');
+
+      try {
+        // Initialize new Quiz Session
+        const res = await API.callWebhook('start');
+
+        if (res.session_id) {
+          quizState.sessionId = res.session_id;
+        }
+        if (res.anon_code && !quizState.anonCode) {
+          quizState.anonCode = res.anon_code;
+          localStorage.setItem('quiz_anon_code', res.anon_code);
+        }
+
+        // Reset stats
+        quizState.stats = { correct: 0, total: 0 };
+
+        if (!res.first_question) {
+          throw new Error('未收到題目');
+        }
+
+        // Show quiz screen
+        startScreen.classList.add('hidden');
+        quizScreen.classList.remove('hidden');
+
+        const totalQuestions = res.first_question.total_questions || CONFIG.TOTAL_QUESTIONS_DEFAULT;
+        document.getElementById('q-total').textContent = '/' + totalQuestions;
+
+        showQuestion(res.first_question);
+      } catch (error) {
+        errorMessage.textContent = `無法啟動測驗: ${error.message}`;
+        errorMessage.classList.remove('hidden');
+        startBtn.disabled = false;
+      } finally {
+        loadingText.classList.add('hidden');
+      }
+    }
+
+    function showQuestion(qMeta) {
+      quizState.processing = false;
+      quizState.currentQuestion = qMeta;
+      quizState.timeLeft = qMeta.time_limit || 20;
+
+      // Update UI Counters
+      const currentIndex = qMeta.current_index || 0;
+      const totalQ = qMeta.total_questions || CONFIG.TOTAL_QUESTIONS_DEFAULT;
+
+      document.getElementById('q-current').textContent = currentIndex + 1;
+      document.getElementById('q-category').textContent = qMeta.category || '未分類';
+      document.getElementById('q-text').textContent = qMeta.content;
+
+      // Optional Image logic
+      const imgContainer = document.getElementById('q-image-container');
+      const imgEl = document.getElementById('q-image');
+
+      // Note: Update logic if the backend response changes how image urls are passed.
+      // Using logic from React version.
+      if (qMeta.id) {
+        imgEl.src = `${CONFIG.IMAGE_BASE_URL}/api/questions/${qMeta.id}/image`;
+        // Add error handler in case no image
+        imgEl.onerror = () => { imgContainer.classList.add('hidden'); };
+        imgEl.onload = () => { imgContainer.classList.remove('hidden'); };
+      } else {
+        imgContainer.classList.add('hidden');
+      }
+
+      const progress = ((currentIndex + 1) / totalQ) * 100;
+      document.getElementById('progress-fill').style.width = progress + '%';
+
+      // Update difficulty indicator
+      const difficultyBadge = document.getElementById('difficulty-badge');
+
+      let difLabel = "中等";
+      let difClass = "medium";
+      if (qMeta.difficulty !== undefined) {
+        if (qMeta.difficulty <= 0.2) { difLabel = "入門"; difClass = "entry"; }
+        else if (qMeta.difficulty <= 0.4) { difLabel = "簡單"; difClass = "easy"; }
+        else if (qMeta.difficulty <= 0.6) { difLabel = "中等"; difClass = "medium"; }
+        else if (qMeta.difficulty <= 0.8) { difLabel = "困難"; difClass = "hard"; }
+        else { difLabel = "挑戰"; difClass = "extreme"; }
+      }
+      difficultyBadge.textContent = difLabel;
+      difficultyBadge.className = 'difficulty-badge ' + difClass;
+
+      // Accuracy
+      const accuracy = quizState.stats.total > 0
+        ? Math.round((quizState.stats.correct / quizState.stats.total) * 100)
+        : 0;
+      document.getElementById('accuracy-display').textContent = `（正確率: ${accuracy}%）`;
+
+      // Render options
+      const optionsArea = document.getElementById('options-area');
+      optionsArea.innerHTML = '';
+
+      const optionsContent = qMeta.options || ['選項 A', '選項 B', '選項 C', '選項 D'];
+
+      optionsContent.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.id = `option-btn-${idx}`;
+        btn.innerHTML = `
+                    <span class="option-letter" id="option-icon-${idx}">${String.fromCharCode(65 + idx)}</span>
+                    <span style="flex:1;">${opt}</span>
+                `;
+        btn.onclick = () => handleAnswer(idx);
+        optionsArea.appendChild(btn);
+      });
+
+      document.getElementById('quiz-card').classList.remove('quiz-processing');
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(quizState.timerInterval);
+      updateTimerDisplay();
+
+      quizState.timerInterval = setInterval(() => {
+        quizState.timeLeft--;
+        updateTimerDisplay();
+
+        if (quizState.timeLeft <= 0) {
+          handleTimeout();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const timerEl = document.getElementById('timer');
+      document.getElementById('timer-value').textContent = Math.max(0, quizState.timeLeft);
+
+      if (quizState.timeLeft <= 5) {
+        timerEl.classList.remove('normal');
+        timerEl.classList.add('warning');
+      } else {
+        timerEl.classList.remove('warning');
+        timerEl.classList.add('normal');
+      }
+    }
+
+    function handleTimeout() {
+      clearInterval(quizState.timerInterval);
+      handleAnswer(-1, true);
+    }
+
+    async function handleAnswer(selectedIndex, isTimeout = false) {
+      if (quizState.processing) return;
+
+      // Reset mobile focus
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+
+      quizState.processing = true;
+      clearInterval(quizState.timerInterval);
+      document.getElementById('quiz-card').classList.add('quiz-processing');
+
+      const currentQ = quizState.currentQuestion;
+      const originalTimeLimit = currentQ.time_limit || 20;
+      const timeUsed = originalTimeLimit - (isTimeout ? 0 : quizState.timeLeft);
+
+      // Disable all buttons immediately
+      const allBtns = document.querySelectorAll('.option-btn');
+      allBtns.forEach(b => b.classList.add('disabled-state'));
+
+      try {
+        // Call webhook with answer details
+        const res = await API.callWebhook('answer', {
+          question_id: currentQ.id,
+          selected_option: isTimeout ? -1 : selectedIndex,
+          time_used: timeUsed
+        });
+
+        const data = res;
+        // If backend does not return correct_option directly, default it to the selection so it doesn't break
+        const correctOpt = data.correct_option !== undefined ? data.correct_option : selectedIndex;
+        const isCorrect = data.correct !== undefined ? data.correct : (correctOpt === selectedIndex);
+
+        // Update stats
+        quizState.stats.total++;
+        if (isCorrect) quizState.stats.correct++;
+
+        // Visual feedback
+        allBtns.forEach((btn, idx) => {
+          btn.classList.remove('disabled-state');
+          if (idx === correctOpt) {
+            btn.classList.add('correct');
+          } else if (idx === selectedIndex && !isCorrect) {
+            btn.classList.add('incorrect');
+          } else {
+            btn.classList.add('disabled-state'); // Keep unselected grayed out
+          }
+        });
+
+        // Wait 800ms to show the color feedback, then move to next view
+        setTimeout(async () => {
+          if (data.finished) {
+            // Request final results
+            try {
+              const finalRes = await API.callWebhook('submit');
+              showResults(finalRes);
+            } catch (e) {
+              console.error("Error submitting quiz:", e);
+              alert("提交成績失敗喔！");
+              goHome();
+            }
+          } else if (data.next_question) {
+            showQuestion(data.next_question);
+          } else {
+            alert("發生未知的流程錯誤！");
+            goHome();
+          }
+        }, 800);
+
+      } catch (e) {
+        console.error("Answer submit failed", e);
+        alert("網路連線發生問題");
+        goHome();
+      }
+    }
+
+    // ===================================================================
+    // RESULT PROCESSING
+    // ===================================================================
+    function getCategoryGradient(index, total) {
+      const hue = (index * 360 / total) % 360;
+      return `linear-gradient(90deg, hsl(${hue}, 70%, 55%), hsl(${hue}, 60%, 65%))`;
+    }
+
+    function showResults(data) {
+      document.getElementById('quiz-screen').classList.add('hidden');
+      document.getElementById('result-screen').classList.remove('hidden');
+
+      const score = data.score || 0;
+      const rankPercent = data.rank_percent || 0;
+      const categoryScores = data.category_scores || {};
+      const analysis = data.analysis || "無詳細分析。";
+
+      // Animate score
+      animateValue('final-score', 0, score, 1500);
+
+      // Update rank
+      document.getElementById('rank-percent').textContent = rankPercent + '%';
+
+      // Update badge based on backend score ranges
+      let badge = '潛力無限';
+      if (score >= 130) badge = '全能天才';
+      else if (score >= 115) badge = '領域大師';
+      else if (score >= 100) badge = '通識高手';
+      document.getElementById('rank-badge').textContent = badge;
+
+      // Update analysis
+      document.getElementById('analysis-text').innerHTML = analysis.replace(/\n/g, '<br>');
+
+      // Draw radar chart
+      if (Object.keys(categoryScores).length > 0) {
+        drawRadarChart(categoryScores);
+        drawCategoryBars(categoryScores);
+      } else {
+        document.querySelector('.chart-section').innerHTML = "<p class='text-muted'>無足夠資料產生圖表</p>";
+        document.getElementById('category-bars').innerHTML = "";
+      }
+    }
+
+    function animateValue(elementId, start, end, duration) {
+      const element = document.getElementById(elementId);
+      const range = end - start;
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+        const current = Math.round(start + range * easeProgress);
+        element.textContent = current;
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
+    function drawRadarChart(scores) {
+      const svg = document.getElementById('radar-chart');
+      const cx = 120, cy = 120, r = 70;
+
+      const categories = Object.keys(scores);
+      const n = categories.length;
+      if (n === 0) return;
+
+      const angles = categories.map((_, i) => (Math.PI / 2) - (i * Math.PI * 2 / n));
+
+      let gridHtml = '';
+      for (let level = 0.25; level <= 1; level += 0.25) {
+        const points = angles.map(angle => {
+          const x = cx + Math.cos(angle) * r * level;
+          const y = cy - Math.sin(angle) * r * level;
+          return `${x},${y}`;
+        }).join(' ');
+        gridHtml += `<polygon points="${points}" fill="none" stroke="#e2e8f0" stroke-width="1"/>`;
+      }
+
+      angles.forEach(angle => {
+        const x = cx + Math.cos(angle) * r;
+        const y = cy - Math.sin(angle) * r;
+        gridHtml += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+      });
+
+      categories.forEach((cat, i) => {
+        const angle = angles[i];
+        const labelRadius = r + 25;
+        const x = cx + Math.cos(angle) * labelRadius;
+        const y = cy - Math.sin(angle) * labelRadius;
+
+        let anchor = 'middle';
+        if (Math.cos(angle) > 0.3) anchor = 'start';
+        else if (Math.cos(angle) < -0.3) anchor = 'end';
+
+        const dy = Math.sin(angle) > 0.3 ? -5 : (Math.sin(angle) < -0.3 ? 10 : 4);
+
+        gridHtml += `<text x="${x}" y="${y + dy}" text-anchor="${anchor}" fill="#64748b" font-size="12" font-weight="600">${cat}</text>`;
+      });
+
+      const dataPoints = categories.map((cat, i) => {
+        const value = scores[cat] || 0;
+        const x = cx + Math.cos(angles[i]) * r * value;
+        const y = cy - Math.sin(angles[i]) * r * value;
+        return `${x},${y}`;
+      }).join(' ');
+
+      gridHtml += `<polygon points="${dataPoints}" fill="rgba(139, 92, 246, 0.3)" stroke="#8b5cf6" stroke-width="3"/>`;
+
+      categories.forEach((cat, i) => {
+        const value = scores[cat] || 0;
+        const x = cx + Math.cos(angles[i]) * r * value;
+        const y = cy - Math.sin(angles[i]) * r * value;
+        gridHtml += `<circle cx="${x}" cy="${y}" r="5" fill="#8b5cf6"/>`;
+      });
+
+      svg.innerHTML = gridHtml;
+    }
+
+    function drawCategoryBars(scores) {
+      const container = document.getElementById('category-bars');
+      const categories = Object.keys(scores);
+      const n = categories.length;
+
+      container.innerHTML = categories.map((cat, index) => {
+        const value = Math.round((scores[cat] || 0) * 100);
+        const gradient = getCategoryGradient(index, n);
+        return `
+                <div class="category-bar-item">
+                    <span class="category-bar-label">${cat}</span>
+                    <div class="category-bar-track">
+                        <div class="category-bar-fill" data-index="${index}" style="width: 0%; background: ${gradient}"></div>
+                    </div>
+                    <span class="category-bar-value">${value}%</span>
+                </div>
+            `;
+      }).join('');
+
+      setTimeout(() => {
+        categories.forEach((cat, index) => {
+          const value = Math.round((scores[cat] || 0) * 100);
+          const bar = container.querySelector(`[data-index="${index}"]`);
+          if (bar) bar.style.width = value + '%';
+        });
+      }, 100);
+    }
+
+    // ===================================================================
+    // ACTIONS
+    // ===================================================================
+    function goHome() {
+      window.location.reload();
+    }
+
+    function restartQuiz() {
+      document.getElementById('result-screen').classList.add('hidden');
+      document.getElementById('start-screen').classList.remove('hidden');
+      document.getElementById('start-btn').disabled = false;
+      document.getElementById('loading-text').classList.add('hidden');
+      startQuiz();
+    }
+
+    async function shareResult() {
+      const resultCard = document.querySelector('.result-card');
+      const shareBtn = document.querySelector('.btn-share');
+      const originalText = shareBtn.innerHTML;
+
+      shareBtn.disabled = true;
+      shareBtn.innerHTML = `
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="animation: spin 1s linear infinite;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                產生中...
+            `;
+
+      try {
+        // Remove border radius or hidden overflow if it breaks canvas locally
+        resultCard.style.borderRadius = "0";
+        const canvas = await html2canvas(resultCard, {
+          backgroundColor: '#f8fafc',
+          scale: 2,
+          useCORS: true,
+          logging: false
+        });
+        resultCard.style.borderRadius = ""; // Reset
+
+        const link = document.createElement('a');
+        const score = document.getElementById('final-score').textContent;
+        link.download = `功能性文盲測驗結果_${score}分.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        shareBtn.innerHTML = `
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    下載完成！
+                `;
+        setTimeout(() => {
+          shareBtn.innerHTML = originalText;
+          shareBtn.disabled = false;
+        }, 2000);
+      } catch (error) {
+        console.error('截圖失敗:', error);
+        shareBtn.innerHTML = originalText;
+        shareBtn.disabled = false;
+        alert('截圖產生失敗，此功能需在伺服器環境下執行才支援跨網域圖片截取。');
+      }
+    }
+  </script>
+</body>
+
+</html>
