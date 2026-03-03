@@ -1044,11 +1044,7 @@
 
         try {
           const response = await fetch(finalUrl, {
-            method: 'GET', // n8n webhooks via query params usually expects GET
-            headers: {
-              'Accept': 'application/json',
-              'ngrok-skip-browser-warning': 'true'
-            }
+            method: 'GET' // n8n webhooks via query params usually expects GET
           });
 
           if (!response.ok) {
