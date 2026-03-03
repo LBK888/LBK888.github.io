@@ -1119,7 +1119,12 @@
 
         // 4. Get general stats from the backend
         try {
-          const statsRes = await fetch(`${CONFIG.IMAGE_BASE_URL}/api/quiz/stats?test_id=${quizState.testId}`);
+          const statsRes = await fetch(`${CONFIG.IMAGE_BASE_URL}/api/quiz/stats?test_id=${quizState.testId}`, {
+            headers: {
+              'Accept': 'application/json',
+              'ngrok-skip-browser-warning': 'true'
+            }
+          });
           if (statsRes.ok) {
             const statsData = await statsRes.json();
             if (statsData.total_participants > 0) {
