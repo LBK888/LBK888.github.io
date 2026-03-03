@@ -1119,19 +1119,13 @@
           }
         }
 
-        // 4. Get general stats from the backend
+        // 4. Get general stats from the backend via Webhook
         try {
-          const statsRes = await fetch(`${CONFIG.BACKEND_URL}/api/quiz/stats?test_id=${quizState.testId}`, {
-            headers: {
-              'Accept': 'application/json',
-              'ngrok-skip-browser-warning': 'true'
-            }
-          });
-          if (statsRes.ok) {
-            const statsData = await statsRes.json();
-            if (statsData.total_participants > 0) {
-              document.getElementById('stat-participants').textContent = statsData.total_participants.toLocaleString();
-              document.getElementById('stat-avg-score').textContent = statsData.average_score;
+          const statsRes = await API.callWebhook('stats', { test_id: quizState.testId });
+          if (statsRes && statsRes.total_participants !== undefined) {
+            if (statsRes.total_participants > 0) {
+              document.getElementById('stat-participants').textContent = statsRes.total_participants.toLocaleString();
+              document.getElementById('stat-avg-score').textContent = statsRes.average_score;
             } else {
               document.getElementById('stat-participants').textContent = "0";
               document.getElementById('stat-avg-score').textContent = "0";
@@ -1215,11 +1209,23 @@
       // Note: Update logic if the backend response changes how image urls are passed.
       // Using logic from React version.
       if (qMeta.id) {
-        let imgSrc = `${CONFIG.IMAGE_BASE_URL}/api/questions/${qMeta.id}/image`;
+        // Fetch images via N8N proxy to bypass ngrok restrictions.
+        // N8N should be configured to listen for `action=get_image` and forward the request to `/api/questions/{question_id}/image`.
+        const imgParams = new URLSearchParams({
+          action: 'get_image',
+          question_id: qMeta.id
+        });
+
         if (quizState.sessionId) {
-          imgSrc += `?session_id=${quizState.sessionId}`;
+          imgParams.append('session_id', quizState.sessionId);
         }
+        if (quizState.anonCode) {
+          imgParams.append('anon_code', quizState.anonCode);
+        }
+
+        let imgSrc = `${CONFIG.WEBHOOK_URL}?${imgParams.toString()}`;
         imgEl.src = imgSrc;
+
         // Add error handler in case no image
         imgEl.onerror = () => { imgContainer.classList.add('hidden'); };
         imgEl.onload = () => { imgContainer.classList.remove('hidden'); };
