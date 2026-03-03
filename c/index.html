@@ -1223,12 +1223,34 @@
           imgParams.append('anon_code', quizState.anonCode);
         }
 
-        let imgSrc = `${CONFIG.WEBHOOK_URL}?${imgParams.toString()}`;
-        imgEl.src = imgSrc;
+        const imgSrcUrl = `${CONFIG.WEBHOOK_URL}?${imgParams.toString()}`;
 
-        // Add error handler in case no image
-        imgEl.onerror = () => { imgContainer.classList.add('hidden'); };
-        imgEl.onload = () => { imgContainer.classList.remove('hidden'); };
+        // Use fetch to allow sending the ngrok bypass header. 
+        // This requires N8N to handle OPTIONS requests (CORS).
+        fetch(imgSrcUrl, {
+          method: 'GET',
+          headers: {
+            'ngrok-skip-browser-warning': 'true'
+          }
+        })
+          .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.blob();
+          })
+          .then(blob => {
+            if (blob.size > 0 && blob.type.startsWith('image/')) {
+              const objectURL = URL.createObjectURL(blob);
+              imgEl.src = objectURL;
+              imgEl.onload = () => { imgContainer.classList.remove('hidden'); };
+            } else {
+              throw new Error('Not an image');
+            }
+          })
+          .catch(err => {
+            console.error("Failed to load image via fetch", err);
+            imgContainer.classList.add('hidden');
+          });
+
       } else {
         imgContainer.classList.add('hidden');
       }
