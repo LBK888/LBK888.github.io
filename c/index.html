@@ -990,9 +990,11 @@
     const CONFIG = {
       // Webhook URL (N8N endpoint)
       WEBHOOK_URL: 'https://mistakenly-proper-zebra.ngrok-free.app/webhook/quiz',
+      // Backend API URL (where your FastAPI is running)
+      // Used for fetching stats and (previously) questions
+      BACKEND_URL: 'https://mistakenly-proper-zebra.ngrok-free.app',
       // Image Base URL (where question images are served)
-      // Leave true, or provide a fixed domain if the images are hosted elsewhere
-      IMAGE_BASE_URL: 'https://mistakenly-proper-zebra.ngrok-free.app/webhook/quiz',
+      IMAGE_BASE_URL: 'https://mistakenly-proper-zebra.ngrok-free.app',
       TOTAL_QUESTIONS_DEFAULT: 20
     };
 
@@ -1119,7 +1121,7 @@
 
         // 4. Get general stats from the backend
         try {
-          const statsRes = await fetch(`${CONFIG.IMAGE_BASE_URL}/api/quiz/stats?test_id=${quizState.testId}`, {
+          const statsRes = await fetch(`${CONFIG.BACKEND_URL}/api/quiz/stats?test_id=${quizState.testId}`, {
             headers: {
               'Accept': 'application/json',
               'ngrok-skip-browser-warning': 'true'
