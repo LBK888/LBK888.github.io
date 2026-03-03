@@ -1043,8 +1043,12 @@
         const finalUrl = `${CONFIG.WEBHOOK_URL}?${params.toString()}`;
 
         try {
-          const response = await fetch(finalUrl, {
-            method: 'GET' // n8n webhooks via query params usually expects GET
+          const params = new URLSearchParams(finalUrl.split('?')[1]);
+          // append ngrok-skip-browser-warning to query instead of headers to avoid CORS OPTIONS pre-flight
+          const requestUrl = finalUrl + '&ngrok-skip-browser-warning=true';
+
+          const response = await fetch(requestUrl, {
+            method: 'GET'
           });
 
           if (!response.ok) {
