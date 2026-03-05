@@ -448,92 +448,87 @@
       padding: 24px;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
-    @media (max-width: 600px) {
-      .options-area {
-        grid-template-columns: 1fr;
-      }
+      gap: 12px;
     }
 
     .option-btn {
-      position: relative;
-      padding: 20px 20px 20px 60px;
-      border: 2px solid #e2e8f0;
-      border-radius: var(--radius-lg);
-      background: var(--white);
-      text-align: left;
-      cursor: pointer;
-      transition: var(--transition);
-      font-size: 1rem;
-      color: var(--text-dark);
-      min-height: 80px;
-      display: flex;
-      align-items: center;
-    }
-
-    @media (hover: hover) {
-      .option-btn:hover:not(:disabled) {
-        border-color: var(--primary);
-        background: #eef2ff;
-      }
-    }
-
-    .option-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .option-letter {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 36px;
-      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f1f5f9;
-      color: var(--text-muted);
-      border-radius: var(--radius-full);
+      gap: 12px;
+      padding: 15px 18px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-size: 1.25rem;
+      color: #fff;
       font-weight: 700;
-      transition: var(--transition);
+      transition: transform 0.2s cubic-bezier(.34, 1.56, .64, 1), box-shadow 0.2s ease, filter 0.15s ease;
+      position: relative;
+      overflow: hidden;
+      min-height: 60px;
+    }
+
+    .option-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0);
+      transition: background 0.15s;
     }
 
     @media (hover: hover) {
-      .option-btn:hover:not(:disabled) .option-letter {
-        background: var(--primary);
-        color: var(--white);
+      .option-btn:hover:not(:disabled)::before {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .option-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
       }
     }
 
-    .option-btn.correct {
-      border-color: #22c55e;
-      background: #f0fdf4;
-      opacity: 1 !important;
+    .option-btn:active:not(:disabled) {
+      transform: scale(0.97);
+      filter: brightness(0.95);
     }
 
-    .option-btn.correct .option-letter {
-      background: #22c55e;
-      color: var(--white);
+    .opt-a {
+      background: #3A86FF;
+      box-shadow: 0 4px 16px rgba(58, 134, 255, 0.35);
+    }
+
+    .opt-b {
+      background: #FF6B6B;
+      box-shadow: 0 4px 16px rgba(255, 107, 107, 0.35);
+    }
+
+    .opt-c {
+      background: #06B96F;
+      box-shadow: 0 4px 16px rgba(6, 185, 111, 0.35);
+    }
+
+    .opt-d {
+      background: #F59E0B;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+    }
+
+    .option-btn.correct {
+      background: #22c55e !important;
+      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.35) !important;
+      transform: scale(1.05);
     }
 
     .option-btn.incorrect {
-      border-color: #ef4444;
-      background: #fef2f2;
-      opacity: 1 !important;
-    }
-
-    .option-btn.incorrect .option-letter {
-      background: #ef4444;
-      color: var(--white);
+      background: #ef4444 !important;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35) !important;
+      transform: scale(0.95);
+      opacity: 0.8;
     }
 
     .option-btn.disabled-state {
-      border-color: #e2e8f0;
       opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
     }
 
     .quiz-processing {
@@ -1285,14 +1280,15 @@
 
       const optionsContent = qMeta.options || ['選項 A', '選項 B', '選項 C', '選項 D'];
 
+      const styles = ['opt-a', 'opt-b', 'opt-c', 'opt-d'];
       optionsContent.forEach((opt, idx) => {
         const btn = document.createElement('button');
-        btn.className = 'option-btn';
+        const letter = String.fromCharCode(65 + idx);
+        const styleClass = styles[idx] || 'opt-a';
+        btn.className = `option-btn ${styleClass}`;
         btn.id = `option-btn-${idx}`;
-        btn.innerHTML = `
-                    <span class="option-letter" id="option-icon-${idx}">${String.fromCharCode(65 + idx)}</span>
-                    <span style="flex:1;">${opt}</span>
-                `;
+        // Only show A, B, C, D
+        btn.innerHTML = `${letter}`;
         btn.onclick = () => handleAnswer(idx);
         optionsArea.appendChild(btn);
       });
