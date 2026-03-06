@@ -1061,6 +1061,40 @@
     // ===================================================================
     // INITIALIZATION
     // ===================================================================
+    async function checkEligibility() {
+      const cooldownDays = quizState.config?.cooldown_days || 14;
+      if (!quizState.anonCode) return true;
+
+      try {
+        const res = await API.callWebhook('check_repeat', {
+          test_id: quizState.testId,
+          cooldown_days: cooldownDays
+        });
+
+        if (res && res.can_play === false) {
+          document.getElementById('start-btn').disabled = true;
+          document.getElementById('start-btn').classList.add('btn-secondary');
+          document.getElementById('start-btn').classList.remove('btn-primary');
+          document.getElementById('start-btn').innerHTML = "已完成測驗";
+
+          const errorMsg = document.getElementById('error-message');
+          errorMsg.textContent = res.message || "您已完成過本次測驗，感謝參與！";
+          errorMsg.classList.remove('hidden');
+          return false;
+        } else if (res && res.can_play === true && res.message && res.message !== "" && res.message !== "New user") {
+          const errorMsg = document.getElementById('error-message');
+          errorMsg.textContent = res.message;
+          errorMsg.classList.remove('hidden');
+          // Keep button enabled, it just warns them that it won't be counted
+          return true;
+        }
+        return true;
+      } catch (e) {
+        console.warn('API error during checkEligibility:', e);
+        return true; // fail open
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', async function () {
 
       // 1. Extract test_id from URL
@@ -1097,49 +1131,23 @@
         console.warn('Failed to load tests_config.json:', err);
       }
 
-      const cooldownDays = quizState.config?.cooldown_days || 14;
-
       // 3. Check if user has already done the test (Demo check)
+      await checkEligibility();
+
+      // 4. Get general stats from the backend via Webhook
       try {
-        if (quizState.anonCode) {
-          const res = await API.callWebhook('check_repeat', {
-            test_id: quizState.testId,
-            cooldown_days: cooldownDays
-          });
-          if (res && res.can_play === false) {
-            document.getElementById('start-btn').disabled = true;
-            document.getElementById('start-btn').classList.add('btn-secondary');
-            document.getElementById('start-btn').classList.remove('btn-primary');
-            document.getElementById('start-btn').innerHTML = "已完成測驗";
-
-            const errorMsg = document.getElementById('error-message');
-            errorMsg.textContent = res.message || "您已完成過本次測驗，感謝參與！";
-            errorMsg.classList.remove('hidden');
-          } else if (res && res.can_play === true && res.message && res.message !== "" && res.message !== "New user") {
-            const errorMsg = document.getElementById('error-message');
-            errorMsg.textContent = res.message;
-            errorMsg.classList.remove('hidden');
-            // Keep button enabled, it just warns them that it won't be counted
+        const statsRes = await API.callWebhook('stats', { test_id: quizState.testId });
+        if (statsRes && statsRes.total_participants !== undefined) {
+          if (statsRes.total_participants > 0) {
+            document.getElementById('stat-participants').textContent = statsRes.total_participants.toLocaleString();
+            document.getElementById('stat-avg-score').textContent = statsRes.average_score;
+          } else {
+            document.getElementById('stat-participants').textContent = "0";
+            document.getElementById('stat-avg-score').textContent = "0";
           }
         }
-
-        // 4. Get general stats from the backend via Webhook
-        try {
-          const statsRes = await API.callWebhook('stats', { test_id: quizState.testId });
-          if (statsRes && statsRes.total_participants !== undefined) {
-            if (statsRes.total_participants > 0) {
-              document.getElementById('stat-participants').textContent = statsRes.total_participants.toLocaleString();
-              document.getElementById('stat-avg-score').textContent = statsRes.average_score;
-            } else {
-              document.getElementById('stat-participants').textContent = "0";
-              document.getElementById('stat-avg-score').textContent = "0";
-            }
-          }
-        } catch (statsErr) {
-          console.warn('Failed to fetch stats:', statsErr);
-        }
-      } catch (e) {
-        console.warn('API error during init, but quiz will still be available:', e);
+      } catch (statsErr) {
+        console.warn('Failed to fetch stats:', statsErr);
       }
     });
 
@@ -1571,12 +1579,16 @@
       window.location.reload();
     }
 
-    function restartQuiz() {
+    async function restartQuiz() {
       document.getElementById('result-screen').classList.add('hidden');
       document.getElementById('start-screen').classList.remove('hidden');
       document.getElementById('start-btn').disabled = false;
       document.getElementById('loading-text').classList.add('hidden');
-      startQuiz();
+
+      const isEligible = await checkEligibility();
+      if (isEligible) {
+        startQuiz();
+      }
     }
 
     async function shareResult() {
