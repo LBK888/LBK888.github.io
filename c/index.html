@@ -1084,6 +1084,10 @@
             }
             if (quizState.config.subtitle) {
               document.querySelector('.start-subtitle').innerHTML = quizState.config.subtitle;
+              const descMeta = document.querySelector('meta[name="description"]');
+              if (descMeta) {
+                descMeta.content = quizState.config.subtitle.replace(/<br\s*\/?>/gi, ' ');
+              }
             }
           } else {
             console.warn(`Test ID '${quizState.testId}' not found in config.`);
@@ -1111,6 +1115,11 @@
             const errorMsg = document.getElementById('error-message');
             errorMsg.textContent = res.message || "您已完成過本次測驗，感謝參與！";
             errorMsg.classList.remove('hidden');
+          } else if (res && res.can_play === true && res.message && res.message !== "" && res.message !== "New user") {
+            const errorMsg = document.getElementById('error-message');
+            errorMsg.textContent = res.message;
+            errorMsg.classList.remove('hidden');
+            // Keep button enabled, it just warns them that it won't be counted
           }
         }
 
