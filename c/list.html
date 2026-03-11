@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuizGame實力大挑戰</title>
+  <meta name="description" content="快來測看看你的各項能力指標">
+  <style>
+    /* ===== CSS Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #ec4899;
+      --accent: #8b5cf6;
+      --bg-light: #f8fafc;
+      --bg-gradient: linear-gradient(135deg, #eef2ff 0%, #fce7f3 100%);
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --white: #ffffff;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-dark);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding: 40px 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    .hidden { display: none !important; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    
+    /* Card Component */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      position: relative;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+    
+    /* Button Component */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 24px; border: none; border-radius: var(--radius-lg);
+      font-size: 16px; font-weight: 700; cursor: pointer; transition: var(--transition);
+      text-decoration: none; width: 100%;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: var(--white); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); }
+    .btn-secondary { background: #f1f5f9; color: var(--text-muted); }
+    .btn-secondary:hover:not(:disabled) { background: #e2e8f0; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+    /* Page Header */
+    .page-header { text-align: center; margin-bottom: 40px; padding-top: 20px; }
+    .page-title {
+      font-size: 2.8rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; color: transparent; /* fallback */
+      margin-bottom: 16px; letter-spacing: -0.05em;
+    }
+    .page-subtitle { color: var(--text-muted); font-size: 1.2rem; }
+
+    /* Quiz List */
+    .quiz-list { display: grid; gap: 24px; grid-template-columns: 1fr; }
+    @media (min-width: 768px) { .quiz-list { grid-template-columns: repeat(2, 1fr); } }
+
+    /* Quiz Card */
+    .quiz-card { padding: 32px; display: flex; flex-direction: column; height: 100%; }
+    .quiz-title { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; line-height: 1.3; }
+    .quiz-desc { color: var(--text-muted); font-size: 1rem; margin-bottom: 24px; min-height: 70px; flex-grow: 1; }
+    
+    .quiz-meta { 
+      display: flex; flex-direction: column; gap: 8px; 
+      margin-bottom: 24px; padding: 16px; 
+      background: #f8fafc; border-radius: var(--radius-md);
+      font-size: 0.9rem; color: var(--text-dark); font-weight: 500;
+    }
+    
+    .status-msg { font-size: 0.9rem; padding: 12px; border-radius: var(--radius-md); margin-bottom: 20px; font-weight: 600; text-align: center;}
+    .status-msg.warning { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .status-msg.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .status-msg.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    
+    .loading-container { text-align: center; padding: 80px 20px; color: var(--text-muted); font-size: 1.1rem; }
+    .spinner {
+      width: 48px; height: 48px; margin: 0 auto 20px; border: 4px solid #e2e8f0;
+      border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+
+    /* SVG Icons */
+    .svg-icon { width: 18px; height: 18px; margin-right: 8px; vertical-align: middle; }
+    .btn svg { margin-left: auto; margin-right: 0; }
+  </style>
+</head>
+
+<body>
+  <div class="container animate-fade-in">
+    <div class="page-header">
+      <h1 class="page-title">QuizGame實力大挑戰</h1>
+      <p class="page-subtitle">快來測看看你的各項能力指標</p>
+    </div>
+
+    <div id="loading" class="loading-container">
+      <div class="spinner"></div>
+      <p>正在努力載入測驗列表...</p>
+    </div>
+
+    <div id="quiz-list" class="quiz-list hidden">
+      <!-- Cards will be populated here by JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      // Use the same webhook url as index.html
+      WEBHOOK_URL: 'https://mistakenly-proper-zebra.ngrok-free.app/webhook/quiz',
+    };
+
+    const API = {
+      async callWebhook(action, urlParams = {}) {
+        const params = new URLSearchParams();
+        params.append('action', action);
+        
+        for (const [key, value] of Object.entries(urlParams)) {
+          if (typeof value === 'object' && value !== null) {
+            params.append(key, JSON.stringify(value));
+          } else if (value !== undefined && value !== null) {
+            params.append(key, value);
+          }
+        }
+        
+        // Get user state from localStorage
+        const anonCode = localStorage.getItem('quiz_anon_code');
+        if (anonCode) {
+          params.append('anon_code', anonCode);
+        }
+
+        const finalUrl = `${CONFIG.WEBHOOK_URL}?${params.toString()}`;
+
+        try {
+          const response = await fetch(finalUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'ngrok-skip-browser-warning': 'true' /* Bypasses ngrok warning */
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`伺服器錯誤: ${response.status}`);
+          }
+          
+          return await response.json();
+        } catch (error) {
+          console.error('API Error:', error);
+          throw error;
+        }
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const listContainer = document.getElementById('quiz-list');
+      const loadingEl = document.getElementById('loading');
+      
+      try {
+        // 1. Fetch configs
+        const configRes = await fetch('./tests_config.json');
+        if (!configRes.ok) throw new Error('無法載入 tests_config.json 設定檔。');
+        const configs = await configRes.json();
+        
+        // 2. Process each test
+        const testCards = [];
+        
+        for (const [testId, testConfig] of Object.entries(configs)) {
+          let statusHtml = '';
+          let btnHtml = '';
+          let btnClass = 'btn-primary';
+          let btnText = '開始測驗';
+          let isDisabled = false;
+
+          try {
+            // Check eligibility per test
+            const res = await API.callWebhook('check_repeat', {
+              test_id: testId,
+              cooldown_days: testConfig.cooldown_days || 14
+            });
+
+            if (res.can_play === false) {
+              isDisabled = true;
+              btnClass = 'btn-secondary';
+              btnText = '已完成測驗';
+              statusHtml = `<div class="status-msg error">🔒 ${res.message || '仍在冷卻期中，請稍後再試'}</div>`;
+            } else if (res.can_play === true && res.message && res.message !== "New user") {
+              // Usually means it's playable but won't be counted
+              statusHtml = `<div class="status-msg warning">⚠️ ${res.message}</div>`;
+            } else {
+              statusHtml = `<div class="status-msg success">✅ 可以進行測驗</div>`;
+            }
+
+          } catch (e) {
+            console.warn(`Error checking status for ${testId}:`, e);
+            statusHtml = `<div class="status-msg error">❌ 無法連線至伺服器驗證狀態</div>`;
+          }
+
+          // Build Card HTML
+          const cardHtml = `
+            <div class="card quiz-card animate-fade-in">
+              <h2 class="quiz-title">${testConfig.title || testId}</h2>
+              <div class="quiz-desc">${testConfig.subtitle || '暫無說明'}</div>
+              
+              <div class="quiz-meta">
+                <div>
+                  <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  冷卻時間: <span style="color:var(--primary); font-weight:700;">${testConfig.cooldown_days || 14}</span> 天
+                </div>
+                <div>
+                  <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                  可重複作答: <span style="font-weight:700;">${testConfig.Repeatable ? '是 (不列入統計)' : '否'}</span>
+                </div>
+              </div>
+              
+              ${statusHtml}
+              
+              <button class="btn ${btnClass}" ${isDisabled ? 'disabled' : ''} onclick="window.location.href='index.html?test_id=${testId}'">
+                ${btnText}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="${isDisabled ? 'display:none' : ''}">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+            </div>
+          `;
+          testCards.push(cardHtml);
+        }
+
+        listContainer.innerHTML = testCards.join('');
+        
+      } catch (e) {
+        listContainer.innerHTML = `
+          <div class="card quiz-card">
+            <h2 class="quiz-title" style="color:red;">錯誤</h2>
+            <p>${e.message}</p>
+          </div>
+        `;
+      } finally {
+        loadingEl.classList.add('hidden');
+        listContainer.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+
+</html>
