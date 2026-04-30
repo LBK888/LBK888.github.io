@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>YOLO · DETECT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+  <style>
+    :root {
+      --bg: #030C10;
+      --surface: rgba(0,210,180,0.05);
+      --border: rgba(0,210,180,0.22);
+      --accent: #00D4B4;
+      --accent-glow: rgba(0,212,180,0.15);
+      --amber: #FFB300;
+      --red: #FF4060;
+      --text: #C4F0E8;
+      --muted: rgba(196,240,232,0.45);
+      --mono: 'Share Tech Mono', 'Courier New', monospace;
+      --sans: 'Barlow Condensed', sans-serif;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);touch-action:manipulation;}
+
+    /* ── GRID BG ── */
+    .grid-bg::before{
+      content:'';position:absolute;inset:0;
+      background-image:linear-gradient(rgba(0,212,180,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,180,.04) 1px,transparent 1px);
+      background-size:44px 44px;pointer-events:none;
+    }
+
+    /* ══════════════════ SETUP SCREEN ══════════════════ */
+    #setup-screen{
+      position:fixed;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;padding:20px;
+      background:var(--bg);z-index:100;
+    }
+    .setup-inner{position:relative;width:100%;max-width:420px;display:flex;flex-direction:column;gap:24px;}
+
+    /* Scanline shimmer on logo */
+    .logo{text-align:center;}
+    .logo-title{
+      font-family:var(--mono);font-size:clamp(2rem,8vw,2.8rem);
+      letter-spacing:.18em;color:var(--accent);
+      text-shadow:0 0 24px rgba(0,212,180,.55),0 0 60px rgba(0,212,180,.2);
+      line-height:1;
+    }
+    .logo-sub{
+      font-size:.7rem;letter-spacing:.35em;color:var(--muted);
+      margin-top:6px;text-transform:uppercase;
+    }
+    .logo-tag{
+      display:inline-block;margin-top:10px;
+      border:1px solid var(--border);border-radius:3px;
+      padding:3px 10px;font-size:.62rem;letter-spacing:.2em;
+      color:var(--accent);background:var(--accent-glow);
+    }
+
+    .card{border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden;}
+    .card-header{
+      padding:9px 16px;font-size:.65rem;letter-spacing:.28em;
+      text-transform:uppercase;color:var(--accent);
+      border-bottom:1px solid var(--border);background:rgba(0,212,180,.05);
+    }
+    .card-body{padding:16px;display:flex;flex-direction:column;gap:11px;}
+
+    #drop-zone{
+      border:1.5px dashed var(--border);border-radius:7px;
+      padding:22px 16px;text-align:center;cursor:pointer;
+      transition:all .2s;position:relative;
+    }
+    #drop-zone.drag-over{border-color:var(--accent);background:var(--accent-glow);}
+    #drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .drop-icon{font-size:1.6rem;margin-bottom:6px;opacity:.7;}
+    .drop-label{font-size:.85rem;font-weight:700;letter-spacing:.05em;}
+    .drop-sub{font-size:.7rem;color:var(--muted);margin-top:3px;}
+
+    .or-div{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.65rem;letter-spacing:.25em;}
+    .or-div::before,.or-div::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    #url-input{
+      background:rgba(0,0,0,.45);border:1px solid var(--border);border-radius:6px;
+      padding:10px 13px;color:var(--text);font-family:var(--mono);font-size:.75rem;
+      width:100%;outline:none;transition:border-color .2s;
+    }
+    #url-input:focus{border-color:var(--accent);}
+    #url-input::placeholder{color:var(--muted);}
+
+    #load-btn{
+      background:var(--accent);border:none;border-radius:6px;padding:13px;
+      color:#030C10;font-family:var(--sans);font-size:.9rem;font-weight:700;
+      letter-spacing:.18em;text-transform:uppercase;cursor:pointer;width:100%;
+      transition:opacity .15s,transform .1s;
+    }
+    #load-btn:active{transform:scale(.98);}
+    #load-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+    .chips{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;}
+    .chip{
+      font-size:.62rem;padding:4px 10px;border-radius:20px;
+      border:1px solid var(--border);color:var(--muted);letter-spacing:.1em;
+    }
+
+    /* ══════════════════ LOADING SCREEN ══════════════════ */
+    #loading-screen{
+      position:fixed;inset:0;display:none;flex-direction:column;
+      align-items:center;justify-content:center;
+      background:var(--bg);z-index:99;gap:18px;
+    }
+    .spin-wrap{width:72px;height:72px;position:relative;}
+    .spin-wrap svg{animation:spin 1.4s linear infinite;width:72px;height:72px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    #loading-status{
+      font-family:var(--mono);font-size:.78rem;color:var(--accent);
+      letter-spacing:.1em;text-align:center;max-width:260px;min-height:2.4em;
+    }
+    .bar-wrap{width:180px;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
+    #loading-bar{height:100%;width:0%;background:var(--accent);border-radius:1px;transition:width .35s;box-shadow:0 0 8px var(--accent);}
+
+    /* ══════════════════ MAIN SCREEN ══════════════════ */
+    #main-screen{position:fixed;inset:0;display:none;}
+    #video{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;}
+    #canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+    /* HUD Top */
+    .hud-top{
+      position:absolute;top:0;left:0;right:0;padding:10px 14px;
+      display:flex;align-items:center;justify-content:space-between;
+      background:linear-gradient(to bottom,rgba(3,12,16,.88),transparent);
+      pointer-events:none;z-index:5;
+    }
+    .hud-left{display:flex;flex-direction:column;gap:3px;}
+    .hud-live{display:flex;align-items:center;gap:7px;}
+    .live-dot{
+      width:7px;height:7px;border-radius:50%;background:var(--accent);
+      box-shadow:0 0 6px var(--accent);animation:blink 2s ease-in-out infinite;
+    }
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
+    .live-label{font-family:var(--mono);font-size:.65rem;color:var(--accent);letter-spacing:.15em;}
+    #hud-model-name{font-size:.72rem;color:var(--muted);letter-spacing:.08em;padding-left:14px;}
+    #hud-fps{
+      font-family:var(--mono);font-size:1.4rem;color:var(--amber);
+      letter-spacing:.02em;text-align:right;line-height:1;
+    }
+    #hud-fps small{font-size:.55rem;color:var(--muted);margin-left:2px;vertical-align:middle;}
+    #hud-inf{font-size:.6rem;color:var(--muted);font-family:var(--mono);text-align:right;margin-top:1px;}
+
+    /* Scanning label (when no detections) */
+    #scan-label{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      font-family:var(--mono);font-size:.7rem;letter-spacing:.4em;
+      color:rgba(0,212,180,.35);pointer-events:none;z-index:4;
+      text-transform:uppercase;
+      animation:scanPulse 2s ease-in-out infinite;
+    }
+    @keyframes scanPulse{0%,100%{opacity:.3;}50%{opacity:.7;}}
+
+    /* HUD Bottom */
+    .hud-bottom{
+      position:absolute;bottom:0;left:0;right:0;
+      background:linear-gradient(to top,rgba(3,12,16,.92) 60%,transparent);
+      padding:10px 14px 28px;z-index:5;
+    }
+    .det-header{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:8px;
+    }
+    .det-title{font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);}
+    #det-total{font-family:var(--mono);font-size:.7rem;color:var(--accent);}
+    #det-list{
+      display:flex;flex-wrap:wrap;gap:6px;
+      max-height:100px;overflow-y:auto;
+    }
+    .det-tag{
+      display:flex;align-items:center;gap:6px;
+      background:rgba(3,12,16,.82);border-radius:4px;padding:5px 10px;
+      border:1px solid;animation:tagIn .15s ease both;
+    }
+    @keyframes tagIn{from{opacity:0;transform:scale(.88);}to{opacity:1;transform:scale(1);}}
+    .det-tag-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+    .det-tag-name{font-size:.76rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+    .det-tag-cnt{font-family:var(--mono);font-size:.68rem;opacity:.65;}
+
+    /* Controls */
+    .ctrl-btn{
+      position:absolute;right:12px;width:38px;height:38px;
+      border-radius:50%;border:1px solid var(--border);
+      background:rgba(3,12,16,.75);color:var(--muted);
+      font-size:1rem;cursor:pointer;display:flex;align-items:center;
+      justify-content:center;z-index:10;transition:all .2s;
+    }
+    .ctrl-btn:hover{border-color:var(--accent);color:var(--accent);}
+    #settings-btn{top:10px;}
+    #camera-btn{top:56px;}
+
+    /* Settings Panel */
+    #settings-panel{
+      position:absolute;bottom:0;left:0;right:0;
+      background:rgba(3,12,16,.96);border-top:1px solid var(--border);
+      padding:20px 20px 30px;
+      transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+      z-index:20;display:flex;flex-direction:column;gap:18px;
+    }
+    #settings-panel.open{transform:translateY(0);}
+    .settings-title{
+      font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;
+      color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:10px;
+    }
+    .srow{display:flex;flex-direction:column;gap:7px;}
+    .slabel{
+      display:flex;justify-content:space-between;
+      font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);
+    }
+    .slabel span{font-family:var(--mono);color:var(--accent);}
+    input[type="range"]{-webkit-appearance:none;width:100%;height:3px;background:var(--border);border-radius:2px;outline:none;}
+    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px rgba(0,212,180,.5);}
+    .srow-inline{display:flex;align-items:center;justify-content:space-between;}
+    .toggle-label{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+    .toggle{
+      width:40px;height:22px;border-radius:11px;border:1px solid var(--border);
+      background:rgba(0,0,0,.5);cursor:pointer;position:relative;transition:background .2s;
+    }
+    .toggle.on{background:var(--accent);}
+    .toggle::after{
+      content:'';position:absolute;top:2px;left:2px;
+      width:16px;height:16px;border-radius:50%;background:#030C10;
+      transition:transform .2s;
+    }
+    .toggle.on::after{transform:translateX(18px);}
+    .settings-close{
+      align-self:center;background:none;border:1px solid var(--border);
+      border-radius:5px;color:var(--muted);padding:8px 28px;
+      font-family:var(--sans);font-size:.78rem;letter-spacing:.2em;
+      text-transform:uppercase;cursor:pointer;transition:all .2s;
+    }
+    .settings-close:hover{border-color:var(--accent);color:var(--accent);}
+
+    /* Error toast */
+    #err-toast{
+      position:fixed;top:20px;left:50%;
+      transform:translateX(-50%) translateY(-100px);
+      background:rgba(255,64,96,.95);color:#fff;
+      padding:10px 20px;border-radius:6px;font-size:.8rem;
+      letter-spacing:.05em;transition:transform .3s;
+      z-index:200;max-width:88vw;text-align:center;pointer-events:none;
+    }
+    #err-toast.show{transform:translateX(-50%) translateY(0);}
+  </style>
+</head>
+<body>
+
+<!-- ══ SETUP SCREEN ══ -->
+<div id="setup-screen" class="grid-bg">
+  <div class="setup-inner">
+    <div class="logo">
+      <div class="logo-title">YOLO·DETECT</div>
+      <div class="logo-sub">Real-time Object Detection Engine</div>
+      <div class="logo-tag">YOLOv8 / YOLOv5 · ONNX · WebGL</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">▸ Load YOLO ONNX Model</div>
+      <div class="card-body">
+        <div id="drop-zone">
+          <input type="file" id="file-input" accept=".onnx">
+          <div class="drop-icon">⬆</div>
+          <div class="drop-label" id="drop-label">Drop .onnx file here</div>
+          <div class="drop-sub" id="drop-sub">or tap to select file from device</div>
+        </div>
+        <div class="or-div">OR URL</div>
+        <input type="text" id="url-input" placeholder="https://example.com/yolov8n.onnx">
+        <button id="load-btn" disabled>Load Model &amp; Start Camera</button>
+      </div>
+    </div>
+
+    <div class="chips">
+      <div class="chip">YOLOv8 ✓</div>
+      <div class="chip">YOLOv5 ✓</div>
+      <div class="chip">WebGL 加速</div>
+      <div class="chip">行動裝置優化</div>
+      <div class="chip">自動讀取類別名稱</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOADING SCREEN ══ -->
+<div id="loading-screen" class="grid-bg">
+  <div class="spin-wrap">
+    <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="36" cy="36" r="28" stroke="rgba(0,212,180,0.12)" stroke-width="4"/>
+      <path d="M36 8 A28 28 0 0 1 64 36" stroke="#00D4B4" stroke-width="4" stroke-linecap="round"/>
+      <path d="M36 8 A28 28 0 0 1 55 55" stroke="rgba(0,212,180,0.3)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div id="loading-status">Initializing ONNX Runtime...</div>
+  <div class="bar-wrap"><div id="loading-bar"></div></div>
+</div>
+
+<!-- ══ MAIN SCREEN ══ -->
+<div id="main-screen">
+  <video id="video" autoplay muted playsinline></video>
+  <canvas id="canvas"></canvas>
+
+  <div id="scan-label">SCANNING</div>
+
+  <!-- Top HUD -->
+  <div class="hud-top">
+    <div class="hud-left">
+      <div class="hud-live"><div class="live-dot"></div><div class="live-label">LIVE</div></div>
+      <div id="hud-model-name">model</div>
+    </div>
+    <div>
+      <div id="hud-fps">-- <small>FPS</small></div>
+      <div id="hud-inf">-- ms/frame</div>
+    </div>
+  </div>
+
+  <!-- Bottom HUD -->
+  <div class="hud-bottom">
+    <div class="det-header">
+      <div class="det-title">偵測結果</div>
+      <div id="det-total">0 objects</div>
+    </div>
+    <div id="det-list"></div>
+  </div>
+
+  <!-- Control buttons -->
+  <button class="ctrl-btn" id="settings-btn" title="Settings">⚙</button>
+  <button class="ctrl-btn" id="camera-btn" title="Switch Camera">⇄</button>
+
+  <!-- Settings Panel -->
+  <div id="settings-panel">
+    <div class="settings-title">Detection Settings</div>
+    <div class="srow">
+      <div class="slabel">Confidence Threshold <span id="conf-val">0.30</span></div>
+      <input type="range" id="conf-slider" min="0.05" max="0.95" step="0.05" value="0.30">
+    </div>
+    <div class="srow">
+      <div class="slabel">IoU Threshold (NMS) <span id="iou-val">0.45</span></div>
+      <input type="range" id="iou-slider" min="0.10" max="0.90" step="0.05" value="0.45">
+    </div>
+    <div class="srow-inline">
+      <div class="toggle-label">Mirror Front Camera</div>
+      <div class="toggle on" id="mirror-toggle"></div>
+    </div>
+    <button class="settings-close" id="settings-close">Close</button>
+  </div>
+</div>
+
+<!-- Error Toast -->
+<div id="err-toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════
+const MODEL_SIZE = 640;
+let confThresh = 0.30;
+let iouThresh  = 0.45;
+let mirrorFront = true;
+
+// 80 COCO class names (fallback when model has no metadata)
+const COCO = {
+  0:'person',1:'bicycle',2:'car',3:'motorcycle',4:'airplane',5:'bus',
+  6:'train',7:'truck',8:'boat',9:'traffic light',10:'fire hydrant',
+  11:'stop sign',12:'parking meter',13:'bench',14:'bird',15:'cat',
+  16:'dog',17:'horse',18:'sheep',19:'cow',20:'elephant',21:'bear',
+  22:'zebra',23:'giraffe',24:'backpack',25:'umbrella',26:'handbag',
+  27:'tie',28:'suitcase',29:'frisbee',30:'skis',31:'snowboard',
+  32:'sports ball',33:'kite',34:'baseball bat',35:'baseball glove',
+  36:'skateboard',37:'surfboard',38:'tennis racket',39:'bottle',
+  40:'wine glass',41:'cup',42:'fork',43:'knife',44:'spoon',45:'bowl',
+  46:'banana',47:'apple',48:'sandwich',49:'orange',50:'broccoli',
+  51:'carrot',52:'hot dog',53:'pizza',54:'donut',55:'cake',56:'chair',
+  57:'couch',58:'potted plant',59:'bed',60:'dining table',61:'toilet',
+  62:'tv',63:'laptop',64:'mouse',65:'remote',66:'keyboard',
+  67:'cell phone',68:'microwave',69:'oven',70:'toaster',71:'sink',
+  72:'refrigerator',73:'book',74:'clock',75:'vase',76:'scissors',
+  77:'teddy bear',78:'hair drier',79:'toothbrush'
+};
+
+const PALETTE = [
+  '#00D4B4','#FF6B6B','#FFD166','#06D6A0','#118AB2','#EF476F',
+  '#FFB347','#A8E6CF','#E9C46A','#F4A261','#48CAE4','#2A9D8F',
+  '#E76F51','#4CC9F0','#80ED99','#FF9F1C','#C77DFF','#FFBF69',
+  '#9B5DE5','#F15BB5','#FEE440','#00BBF9','#00F5D4','#FB5607',
+];
+const color = i => PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length];
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let session     = null;
+let classNames  = {...COCO};
+let modelLabel  = 'model';
+let stream      = null;
+let facing      = 'environment';
+let lastDets    = [];
+let inferring   = false;
+let pendingBuf  = null;   // model ArrayBuffer
+let frameCount  = 0;
+let fpsT        = performance.now();
+let infMs       = 0;
+
+// Reusable buffers
+const offCvs = document.createElement('canvas');
+offCvs.width = MODEL_SIZE; offCvs.height = MODEL_SIZE;
+const offCtx = offCvs.getContext('2d', { willReadFrequently: true });
+const pixBuf  = new Float32Array(3 * MODEL_SIZE * MODEL_SIZE);
+
+// ════════════════════════════════════════════════
+// DOM REFS
+// ════════════════════════════════════════════════
+const setupScreen   = document.getElementById('setup-screen');
+const loadingScreen = document.getElementById('loading-screen');
+const mainScreen    = document.getElementById('main-screen');
+const loadStatus    = document.getElementById('loading-status');
+const loadBar       = document.getElementById('loading-bar');
+const fileInput     = document.getElementById('file-input');
+const urlInput      = document.getElementById('url-input');
+const loadBtn       = document.getElementById('load-btn');
+const dropZone      = document.getElementById('drop-zone');
+const dropLabel     = document.getElementById('drop-label');
+const dropSub       = document.getElementById('drop-sub');
+const video         = document.getElementById('video');
+const canvas        = document.getElementById('canvas');
+const ctx           = canvas.getContext('2d');
+const hudModelName  = document.getElementById('hud-model-name');
+const hudFPS        = document.getElementById('hud-fps');
+const hudInf        = document.getElementById('hud-inf');
+const scanLabel     = document.getElementById('scan-label');
+const detList       = document.getElementById('det-list');
+const detTotal      = document.getElementById('det-total');
+const settingsBtn   = document.getElementById('settings-btn');
+const settingsPanel = document.getElementById('settings-panel');
+const settingsClose = document.getElementById('settings-close');
+const cameraBtn     = document.getElementById('camera-btn');
+const confSlider    = document.getElementById('conf-slider');
+const iouSlider     = document.getElementById('iou-slider');
+const confVal       = document.getElementById('conf-val');
+const iouVal        = document.getElementById('iou-val');
+const mirrorToggle  = document.getElementById('mirror-toggle');
+const errToast      = document.getElementById('err-toast');
+
+// ════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════
+let errTimer = null;
+function showErr(msg, ms = 4000) {
+  errToast.textContent = msg;
+  errToast.classList.add('show');
+  clearTimeout(errTimer);
+  errTimer = setTimeout(() => errToast.classList.remove('show'), ms);
+}
+
+function setProgress(msg, pct) {
+  loadStatus.textContent = msg;
+  if (pct != null) loadBar.style.width = pct + '%';
+}
+
+// ════════════════════════════════════════════════
+// EXTRACT CLASS NAMES FROM ONNX BINARY
+// YOLOv8 embeds names as metadata_props key='names'
+// value like: {0: 'person', 1: 'car', ...}
+// ════════════════════════════════════════════════
+function extractNames(buf) {
+  try {
+    const raw = new TextDecoder('utf-8', { fatal: false }).decode(new Uint8Array(buf));
+    // Look for dict pattern starting at index 0
+    const m = raw.match(/\{0:\s*['"]([^'"]+)['"]/);
+    if (!m) return null;
+    const start = raw.indexOf(m[0]);
+    // Find balanced braces
+    let depth = 0, end = start;
+    for (let i = start; i < Math.min(start + 8000, raw.length); i++) {
+      if (raw[i] === '{') depth++;
+      else if (raw[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
+    }
+    const dictStr = raw.slice(start, end + 1);
+    const pairs   = [...dictStr.matchAll(/(\d+):\s*['"]([^'"]+)['"]/g)];
+    if (pairs.length === 0) return null;
+    const names = {};
+    pairs.forEach(([, idx, name]) => { names[+idx] = name; });
+    console.log(`Extracted ${Object.keys(names).length} class names from model metadata`);
+    return names;
+  } catch (e) { return null; }
+}
+
+// ════════════════════════════════════════════════
+// MODEL LOADING
+// ════════════════════════════════════════════════
+async function loadModel(src) {
+  setProgress('Initializing ONNX Runtime...', 8);
+  try {
+    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
+    ort.env.wasm.numThreads = 1;
+
+    setProgress('Downloading / reading model...', 22);
+    let modelBuf;
+    if (typeof src === 'string') {
+      const r = await fetch(src);
+      if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+      modelBuf = await r.arrayBuffer();
+    } else {
+      modelBuf = src;
+    }
+
+    setProgress('Parsing class names from metadata...', 42);
+    const extracted = extractNames(modelBuf);
+    classNames = extracted || {...COCO};
+
+    setProgress('Creating inference session (WebGL → WASM)...', 58);
+    session = await ort.InferenceSession.create(modelBuf, {
+      executionProviders: ['webgl', 'wasm'],
+      graphOptimizationLevel: 'all',
+    });
+
+    // Log I/O shapes
+    console.log('Input names:', session.inputNames);
+    console.log('Output names:', session.outputNames);
+
+    setProgress('Warming up model...', 78);
+    const dummy = new ort.Tensor('float32', new Float32Array(3*MODEL_SIZE*MODEL_SIZE), [1,3,MODEL_SIZE,MODEL_SIZE]);
+    await session.run({ [session.inputNames[0]]: dummy });
+
+    setProgress('Starting camera...', 90);
+    await startCamera();
+
+    setProgress('Ready!', 100);
+    setTimeout(() => {
+      loadingScreen.style.display = 'none';
+      mainScreen.style.display   = 'block';
+      hudModelName.textContent   = modelLabel;
+      resizeCanvas();
+      startLoop();
+    }, 350);
+
+  } catch (err) {
+    console.error(err);
+    loadingScreen.style.display = 'none';
+    setupScreen.style.display   = 'flex';
+    showErr('⚠ ' + err.message, 6000);
+  }
+}
+
+// ════════════════════════════════════════════════
+// CAMERA
+// ════════════════════════════════════════════════
+async function startCamera() {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+  } catch {
+    // Fallback without facingMode
+    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  }
+  video.srcObject = stream;
+  await new Promise(res => { video.onloadedmetadata = () => { video.play(); res(); }; });
+}
+
+// ════════════════════════════════════════════════
+// PREPROCESSING  (video → 640×640 letterbox tensor)
+// ════════════════════════════════════════════════
+function preprocess() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !vh) return null;
+
+  const scale = Math.min(MODEL_SIZE / vw, MODEL_SIZE / vh);
+  const nw    = Math.round(vw * scale);
+  const nh    = Math.round(vh * scale);
+  const padX  = Math.round((MODEL_SIZE - nw) / 2);
+  const padY  = Math.round((MODEL_SIZE - nh) / 2);
+
+  offCtx.fillStyle = '#000';
+  offCtx.fillRect(0, 0, MODEL_SIZE, MODEL_SIZE);
+  offCtx.drawImage(video, padX, padY, nw, nh);
+
+  const pixels = offCtx.getImageData(0, 0, MODEL_SIZE, MODEL_SIZE).data;
+  const area   = MODEL_SIZE * MODEL_SIZE;
+  for (let i = 0; i < area; i++) {
+    pixBuf[i]          = pixels[i*4]   / 255; // R
+    pixBuf[area + i]   = pixels[i*4+1] / 255; // G
+    pixBuf[area*2 + i] = pixels[i*4+2] / 255; // B
+  }
+  return { scale, padX, padY, vw, vh };
+}
+
+// ════════════════════════════════════════════════
+// POSTPROCESSING  (decode + NMS)
+// ════════════════════════════════════════════════
+function decode(rawTensor, lb) {
+  const { scale: lbScale, padX, padY, vw, vh } = lb;
+  const dims = rawTensor.dims;
+  const data = rawTensor.data;
+  const dets = [];
+
+  // Detect format:
+  //  YOLOv8: [1, 4+nc, num_anchors]  → dims[1] < dims[2]
+  //  YOLOv5: [1, num_anchors, 5+nc]  → dims[1] > dims[2]
+
+  if (dims[1] < dims[2]) {
+    // ── YOLOv8 ──
+    const na = dims[2];            // num_anchors (e.g. 8400)
+    const nc = dims[1] - 4;       // num_classes
+    for (let i = 0; i < na; i++) {
+      let maxS = 0, maxC = 0;
+      for (let c = 0; c < nc; c++) {
+        const s = data[(4+c)*na + i];
+        if (s > maxS) { maxS = s; maxC = c; }
+      }
+      if (maxS < confThresh) continue;
+      const cx = data[0*na+i], cy = data[1*na+i];
+      const bw = data[2*na+i], bh = data[3*na+i];
+      dets.push({
+        x1: ((cx-bw/2)-padX)/lbScale, y1: ((cy-bh/2)-padY)/lbScale,
+        x2: ((cx+bw/2)-padX)/lbScale, y2: ((cy+bh/2)-padY)/lbScale,
+        score: maxS, cls: maxC
+      });
+    }
+  } else {
+    // ── YOLOv5 ──  (already has obj_conf × class_prob)
+    const na    = dims[1];
+    const nAttr = dims[2];
+    const nc    = nAttr - 5;
+    for (let i = 0; i < na; i++) {
+      const off  = i * nAttr;
+      const objC = data[off+4];
+      if (objC < confThresh) continue;
+      let maxS = 0, maxC = 0;
+      for (let c = 0; c < nc; c++) {
+        const s = data[off+5+c] * objC;
+        if (s > maxS) { maxS = s; maxC = c; }
+      }
+      if (maxS < confThresh) continue;
+      const cx = data[off], cy = data[off+1];
+      const bw = data[off+2], bh = data[off+3];
+      dets.push({
+        x1: ((cx-bw/2)-padX)/lbScale, y1: ((cy-bh/2)-padY)/lbScale,
+        x2: ((cx+bw/2)-padX)/lbScale, y2: ((cy+bh/2)-padY)/lbScale,
+        score: maxS, cls: maxC
+      });
+    }
+  }
+
+  // Clamp to video bounds
+  dets.forEach(d => {
+    d.x1 = Math.max(0, Math.min(vw, d.x1));
+    d.y1 = Math.max(0, Math.min(vh, d.y1));
+    d.x2 = Math.max(0, Math.min(vw, d.x2));
+    d.y2 = Math.max(0, Math.min(vh, d.y2));
+  });
+
+  return nms(dets.filter(d => (d.x2-d.x1)*(d.y2-d.y1) > 0));
+}
+
+function iou(a, b) {
+  const ix1 = Math.max(a.x1,b.x1), iy1 = Math.max(a.y1,b.y1);
+  const ix2 = Math.min(a.x2,b.x2), iy2 = Math.min(a.y2,b.y2);
+  const inter = Math.max(0,ix2-ix1) * Math.max(0,iy2-iy1);
+  if (!inter) return 0;
+  return inter / ((a.x2-a.x1)*(a.y2-a.y1) + (b.x2-b.x1)*(b.y2-b.y1) - inter);
+}
+
+function nms(dets) {
+  dets.sort((a,b) => b.score - a.score);
+  const keep = [], sup = new Set();
+  for (let i = 0; i < dets.length; i++) {
+    if (sup.has(i)) continue;
+    keep.push(dets[i]);
+    for (let j = i+1; j < dets.length; j++) {
+      if (!sup.has(j) && iou(dets[i], dets[j]) > iouThresh) sup.add(j);
+    }
+  }
+  return keep;
+}
+
+// ════════════════════════════════════════════════
+// RENDERING
+// ════════════════════════════════════════════════
+function resizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 200));
+resizeCanvas();
+
+// Returns: how the video is drawn onto the canvas (letterbox, maintain aspect)
+function getDP() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !vh) return null;
+  const cw = canvas.width, ch = canvas.height;
+  const s  = Math.min(cw/vw, ch/vh);
+  return {
+    dx: (cw - vw*s)/2, dy: (ch - vh*s)/2,
+    dw: vw*s,          dh: vh*s,
+    sx: s,             sy: s,
+  };
+}
+
+function v2c(vx, vy, dp) {
+  return { x: dp.dx + vx*dp.sx, y: dp.dy + vy*dp.sy };
+}
+
+function drawBoxes(dets, dp) {
+  if (!dp || !dets.length) return;
+  ctx.save();
+  const fsize = Math.max(10, Math.min(13, dp.dw/45));
+  ctx.font = `bold ${fsize}px 'Share Tech Mono', monospace`;
+  ctx.textBaseline = 'top';
+
+  for (const d of dets) {
+    const c  = color(d.cls);
+    const tl = v2c(d.x1, d.y1, dp);
+    const br = v2c(d.x2, d.y2, dp);
+    const w  = br.x - tl.x, h = br.y - tl.y;
+    if (w < 2 || h < 2) continue;
+
+    // Semi-transparent fill
+    ctx.fillStyle = c + '18';
+    ctx.fillRect(tl.x, tl.y, w, h);
+
+    // Bounding box outline
+    ctx.strokeStyle = c;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(tl.x, tl.y, w, h);
+
+    // Corner accents (tactical HUD style)
+    const cs = Math.min(w, h) * 0.18 + 5;
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = c;
+    // TL
+    ctx.beginPath(); ctx.moveTo(tl.x, tl.y+cs); ctx.lineTo(tl.x, tl.y); ctx.lineTo(tl.x+cs, tl.y); ctx.stroke();
+    // TR
+    ctx.beginPath(); ctx.moveTo(br.x-cs, tl.y); ctx.lineTo(br.x, tl.y); ctx.lineTo(br.x, tl.y+cs); ctx.stroke();
+    // BL
+    ctx.beginPath(); ctx.moveTo(tl.x, br.y-cs); ctx.lineTo(tl.x, br.y); ctx.lineTo(tl.x+cs, br.y); ctx.stroke();
+    // BR
+    ctx.beginPath(); ctx.moveTo(br.x-cs, br.y); ctx.lineTo(br.x, br.y); ctx.lineTo(br.x, br.y-cs); ctx.stroke();
+
+    // Label
+    const name  = classNames[d.cls] || `cls_${d.cls}`;
+    const label = `${name}  ${(d.score*100).toFixed(0)}%`;
+    const tw    = ctx.measureText(label).width + 8;
+    const lh    = fsize + 6;
+    const lx    = tl.x;
+    const ly    = tl.y > lh + 2 ? tl.y - lh - 2 : tl.y + 2;
+    ctx.fillStyle = c;
+    ctx.fillRect(lx, ly, tw, lh);
+    ctx.fillStyle = '#030C10';
+    ctx.fillText(label, lx + 4, ly + 3);
+  }
+  ctx.restore();
+}
+
+// ════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════
+function updateStats(dets) {
+  const counts = {};
+  for (const d of dets) {
+    const n = classNames[d.cls] || `cls_${d.cls}`;
+    counts[n] = (counts[n]||0) + 1;
+  }
+
+  const total = dets.length;
+  detTotal.textContent = `${total} object${total!==1?'s':''}`;
+  scanLabel.style.display = total ? 'none' : 'block';
+
+  detList.innerHTML = '';
+  for (const [name, cnt] of Object.entries(counts)) {
+    const ci   = Object.entries(classNames).find(([,v])=>v===name)?.[0] ?? 0;
+    const clr  = color(+ci);
+    const tag  = document.createElement('div');
+    tag.className = 'det-tag';
+    tag.style.borderColor = clr + '55';
+    tag.innerHTML = `
+      <div class="det-tag-dot" style="background:${clr}"></div>
+      <div class="det-tag-name" style="color:${clr}">${name}</div>
+      <div class="det-tag-cnt">×${cnt}</div>`;
+    detList.appendChild(tag);
+  }
+}
+
+// ════════════════════════════════════════════════
+// INFERENCE + RENDER LOOP
+// ════════════════════════════════════════════════
+let rafID = null;
+
+function loop() {
+  rafID = requestAnimationFrame(loop);
+
+  if (!video.videoWidth || video.readyState < 2) return;
+
+  const dp = getDP();
+  if (!dp) return;
+
+  // Draw video frame
+  if (facing === 'user' && mirrorFront) {
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, canvas.width - dp.dx - dp.dw, dp.dy, dp.dw, dp.dh);
+    ctx.restore();
+    // For mirrored front cam: flip dp for box drawing
+    const mirrorDP = { ...dp, dx: canvas.width - dp.dx - dp.dw };
+    drawBoxes(lastDets.map(d => ({
+      ...d,
+      x1: video.videoWidth - d.x2, x2: video.videoWidth - d.x1
+    })), mirrorDP);
+  } else {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, dp.dx, dp.dy, dp.dw, dp.dh);
+    drawBoxes(lastDets, dp);
+  }
+
+  // Kick off inference (non-blocking; fires at achievable FPS)
+  if (!inferring && session) {
+    inferring = true;
+    const lb = preprocess();
+    if (lb) {
+      const t0 = performance.now();
+      const tensor = new ort.Tensor('float32', pixBuf.slice(), [1, 3, MODEL_SIZE, MODEL_SIZE]);
+      session.run({ [session.inputNames[0]]: tensor })
+        .then(out => {
+          infMs = performance.now() - t0;
+          const raw = out[session.outputNames[0]];
+          lastDets = decode(raw, lb);
+          updateStats(lastDets);
+          updateFPS();
+          inferring = false;
+        })
+        .catch(e => { console.warn(e); inferring = false; });
+    } else { inferring = false; }
+  }
+}
+
+function updateFPS() {
+  frameCount++;
+  const now = performance.now();
+  if (now - fpsT >= 600) {
+    const fps = Math.round(frameCount * 1000 / (now - fpsT));
+    fpsT = now; frameCount = 0;
+    hudFPS.innerHTML = `${fps} <small>FPS</small>`;
+    hudInf.textContent = `${infMs.toFixed(0)} ms/frame`;
+    hudFPS.style.color = fps >= 15 ? '#00D4B4' : fps >= 8 ? '#FFB300' : '#FF4060';
+  }
+}
+
+function startLoop() {
+  if (rafID) cancelAnimationFrame(rafID);
+  loop();
+}
+
+// ════════════════════════════════════════════════
+// EVENT LISTENERS
+// ════════════════════════════════════════════════
+
+// Enable Load button when file or URL is ready
+function checkLoadReady() {
+  loadBtn.disabled = !(pendingBuf || urlInput.value.trim());
+}
+
+// File drop
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f?.name.endsWith('.onnx')) handleFile(f);
+  else showErr('請選擇 .onnx 格式的模型檔案');
+});
+
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    pendingBuf  = e.target.result;
+    modelLabel  = file.name.replace(/\.onnx$/i, '');
+    dropLabel.textContent = file.name;
+    dropSub.textContent   = `${(file.size/1024/1024).toFixed(2)} MB · ready`;
+    dropSub.style.color   = 'var(--accent)';
+    checkLoadReady();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+urlInput.addEventListener('input', () => {
+  if (urlInput.value.trim()) {
+    modelLabel = urlInput.value.split('/').pop().replace(/\.onnx$/i,'') || 'model';
+  }
+  checkLoadReady();
+});
+
+loadBtn.addEventListener('click', async () => {
+  setupScreen.style.display   = 'none';
+  loadingScreen.style.display = 'flex';
+  const url = urlInput.value.trim();
+  await loadModel(url || pendingBuf);
+});
+
+// Settings
+settingsBtn.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+settingsClose.addEventListener('click', () => settingsPanel.classList.remove('open'));
+
+confSlider.addEventListener('input', () => {
+  confThresh = parseFloat(confSlider.value);
+  confVal.textContent = confThresh.toFixed(2);
+});
+iouSlider.addEventListener('input', () => {
+  iouThresh = parseFloat(iouSlider.value);
+  iouVal.textContent = iouThresh.toFixed(2);
+});
+
+mirrorToggle.addEventListener('click', () => {
+  mirrorFront = !mirrorFront;
+  mirrorToggle.classList.toggle('on', mirrorFront);
+});
+
+// Camera switch
+cameraBtn.addEventListener('click', async () => {
+  facing = facing === 'environment' ? 'user' : 'environment';
+  cameraBtn.style.opacity = '.4';
+  try { await startCamera(); }
+  catch { showErr('無法切換相機'); facing = facing === 'environment' ? 'user' : 'environment'; }
+  cameraBtn.style.opacity = '1';
+});
+
+// Close settings on outside tap
+document.addEventListener('click', e => {
+  if (settingsPanel.classList.contains('open') &&
+      !settingsPanel.contains(e.target) &&
+      e.target !== settingsBtn) {
+    settingsPanel.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
