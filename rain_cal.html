@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海水養殖池降雨緩衝容量估算 | Rain Buffer Capacity Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Serif+TC:wght@400;600;700&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep: #060e1a;
+    --navy: #0a1628;
+    --mid: #0d2240;
+    --panel: #0f2b50;
+    --border: #1a4a7a;
+    --accent: #00b4d8;
+    --accent2: #48cae4;
+    --text: #cde8f8;
+    --text-dim: #6a9bbf;
+    --green: #22c55e;
+    --orange: #f97316;
+    --red: #ef4444;
+    --green-bg: rgba(34,197,94,0.1);
+    --orange-bg: rgba(249,115,22,0.1);
+    --red-bg: rgba(239,68,68,0.1);
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Noto Serif TC', serif;
+    --sans: 'Space Grotesk', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--deep);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    line-height: 1.6;
+    background-image:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(0,100,180,0.18) 0%, transparent 70%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23003060' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .page-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 48px 0 36px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+    position: relative;
+  }
+  .wave-line {
+    position: absolute;
+    bottom: -1px; left: 0; width: 100%;
+    height: 8px;
+    background: repeating-linear-gradient(90deg,
+      var(--accent) 0%, var(--accent2) 50%, var(--accent) 100%);
+    background-size: 40px 100%;
+    opacity: 0.25;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8'%3E%3Cpath d='M0 4 Q10 0 20 4 Q30 8 40 4' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+    mask-size: 40px 8px;
+    mask-repeat: repeat-x;
+  }
+  header h1 {
+    font-family: var(--serif);
+    font-size: clamp(1.4rem, 3.5vw, 2rem);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+  }
+  header h1 span {
+    display: block;
+    font-family: var(--sans);
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 300;
+    color: var(--accent2);
+    letter-spacing: 0.1em;
+    margin-top: 6px;
+  }
+  header p.subtitle {
+    margin-top: 14px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    max-width: 600px;
+    margin-left: auto; margin-right: auto;
+  }
+
+  /* ── Section cards ── */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .card-title {
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent2);
+    letter-spacing: 0.04em;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px; height: 18px;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── Principle section ── */
+  .principle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media(max-width:600px){ .principle-grid { grid-template-columns:1fr; } }
+  .principle-col h3 {
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .principle-col p {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.75;
+  }
+  .principle-col p strong { color: var(--text); font-weight: 600; }
+  .formula-block {
+    margin-top: 14px;
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent2);
+    line-height: 1.9;
+  }
+  .formula-block .label { color: var(--text-dim); font-size: 0.68rem; }
+
+  /* ── Input grid ── */
+  .input-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+  @media(max-width:700px){ .input-sections { grid-template-columns:1fr; } }
+
+  .input-group h3 {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    font-weight: 600;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .input-group h3 .zh { font-family: var(--serif); letter-spacing: 0; }
+
+  .field { margin-bottom: 14px; }
+  label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    letter-spacing: 0.06em;
+  }
+  label .zh { font-family: var(--serif); }
+  input[type=number], select {
+    width: 100%;
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.88rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  input[type=number]:focus, select:focus { border-color: var(--accent); }
+  select { cursor: pointer; }
+  select option { background: var(--mid); }
+
+  .rain-presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .preset-btn {
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .preset-btn:hover, .preset-btn.active {
+    border-color: var(--accent);
+    color: var(--accent2);
+    background: rgba(0,180,216,0.08);
+  }
+  .preset-note {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+
+  /* ── Calculate button ── */
+  .btn-calc {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    background: linear-gradient(135deg, #006d9e, #00b4d8);
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.12s;
+  }
+  .btn-calc:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-calc:active { transform: translateY(0); }
+
+  /* ── Results ── */
+  #results { display: none; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media(max-width:700px){ .result-grid { grid-template-columns:1fr; } }
+
+  /* SVG vis */
+  .vis-wrap {
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .vis-wrap svg { width: 100%; height: auto; display: block; }
+
+  /* Data table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .data-table tr { border-bottom: 1px solid rgba(26,74,122,0.5); }
+  .data-table tr:last-child { border-bottom: none; }
+  .data-table td { padding: 9px 8px; }
+  .data-table td:first-child { color: var(--text-dim); font-size: 0.75rem; }
+  .data-table td:last-child {
+    font-family: var(--mono);
+    font-weight: 600;
+    text-align: right;
+    color: var(--text);
+  }
+  .data-table .zh { font-family: var(--serif); }
+
+  /* Buffer result display */
+  .buffer-result {
+    margin-top: 20px;
+    border-radius: 10px;
+    padding: 20px 24px;
+    text-align: center;
+    border: 2px solid;
+    transition: all 0.4s;
+  }
+  .buffer-result .pct {
+    font-family: var(--mono);
+    font-size: 2.8rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .buffer-result .status-label {
+    margin-top: 6px;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+  .buffer-result .status-desc {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-family: var(--serif);
+  }
+  .safe   { background: var(--green-bg);  border-color: var(--green);  color: var(--green); }
+  .caution{ background: var(--orange-bg); border-color: var(--orange); color: var(--orange); }
+  .danger { background: var(--red-bg);    border-color: var(--red);    color: var(--red); }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    justify-content: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Thresholds bar ── */
+  .threshold-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--red) 0%, var(--red) 40%, var(--orange) 40%, var(--orange) 85%, var(--green) 85%);
+    margin: 14px 0 6px;
+    position: relative;
+  }
+  .threshold-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+  .threshold-indicator {
+    position: absolute;
+    top: -4px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid white;
+    transform: translateX(-50%);
+    transition: left 0.5s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 0 8px rgba(0,0,0,0.5);
+  }
+
+  /* error */
+  .error-msg {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    color: var(--red);
+    margin-top: 16px;
+    display: none;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- Header -->
+  <header>
+    <h1>
+      海水養殖池降雨緩衝容量估算
+      <span>Marine Aquaculture Pond · Rain Buffer Capacity Calculator</span>
+    </h1>
+    <p class="subtitle">
+      透過鹽度與 pH 快速估算養殖池對降雨的剩餘緩衝能力，協助強降雨前的防護準備<br>
+      Estimate remaining rain buffering capacity using salinity &amp; pH for pre-storm aquaculture management
+    </p>
+    <div class="wave-line"></div>
+  </header>
+
+  <!-- Principle -->
+  <div class="card">
+    <div class="card-title">計算原理 · Calculation Principle</div>
+    <div class="principle-grid">
+      <div class="principle-col">
+        <h3>中文說明</h3>
+        <p>
+          降雨會大量稀釋養殖池的<strong>鹽度</strong>，同時因雨水偏酸而降低<strong>pH 值</strong>。
+          健康海水本身具有緩衝能力，能抵抗 pH 驟降，但緩衝容量消耗後將造成魚蝦急性壓力或死亡。
+        </p>
+        <p style="margin-top:10px">
+          本計算以<strong>鹽度稀釋比例</strong>推算池中雨水佔比，
+          再比較「若無緩衝力」理論 pH 與實測池水 pH 的差距，
+          反推目前的<strong>剩餘緩衝容量</strong>。
+        </p>
+      </div>
+      <div class="principle-col">
+        <h3>English</h3>
+        <p>
+          Heavy rain <strong>dilutes salinity</strong> and lowers <strong>pH</strong> due to the acidity of rainwater.
+          Healthy seawater has a natural buffering capacity that resists pH drops,
+          but once depleted, livestock experience acute stress or mortality.
+        </p>
+        <p style="margin-top:10px">
+          This tool uses <strong>salinity dilution</strong> to estimate the rain fraction in the pond,
+          then compares the theoretical "no-buffer" pH with the actual measured pH
+          to back-calculate <strong>remaining buffer capacity</strong>.
+        </p>
+      </div>
+    </div>
+    <div class="formula-block">
+      <div class="label">① Rain fraction 雨水佔比</div>
+      rain% = (S_inlet − S_pool) / (S_inlet − S_rain)<br>
+      <div class="label" style="margin-top:8px">② Estimated pH (no buffering) 無緩衝 pH 估計</div>
+      pH_est = −log₁₀( [H⁺]_inlet × (1−rain%) + [H⁺]_rain × rain% )<br>
+      <div class="label" style="margin-top:8px">③ Buffer Capacity 緩衝容量</div>
+      Buffer% = ( [H⁺]_est − [H⁺]_pool ) / ( [H⁺]_rain × rain% ) × 100%
+    </div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="card">
+    <div class="card-title">水質輸入 · Water Quality Inputs</div>
+    <div class="input-sections">
+
+      <!-- Inlet -->
+      <div class="input-group">
+        <h3><span class="zh">入水口</span> · Inlet</h3>
+        <div class="field">
+          <label><span class="zh">入水鹽度</span> · Inlet Salinity (‰)</label>
+          <input type="number" id="s_inlet" value="32.7" step="0.1" min="0" max="45">
+        </div>
+        <div class="field">
+          <label><span class="zh">入水 pH</span> · Inlet pH</label>
+          <input type="number" id="ph_inlet" value="8.15" step="0.01" min="0" max="14">
+        </div>
+      </div>
+
+      <!-- Pool -->
+      <div class="input-group">
+        <h3><span class="zh">池水</span> · Pond Water</h3>
+        <div class="field">
+          <label><span class="zh">池水鹽度</span> · Pond Salinity (‰)</label>
+          <input type="number" id="s_pool" value="28.5" step="0.1" min="0" max="45">
+        </div>
+        <div class="field">
+          <label><span class="zh">池水 pH</span> · Pond pH</label>
+          <input type="number" id="ph_pool" value="7.56" step="0.01" min="0" max="14">
+        </div>
+      </div>
+
+      <!-- Rain -->
+      <div class="input-group">
+        <h3><span class="zh">雨水</span> · Rainwater</h3>
+        <p class="preset-note">快速選取 · Quick presets</p>
+        <div class="rain-presets">
+          <button class="preset-btn" onclick="setRainPreset(0, 5.6, this)">
+            正常雨水<br><small>Normal Rain pH 5.6</small>
+          </button>
+          <button class="preset-btn" onclick="setRainPreset(0, 4.5, this)">
+            酸雨<br><small>Acid Rain pH 4.5</small>
+          </button>
+          <button class="preset-btn" onclick="setRainPreset(0, 4.0, this)">
+            強酸雨<br><small>Heavy Acid pH 4.0</small>
+          </button>
+          <button class="preset-btn active" onclick="setRainPreset(0, 6.1, this)">
+            自訂<br><small>Custom</small>
+          </button>
+        </div>
+        <div class="field">
+          <label><span class="zh">雨水鹽度</span> · Rain Salinity (‰) <em style="color:var(--text-dim)">[通常為 0]</em></label>
+          <input type="number" id="s_rain" value="0" step="0.1" min="0" max="10">
+        </div>
+        <div class="field">
+          <label><span class="zh">雨水 pH</span> · Rain pH</label>
+          <input type="number" id="ph_rain" value="6.1" step="0.01" min="0" max="14">
+        </div>
+      </div>
+
+    </div><!-- /input-sections -->
+
+    <div id="error-msg" class="error-msg"></div>
+    <button class="btn-calc" onclick="calculate()">
+      ▶ 計算緩衝容量 · Calculate Buffer Capacity
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="card">
+      <div class="card-title">計算結果 · Results</div>
+
+      <div class="result-grid">
+        <!-- SVG visualization -->
+        <div>
+          <div class="vis-wrap">
+            <svg id="pond-svg" viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#00b4d8"></div>入水 Inlet water</div>
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(120,200,255,0.5)"></div>雨水 Rainwater</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#1e5f8a"></div>原池水 Original pool</div>
+          </div>
+        </div>
+
+        <!-- Numeric data + buffer gauge -->
+        <div>
+          <table class="data-table">
+            <tr><td><span class="zh">雨水佔比</span> · Rain Fraction</td><td id="r_rain_pct">—</td></tr>
+            <tr><td><span class="zh">無緩衝估計 pH</span> · Est. pH (no buffer)</td><td id="r_ph_est">—</td></tr>
+            <tr><td><span class="zh">入水 [H⁺]</span> · Inlet [H⁺]</td><td id="r_h_inlet">—</td></tr>
+            <tr><td><span class="zh">池水 [H⁺]</span> · Pool [H⁺]</td><td id="r_h_pool">—</td></tr>
+            <tr><td><span class="zh">雨水 [H⁺]</span> · Rain [H⁺]</td><td id="r_h_rain">—</td></tr>
+            <tr><td><span class="zh">估計 [H⁺]</span> · Est. [H⁺]</td><td id="r_h_est">—</td></tr>
+          </table>
+
+          <div style="margin-top:18px">
+            <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:6px;letter-spacing:0.06em">
+              BUFFER CAPACITY 緩衝容量指標
+            </div>
+            <div class="threshold-bar" id="thresh-bar">
+              <div class="threshold-indicator" id="thresh-dot" style="background:#888"></div>
+            </div>
+            <div class="threshold-labels">
+              <span>0%</span><span>40% 危險</span><span>85% 安全</span><span>100%</span>
+            </div>
+          </div>
+
+          <div class="buffer-result" id="buffer-result">
+            <div class="pct" id="r_buffer_pct">—</div>
+            <div class="status-label" id="r_status_label">—</div>
+            <div class="status-desc" id="r_status_desc">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    緩衝容量 ≥ 85% 安全 · 40–85% 警戒 · &lt; 40% 危險<br>
+    本工具為快速估算，現場監測數據仍為準確判斷之依據。
+  </footer>
+
+</div><!-- /page-wrap -->
+
+<script>
+// ── Preset buttons ──
+function setRainPreset(sal, ph, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('s_rain').value = sal;
+  document.getElementById('ph_rain').value = ph;
+}
+
+// ── Main calculation ──
+function calculate() {
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+
+  const S_inlet = parseFloat(document.getElementById('s_inlet').value);
+  const S_pool  = parseFloat(document.getElementById('s_pool').value);
+  const S_rain  = parseFloat(document.getElementById('s_rain').value);
+  const pH_inlet= parseFloat(document.getElementById('ph_inlet').value);
+  const pH_pool = parseFloat(document.getElementById('ph_pool').value);
+  const pH_rain = parseFloat(document.getElementById('ph_rain').value);
+
+  // Validate
+  const vals = [S_inlet, S_pool, S_rain, pH_inlet, pH_pool, pH_rain];
+  if (vals.some(v => isNaN(v))) {
+    showError('請填寫所有欄位 · Please fill in all fields.');
+    return;
+  }
+  if (S_inlet <= S_rain) {
+    showError('入水鹽度必須高於雨水鹽度 · Inlet salinity must be greater than rain salinity.');
+    return;
+  }
+  if (S_pool > S_inlet) {
+    showError('池水鹽度不應高於入水鹽度 · Pond salinity should not exceed inlet salinity.');
+    return;
+  }
+  if (pH_rain >= pH_inlet) {
+    showError('雨水 pH 應低於入水 pH（雨水通常偏酸）· Rain pH should be lower than inlet pH.');
+    return;
+  }
+
+  // ① Rain fraction
+  const rain_frac = (S_inlet - S_pool) / (S_inlet - S_rain);
+
+  if (rain_frac < 0 || rain_frac > 1) {
+    showError('鹽度數據異常，請重新確認 · Abnormal salinity values, please recheck.');
+    return;
+  }
+
+  // ② [H+] concentrations
+  const H_inlet = Math.pow(10, -pH_inlet);
+  const H_pool  = Math.pow(10, -pH_pool);
+  const H_rain  = Math.pow(10, -pH_rain);
+
+  // ③ Estimated [H+] without buffering (linear mixing)
+  const H_est = H_inlet * (1 - rain_frac) + H_rain * rain_frac;
+  const pH_est = -Math.log10(H_est);
+
+  // ④ Raw buffer capacity
+  const denom = H_rain * rain_frac;
+  const buffer_raw = (H_est - H_pool) / denom;
+  const buffer_pct_raw = buffer_raw * 100;
+  const buffer_pct = Math.max(0, Math.min(100, buffer_pct_raw));
+
+  // Update table
+  document.getElementById('r_rain_pct').textContent = (rain_frac * 100).toFixed(2) + ' %';
+  document.getElementById('r_ph_est').textContent    = pH_est.toFixed(4);
+  document.getElementById('r_h_inlet').textContent   = H_inlet.toExponential(4);
+  document.getElementById('r_h_pool').textContent    = H_pool.toExponential(4);
+  document.getElementById('r_h_rain').textContent    = H_rain.toExponential(4);
+  document.getElementById('r_h_est').textContent     = H_est.toExponential(4);
+
+  // Threshold indicator
+  const dot = document.getElementById('thresh-dot');
+  dot.style.left = buffer_pct.toFixed(1) + '%';
+  if (buffer_pct >= 85) {
+    dot.style.background = '#22c55e';
+  } else if (buffer_pct >= 40) {
+    dot.style.background = '#f97316';
+  } else {
+    dot.style.background = '#ef4444';
+  }
+
+  // Buffer result box
+  const resEl = document.getElementById('buffer-result');
+  const pctEl = document.getElementById('r_buffer_pct');
+  const lblEl = document.getElementById('r_status_label');
+  const dscEl = document.getElementById('r_status_desc');
+  pctEl.textContent = buffer_pct.toFixed(1) + '%';
+  resEl.className = 'buffer-result';
+  if (buffer_pct >= 85) {
+    resEl.classList.add('safe');
+    lblEl.textContent = '✓ 安全 SAFE';
+    dscEl.textContent = '緩衝容量充足，池水對降雨稀釋有良好抵抗力 · Buffering is strong; pond can well resist further acidic dilution.';
+  } else if (buffer_pct >= 40) {
+    resEl.classList.add('caution');
+    lblEl.textContent = '⚠ 警戒 CAUTION';
+    dscEl.textContent = '緩衝容量下降，建議關注後續降雨，準備換水或加石灰補充 · Buffer is partially depleted. Monitor closely and prepare mitigation.';
+  } else {
+    resEl.classList.add('danger');
+    lblEl.textContent = '✕ 危險 DANGER';
+    dscEl.textContent = '緩衝容量嚴重不足，強降雨可能造成急性 pH 驟降，建議立即採取措施 · Buffer critically low. Severe rainfall may trigger acute pH crash. Act immediately.';
+  }
+
+  // Draw SVG
+  drawPondSVG(rain_frac, buffer_pct, S_inlet, S_pool, pH_inlet, pH_pool, pH_rain, pH_est);
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ── SVG visualization ──
+function drawPondSVG(rain_frac, buffer_pct, S_inlet, S_pool, pH_inlet, pH_pool, pH_rain, pH_est) {
+  const svg = document.getElementById('pond-svg');
+  svg.innerHTML = '';
+
+  const W = 300, H = 280;
+  const PX = 30, PW = 240, PH_start = 60, PH_height = 140;
+
+  // Color based on buffer
+  let statusColor = '#22c55e', statusColorFade = 'rgba(34,197,94,0.25)';
+  if (buffer_pct < 40) {
+    statusColor = '#ef4444'; statusColorFade = 'rgba(239,68,68,0.2)';
+  } else if (buffer_pct < 85) {
+    statusColor = '#f97316'; statusColorFade = 'rgba(249,115,22,0.2)';
+  }
+
+  // Rain animation drops
+  for (let i = 0; i < 8; i++) {
+    const x = PX + 20 + (i * 30) % PW;
+    const y1 = 10 + (i * 17) % 40;
+    const opacity = 0.3 + (i % 3) * 0.2;
+    el('line', { x1: x, y1: y1, x2: x - 4, y2: y1 + 12,
+      stroke: '#90cdf4', 'stroke-width': 1.5, opacity, 'stroke-linecap': 'round' }, svg);
+  }
+
+  // Pond outline (rounded rect)
+  el('rect', { x: PX, y: PH_start - 4, width: PW, height: PH_height + 8,
+    rx: 8, ry: 8, fill: 'none', stroke: '#2a6090', 'stroke-width': 2 }, svg);
+
+  // Defs for clip path
+  const defs = el('defs', {}, svg);
+  const clip = el('clipPath', { id: 'pond-clip' }, defs);
+  el('rect', { x: PX + 1, y: PH_start, width: PW - 2, height: PH_height }, clip);
+
+  // Base water (original inlet)
+  el('rect', { x: PX, y: PH_start, width: PW, height: PH_height,
+    fill: '#1e4d7a', 'clip-path': 'url(#pond-clip)' }, svg);
+
+  // Rainwater layer (from top)
+  const rainH = PH_height * Math.min(rain_frac, 1);
+  el('rect', { x: PX, y: PH_start, width: PW, height: rainH,
+    fill: 'rgba(120,200,255,0.45)', 'clip-path': 'url(#pond-clip)' }, svg);
+
+  // Rain fraction divider line
+  if (rain_frac > 0.02 && rain_frac < 0.98) {
+    const divY = PH_start + rainH;
+    el('line', { x1: PX, y1: divY, x2: PX + PW, y2: divY,
+      stroke: 'rgba(160,220,255,0.6)', 'stroke-width': 1, 'stroke-dasharray': '6,4' }, svg);
+  }
+
+  // Buffer status glow
+  el('rect', { x: PX + 1, y: PH_start, width: PW - 2, height: PH_height,
+    fill: 'none', stroke: statusColor, 'stroke-width': 3, rx: 6,
+    opacity: 0.5, 'clip-path': 'url(#pond-clip)' }, svg);
+
+  // Labels inside pond
+  const midRainY = PH_start + Math.max(rainH / 2, 14);
+  if (rain_frac >= 0.06) {
+    text(svg, `雨水 ${(rain_frac * 100).toFixed(1)}%`, PX + PW / 2, midRainY,
+      '0.68rem', 'rgba(200,240,255,0.9)', 'middle');
+    text(svg, `Rain fraction`, PX + PW / 2, midRainY + 14,
+      '0.6rem', 'rgba(160,210,240,0.7)', 'middle');
+  }
+
+  const pondMidY = PH_start + rainH + (PH_height - rainH) / 2;
+  if (rain_frac < 0.94) {
+    text(svg, `原池水 ${(100 - rain_frac * 100).toFixed(1)}%`, PX + PW / 2, pondMidY,
+      '0.68rem', 'rgba(180,220,255,0.85)', 'middle');
+  }
+
+  // Pond label
+  text(svg, '養殖池斷面示意  ·  Pond Cross-section', W / 2, PH_start - 10,
+    '0.65rem', '#6a9bbf', 'middle');
+
+  // === Info panel below pond ===
+  const infoY = PH_start + PH_height + 20;
+
+  // Buffer gauge bar
+  const barX = PX, barY = infoY, barW = PW, barH = 12, barR = 6;
+  el('rect', { x: barX, y: barY, width: barW, height: barH, rx: barR,
+    fill: '#0a1628', stroke: '#1a4a7a', 'stroke-width': 1 }, svg);
+
+  // gradient fill
+  const gradId = 'buf-grad';
+  const grad = el('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '0%' }, defs);
+  el('stop', { offset: '0%',   'stop-color': '#ef4444' }, grad);
+  el('stop', { offset: '40%',  'stop-color': '#ef4444' }, grad);
+  el('stop', { offset: '40%',  'stop-color': '#f97316' }, grad);
+  el('stop', { offset: '85%',  'stop-color': '#f97316' }, grad);
+  el('stop', { offset: '85%',  'stop-color': '#22c55e' }, grad);
+  el('stop', { offset: '100%', 'stop-color': '#22c55e' }, grad);
+
+  el('rect', { x: barX, y: barY, width: barW, height: barH,
+    rx: barR, fill: `url(#${gradId})`, opacity: 0.85 }, svg);
+
+  // pointer
+  const dotX = barX + barW * (buffer_pct / 100);
+  el('circle', { cx: dotX, cy: barY + barH / 2, r: 7,
+    fill: statusColor, stroke: '#fff', 'stroke-width': 1.5 }, svg);
+
+  text(svg, 'Buffer Capacity  緩衝容量', W / 2, barY - 5,
+    '0.62rem', '#6a9bbf', 'middle');
+  text(svg, `${buffer_pct.toFixed(1)}%`, dotX, barY + barH + 13,
+    '0.72rem', statusColor, 'middle', 600);
+
+  // Data readout row
+  const dY = infoY + 38;
+  const cols = [
+    { label: '入水 pH', val: pH_inlet.toFixed(2) },
+    { label: '池水 pH', val: pH_pool.toFixed(2) },
+    { label: '雨水 pH', val: pH_rain.toFixed(2) },
+    { label: '估計 pH', val: pH_est.toFixed(2) },
+  ];
+  cols.forEach((c, i) => {
+    const cx = PX + (i + 0.5) * (PW / cols.length);
+    text(svg, c.label, cx, dY, '0.58rem', '#6a9bbf', 'middle');
+    text(svg, c.val, cx, dY + 16, '0.72rem', '#cde8f8', 'middle', 600);
+  });
+
+  // Salinity row
+  const dY2 = dY + 36;
+  const cols2 = [
+    { label: '入水鹽度', val: `${S_inlet}‰` },
+    { label: '池水鹽度', val: `${S_pool}‰` },
+  ];
+  cols2.forEach((c, i) => {
+    const cx = PX + (i * 2 + 1) * (PW / 4);
+    text(svg, c.label, cx, dY2, '0.58rem', '#6a9bbf', 'middle');
+    text(svg, c.val, cx, dY2 + 16, '0.72rem', '#cde8f8', 'middle', 600);
+  });
+}
+
+function el(tag, attrs, parent) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const e = document.createElementNS(ns, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function text(parent, str, x, y, size, fill, anchor = 'middle', weight = 400) {
+  const t = el('text', {
+    x, y,
+    'font-size': size,
+    fill,
+    'text-anchor': anchor,
+    'font-family': 'IBM Plex Mono, monospace',
+    'font-weight': weight,
+    'dominant-baseline': 'middle'
+  }, parent);
+  t.textContent = str;
+  return t;
+}
+
+// Run once on load with defaults to pre-fill
+window.addEventListener('DOMContentLoaded', () => {
+  // Optionally auto-calculate with default values
+  // calculate();
+});
+</script>
+</body>
+</html>
