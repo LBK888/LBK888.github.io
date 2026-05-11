@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cell Distribution Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f2efe9;--surface:#ffffff;--border:#d0ccc4;
+  --text:#1a1a18;--muted:#6e6e66;--accent:#253320;
+  --red:#c0312a;--green:#2a6a2e;--blue:#18387c;
+  --red-bg:#fce9e8;--green-bg:#e7f4e8;--blue-bg:#e8eef9;
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--accent);color:#dde8d0;padding:20px 16px;text-align:center;}
+header h1{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;letter-spacing:.04em;}
+header p{font-size:.78rem;color:#9aaa8a;margin-top:3px;font-family:'JetBrains Mono',monospace;}
+
+.container{max-width:720px;margin:0 auto;padding:18px 14px 60px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:7px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.step-badge{background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 22px;border:none;border-radius:6px;font-family:'Source Sans 3',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .18s;user-select:none;}
+.btn-primary{background:var(--accent);color:#dde8d0;}
+.btn-primary:hover{opacity:.85;}
+.btn-secondary{background:#fff;color:var(--text);border:1.5px solid var(--border);}
+.btn-secondary:hover{background:var(--bg);}
+.btn-analyze{background:var(--blue);color:#fff;font-size:1.05rem;padding:13px 30px;width:100%;border-radius:8px;margin-top:14px;letter-spacing:.03em;}
+.btn-analyze:hover{opacity:.9;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+
+input[type="file"]{display:none;}
+
+/* IMAGE ALIGNMENT */
+.align-frame{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:6px;background:#3a3a3a;line-height:0;}
+#imageCanvas{display:block;width:100%;height:auto;max-height:50vh;object-fit:contain;}
+#gridOverlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+
+.slider-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px;}
+.slider-grid label{font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:3px;}
+.slider-grid input[type=range]{width:100%;accent-color:var(--accent);height:4px;}
+.slider-val{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text);}
+
+/* HEX GRID */
+.hex-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0;}
+#hexGrid{display:block;margin:0 auto;touch-action:manipulation;}
+
+.color-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:.78rem;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+.color-legend span{display:flex;align-items:center;gap:4px;}
+.dot{width:13px;height:13px;border-radius:3px;border:1px solid rgba(0,0,0,.2);flex-shrink:0;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+.stat-box{border-radius:8px;padding:12px 14px;}
+.stat-box.r{background:var(--red-bg);border-left:4px solid var(--red);}
+.stat-box.g{background:var(--green-bg);border-left:4px solid var(--green);}
+.stat-box.b{background:var(--blue-bg);border-left:4px solid var(--blue);}
+.stat-box.e{background:#f5f3ee;border-left:4px solid #aaa;}
+.stat-label{font-size:.7rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+.stat-num{font-size:2.1rem;font-family:'Cormorant Garamond',serif;font-weight:700;line-height:1.1;}
+.stat-pct{font-size:.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+
+/* RESULTS */
+.res-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.res-row:last-child{border-bottom:none;}
+.res-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
+.res-name{font-weight:600;font-size:.92rem;flex:1;}
+.res-n{font-size:.75rem;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+.badge{display:inline-block;padding:4px 14px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+.b-cluster{background:#fff3cd;color:#856404;border:1.5px solid #f0b429;}
+.b-random{background:#d1f0f5;color:#0c5460;border:1.5px solid #2bbcd4;}
+.b-regular{background:#d4edda;color:#155724;border:1.5px solid #34c759;}
+.b-skip{background:#f5f3ee;color:#888;border:1.5px solid #ccc;font-size:.72rem;}
+
+/* CHART */
+.chart-note{font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:10px;line-height:1.5;}
+canvas.chart-c{display:block;width:100%!important;aspect-ratio:1/1;max-width:500px;margin:0 auto;}
+
+.hidden{display:none;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a18;color:#fff;padding:10px 20px;border-radius:8px;font-size:.85rem;font-family:'JetBrains Mono',monospace;opacity:0;transition:opacity .3s;pointer-events:none;z-index:1000;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+@media(max-width:400px){
+  .slider-grid{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  header h1{font-size:1.4rem;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Hex Grid Cell Analyzer</h1>
+  <p>Ripley's K · Spatial Distribution · L(r) Analysis</p>
+</header>
+
+<div class="container">
+
+<!-- STEP 1: CAPTURE -->
+<div class="card" id="s1">
+  <div class="card-title"><span class="step-badge">1</span>拍攝 / 上傳照片</div>
+  <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px;">拍攝或上傳蜂巢格照片，或直接跳至步驟 3 手動輸入格子顏色。</p>
+  <div class="btn-row">
+    <label class="btn btn-primary" for="camIn" style="cursor:pointer;">📷 開啟相機</label>
+    <input type="file" id="camIn" accept="image/*" capture="environment">
+    <label class="btn btn-secondary" for="fileIn" style="cursor:pointer;">🖼 從相簿選取</label>
+    <input type="file" id="fileIn" accept="image/*">
+  </div>
+</div>
+
+<!-- STEP 2: ALIGN -->
+<div class="card hidden" id="s2">
+  <div class="card-title"><span class="step-badge">2</span>對齊蜂巢格</div>
+  <p style="font-size:.83rem;color:var(--muted);margin-bottom:10px;">調整滑桿使綠色格線與照片中的蜂巢格對齊，再按「提取顏色」。</p>
+
+  <div class="align-frame" id="alignFrame">
+    <canvas id="imageCanvas"></canvas>
+    <svg id="gridOverlay" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="slider-grid">
+    <label>X 位移 <span class="slider-val" id="vX">0</span>
+      <input type="range" id="ctX" min="-200" max="900" value="5" oninput="syncSlider('ctX','vX');drawOverlay()">
+    </label>
+    <label>Y 位移 <span class="slider-val" id="vY">0</span>
+      <input type="range" id="ctY" min="-200" max="900" value="5" oninput="syncSlider('ctY','vY');drawOverlay()">
+    </label>
+    <label>格子大小 <span class="slider-val" id="vSize">22</span>
+      <input type="range" id="ctSize" min="6" max="80" value="22" oninput="syncSlider('ctSize','vSize');drawOverlay()">
+    </label>
+    <label>旋轉角度 <span class="slider-val" id="vRot">0</span>°
+      <input type="range" id="ctRot" min="-30" max="30" value="0" oninput="syncSlider('ctRot','vRot');drawOverlay()">
+    </label>
+    <label>透明度 <span class="slider-val" id="vOpa">50</span>%
+      <input type="range" id="ctOpa" min="10" max="100" value="50" oninput="syncSlider('ctOpa','vOpa');drawOverlay()">
+    </label>
+  </div>
+
+  <div class="btn-row" style="margin-top:14px;">
+    <button class="btn btn-primary" onclick="extractColors()">✓ 提取顏色</button>
+    <button class="btn btn-secondary" onclick="skipToManual()">跳過 → 手動輸入</button>
+  </div>
+</div>
+
+<!-- STEP 3: EDIT GRID -->
+<div class="card" id="s3">
+  <div class="card-title"><span class="step-badge">3</span>確認 / 手動調整格子</div>
+  <div class="color-legend">
+    <span><div class="dot" style="background:var(--red);"></div>紅細胞</span>
+    <span><div class="dot" style="background:var(--green);"></div>綠細胞 (照片中黑色)</span>
+    <span><div class="dot" style="background:var(--blue);"></div>藍細胞</span>
+    <span><div class="dot" style="background:#f9f9f5;"></div>空格</span>
+    <span style="color:var(--muted);font-size:.72rem;">← 點選格子循環切換</span>
+  </div>
+  <div class="hex-scroll">
+    <svg id="hexGrid" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <button class="btn btn-analyze" onclick="runAnalysis()">📊 Analyze</button>
+</div>
+
+<!-- STATS -->
+<div class="card hidden" id="s4">
+  <div class="card-title">細胞統計</div>
+  <div class="stats-row" id="statsRow"></div>
+</div>
+
+<!-- RESULTS -->
+<div class="card hidden" id="s5">
+  <div class="card-title">分佈分析結果</div>
+  <div id="resBody"></div>
+</div>
+
+<!-- CHART -->
+<div class="card hidden" id="s6">
+  <div class="card-title">L(r) vs r 分析圖</div>
+  <canvas id="lrChart" class="chart-c"></canvas>
+  <p class="chart-note">虛線 = L(r) = r（完全隨機分佈基準）<br>曲線高於虛線 → 聚集（Cluster）　低於虛線 → 規則（Regular）</p>
+</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+const ROWS = 12, COLS = 12;
+let gridData = Array.from({length:ROWS}, ()=>new Array(COLS).fill(0));
+// 0=empty/white  1=red  2=green  3=blue
+let imgEl = null;
+let imgCanvasW = 0, imgCanvasH = 0;
+
+const CFILL  = ['#f9f9f5','#c0312a','#2a6a2e','#18387c'];
+const CSTROKE= ['#ccc',   '#c0312a','#2a6a2e','#18387c'];
+const CNAMES = ['空格','紅細胞','綠細胞','藍細胞'];
+const CBGCLS = ['e','r','g','b'];
+
+// ─────────────────────────────────────────────
+// Toast
+// ─────────────────────────────────────────────
+function toast(msg, dur=2000){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+// ─────────────────────────────────────────────
+// Slider sync
+// ─────────────────────────────────────────────
+function syncSlider(inputId, spanId){
+  document.getElementById(spanId).textContent = document.getElementById(inputId).value;
+}
+
+// ─────────────────────────────────────────────
+// Hex geometry (pointy-top)
+// ─────────────────────────────────────────────
+let hexR = 22;
+
+function hexW(){ return Math.sqrt(3)*hexR; }
+function hexH(){ return 2*hexR; }
+
+// Display center of cell [row][col]
+function cellCenter(row, col){
+  const hw = hexW();
+  const x = col*hw + (row%2)*hw/2 + hexR + 2;
+  const y = row*(hexH()*0.75) + hexR + 2;
+  return {x,y};
+}
+
+// SVG polygon points string
+function polyPts(cx, cy, r){
+  let s='';
+  for(let i=0;i<6;i++){
+    const a = Math.PI/6 + Math.PI/3*i; // pointy-top: 30° offset
+    s += (cx+r*Math.cos(a)).toFixed(2)+','+(cy+r*Math.sin(a)).toFixed(2)+(i<5?' ':' ');
+  }
+  return s.trim();
+}
+
+// Grid spatial coords for Ripley's K
+function gridCoord(row,col){
+  return { x: col+(row%2)*0.5, y: row*(Math.sqrt(3)/2) };
+}
+
+// ─────────────────────────────────────────────
+// Render editable hex grid
+// ─────────────────────────────────────────────
+function renderGrid(){
+  const svg = document.getElementById('hexGrid');
+  const {x:maxX, y:maxY} = cellCenter(ROWS-1, COLS-1);
+  const w = maxX + hexR + 4, h = maxY + hexR + 4;
+  svg.setAttribute('width',w);
+  svg.setAttribute('height',h);
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  svg.innerHTML='';
+
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const {x,y}=cellCenter(r,c);
+      const t=gridData[r][c];
+      const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      poly.setAttribute('points', polyPts(x,y,hexR-1.5));
+      poly.setAttribute('fill', CFILL[t]);
+      poly.setAttribute('stroke','#1c1c1a');
+      poly.setAttribute('stroke-width','1.5');
+      poly.setAttribute('data-r',r); poly.setAttribute('data-c',c);
+      poly.style.cursor='pointer';
+      poly.addEventListener('click', onCellTap);
+      poly.addEventListener('touchend', onCellTouch);
+      svg.appendChild(poly);
+    }
+  }
+}
+
+function onCellTap(e){
+  cycleCell(+e.target.dataset.r, +e.target.dataset.c);
+}
+function onCellTouch(e){
+  e.preventDefault();
+  cycleCell(+e.target.dataset.r, +e.target.dataset.c);
+}
+function cycleCell(r,c){
+  gridData[r][c] = (gridData[r][c]+1)%4;
+  const svg=document.getElementById('hexGrid');
+  const poly=svg.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+  if(poly) poly.setAttribute('fill', CFILL[gridData[r][c]]);
+  if(navigator.vibrate) navigator.vibrate(15);
+}
+
+// ─────────────────────────────────────────────
+// Image load
+// ─────────────────────────────────────────────
+['camIn','fileIn'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', e=>{
+    const f=e.target.files[0]; if(!f)return;
+    const reader=new FileReader();
+    reader.onload=ev=>loadImg(ev.target.result);
+    reader.readAsDataURL(f);
+  });
+});
+
+function loadImg(src){
+  const img=new Image();
+  img.onload=()=>{
+    imgEl=img;
+    const cvs=document.getElementById('imageCanvas');
+    const maxW=Math.min(img.width,680);
+    const scale=maxW/img.width;
+    cvs.width=imgCanvasW=maxW;
+    cvs.height=imgCanvasH=Math.round(img.height*scale);
+    const ctx=cvs.getContext('2d');
+    ctx.drawImage(img,0,0,cvs.width,cvs.height);
+    // Default grid size
+    const defR=Math.min(Math.floor(maxW/(COLS+1.5)/Math.sqrt(3)), 28);
+    document.getElementById('ctSize').value=defR;
+    document.getElementById('vSize').textContent=defR;
+    document.getElementById('ctX').value=Math.round(maxW*0.04);
+    document.getElementById('vX').textContent=document.getElementById('ctX').value;
+    document.getElementById('ctY').value=Math.round(imgCanvasH*0.04);
+    document.getElementById('vY').textContent=document.getElementById('ctY').value;
+    document.getElementById('s2').classList.remove('hidden');
+    drawOverlay();
+    document.getElementById('s2').scrollIntoView({behavior:'smooth'});
+  };
+  img.src=src;
+}
+
+// ─────────────────────────────────────────────
+// Grid overlay on image
+// ─────────────────────────────────────────────
+function drawOverlay(){
+  const svg=document.getElementById('gridOverlay');
+  const r    =+document.getElementById('ctSize').value;
+  const offX =+document.getElementById('ctX').value;
+  const offY =+document.getElementById('ctY').value;
+  const rot  =+document.getElementById('ctRot').value;
+  const opa  =+document.getElementById('ctOpa').value/100;
+  const W=imgCanvasW, H=imgCanvasH;
+
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('width',W); svg.setAttribute('height',H);
+  svg.style.opacity=opa;
+  svg.innerHTML='';
+
+  const hw=Math.sqrt(3)*r, hh=2*r;
+  // Rotation group around overlay origin
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('transform',`rotate(${rot},${offX},${offY})`);
+
+  for(let row=0;row<ROWS;row++){
+    for(let col=0;col<COLS;col++){
+      const cx=offX + col*hw + (row%2)*hw/2;
+      const cy=offY + row*(hh*0.75);
+      const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      poly.setAttribute('points',polyPts(cx,cy,r-1));
+      poly.setAttribute('fill','none');
+      poly.setAttribute('stroke','#00ff88');
+      poly.setAttribute('stroke-width','1.8');
+      g.appendChild(poly);
+    }
+  }
+  svg.appendChild(g);
+}
+
+// ─────────────────────────────────────────────
+// Color extraction
+// ─────────────────────────────────────────────
+function extractColors(){
+  if(!imgEl){toast('請先選取照片');return;}
+  const r    =+document.getElementById('ctSize').value;
+  const offX =+document.getElementById('ctX').value;
+  const offY =+document.getElementById('ctY').value;
+  const rot  =+document.getElementById('ctRot').value * Math.PI/180;
+
+  // Full-res sampling canvas
+  const sc=document.createElement('canvas');
+  sc.width=imgEl.width; sc.height=imgEl.height;
+  const ctx=sc.getContext('2d');
+  ctx.drawImage(imgEl,0,0);
+  const scaleX=imgEl.width/imgCanvasW;
+  const scaleY=imgEl.height/imgCanvasH;
+
+  const hw=Math.sqrt(3)*r, hh=2*r;
+  const sampleRad=Math.max(2, r*0.28);
+
+  for(let row=0;row<ROWS;row++){
+    for(let col=0;col<COLS;col++){
+      // Display coords
+      let cx=offX + col*hw + (row%2)*hw/2;
+      let cy=offY + row*(hh*0.75);
+      // Apply rotation around (offX, offY)
+      if(rot!==0){
+        const dx=cx-offX, dy=cy-offY;
+        const cosR=Math.cos(rot), sinR=Math.sin(rot);
+        cx=offX + dx*cosR - dy*sinR;
+        cy=offY + dx*sinR + dy*cosR;
+      }
+      // Scale to full image
+      const px=cx*scaleX, py=cy*scaleY, pr=sampleRad*((scaleX+scaleY)/2);
+      const x0=Math.max(0,Math.round(px-pr)), y0=Math.max(0,Math.round(py-pr));
+      const sw=Math.min(Math.round(pr*2)+1,imgEl.width-x0);
+      const sh=Math.min(Math.round(pr*2)+1,imgEl.height-y0);
+      if(sw<1||sh<1){gridData[row][col]=0;continue;}
+      const idata=ctx.getImageData(x0,y0,sw,sh);
+      const avg=avgColor(idata);
+      gridData[row][col]=classifyRGB(avg.r,avg.g,avg.b);
+    }
+  }
+  renderGrid();
+  toast('顏色提取完成！可手動調整後按 Analyze');
+  document.getElementById('s3').scrollIntoView({behavior:'smooth'});
+}
+
+function skipToManual(){
+  document.getElementById('s3').scrollIntoView({behavior:'smooth'});
+}
+
+function avgColor(d){
+  let r=0,g=0,b=0,n=0;
+  for(let i=0;i<d.data.length;i+=4){r+=d.data[i];g+=d.data[i+1];b+=d.data[i+2];n++;}
+  return {r:r/n, g:g/n, b:b/n};
+}
+
+function rgbToHsv(r,g,b){
+  r/=255; g/=255; b/=255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn;
+  let h=0;
+  const s=mx===0?0:d/mx, v=mx;
+  if(d!==0){
+    if(mx===r) h=((g-b)/d+(g<b?6:0))/6;
+    else if(mx===g) h=((b-r)/d+2)/6;
+    else h=((r-g)/d+4)/6;
+  }
+  return {h:h*360, s, v};
+}
+
+function classifyRGB(r,g,b){
+  const {h,s,v}=rgbToHsv(r,g,b);
+  if(v<0.28) return 2;                                    // dark → green
+  if(s<0.22 || (s<0.32 && v>0.78)) return 0;             // white/empty
+  if(s>0.30 && v>0.28 && (h>=340||h<=20)) return 1;      // red
+  if(s>0.22 && v>0.22 && h>=190 && h<=275) return 3;     // blue
+  if(v<0.48 && s<0.28) return 2;                         // dark neutral → green
+  return 0;
+}
+
+// ─────────────────────────────────────────────
+// Stats
+// ─────────────────────────────────────────────
+function calcStats(){
+  const cnt=[0,0,0,0];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) cnt[gridData[r][c]]++;
+  return cnt;
+}
+function renderStats(cnt){
+  const total=ROWS*COLS;
+  const html=[1,2,3,0].map(i=>`
+    <div class="stat-box ${CBGCLS[i]}">
+      <div class="stat-label">${CNAMES[i]}</div>
+      <div class="stat-num" style="color:${i===0?'#888':CFILL[i]}">${cnt[i]}</div>
+      <div class="stat-pct">${(cnt[i]/total*100).toFixed(1)}% / ${total}</div>
+    </div>`).join('');
+  document.getElementById('statsRow').innerHTML=html;
+  document.getElementById('s4').classList.remove('hidden');
+}
+
+// ─────────────────────────────────────────────
+// Ripley's K / L function
+// ─────────────────────────────────────────────
+function computeL(cellType){
+  const pts=[];
+  for(let r=0;r<ROWS;r++)
+    for(let c=0;c<COLS;c++)
+      if(gridData[r][c]===cellType) pts.push(gridCoord(r,c));
+  if(pts.length<10) return null;
+  const n=pts.length;
+
+  // Study area bounding box
+  const allCoords=[...Array.from({length:ROWS},(_,r)=>Array.from({length:COLS},(_,c)=>gridCoord(r,c))).flat()];
+  const xs=allCoords.map(p=>p.x), ys=allCoords.map(p=>p.y);
+  const xmin=Math.min(...xs), xmax=Math.max(...xs);
+  const ymin=Math.min(...ys), ymax=Math.max(...ys);
+  const A=(xmax-xmin+Math.sqrt(3))*(ymax-ymin+Math.sqrt(3));
+
+  const maxR=Math.min(xmax-xmin, ymax-ymin)*0.38;
+  const STEPS=60;
+  const rs=Array.from({length:STEPS},(_,i)=>(i+1)*maxR/STEPS);
+
+  // Precompute pairwise distances (upper triangle, then count *2)
+  const dists=[];
+  for(let i=0;i<n;i++)
+    for(let j=i+1;j<n;j++){
+      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+      dists.push(Math.sqrt(dx*dx+dy*dy));
+    }
+  dists.sort((a,b)=>a-b);
+
+  const Lvals=rs.map(r=>{
+    let cnt=0;
+    for(const d of dists){ if(d>r) break; cnt+=2; }
+    const K=(A/(n*n))*cnt;
+    return Math.sqrt(K/Math.PI);
+  });
+
+  return {rs, Lvals, maxR, n};
+}
+
+function classifyDist(rs, Lvals){
+  const eps=rs[rs.length-1]*0.04;
+  let above=0, below=0;
+  for(let i=0;i<rs.length;i++){
+    const d=Lvals[i]-rs[i];
+    if(d>eps) above++;
+    else if(d<-eps) below++;
+  }
+  const af=above/rs.length, bf=below/rs.length;
+  if(af>0.50) return 'cluster';
+  if(bf>0.50) return 'regular';
+  return 'random';
+}
+
+// ─────────────────────────────────────────────
+// Main analysis
+// ─────────────────────────────────────────────
+function runAnalysis(){
+  const cnt=calcStats();
+  renderStats(cnt);
+
+  const types=[
+    {id:1, name:'紅細胞 (Red)',   cls:'r', col:'#c0312a'},
+    {id:2, name:'綠細胞 (Green)', cls:'g', col:'#2a6a2e'},
+    {id:3, name:'藍細胞 (Blue)',  cls:'b', col:'#18387c'},
+  ];
+
+  const rows=[], chartData=[];
+
+  for(const t of types){
+    if(cnt[t.id]===0) continue; // type not present, skip entirely
+    const lres=computeL(t.id);
+    const skip=cnt[t.id]<10;
+    rows.push({...t, count:cnt[t.id], lres, skip,
+      dist: (!skip && lres) ? classifyDist(lres.rs, lres.Lvals) : null});
+    if(!skip && lres) chartData.push({...lres, col:t.col, name:t.name});
+  }
+
+  // Render result rows
+  const bdgMap={cluster:'b-cluster',random:'b-random',regular:'b-regular'};
+  const bdgTxt={cluster:'Cluster 聚集',random:'Random 隨機',regular:'Regular 規則'};
+  const html=rows.map(t=>`
+    <div class="res-row">
+      <div class="res-dot" style="background:${t.col}"></div>
+      <div style="flex:1">
+        <div class="res-name">${t.name}</div>
+        <div class="res-n">n = ${t.count}</div>
+      </div>
+      ${t.skip
+        ? '<span class="badge b-skip">細胞數 &lt; 10，略過分析</span>'
+        : `<span class="badge ${bdgMap[t.dist]}">${bdgTxt[t.dist]}</span>`}
+    </div>`).join('');
+  document.getElementById('resBody').innerHTML=html||'<p style="color:var(--muted);font-size:.85rem;">無細胞資料。請在格子中填入顏色。</p>';
+  document.getElementById('s5').classList.remove('hidden');
+
+  // Chart
+  if(chartData.length>0) renderChart(chartData);
+
+  document.getElementById('s4').scrollIntoView({behavior:'smooth'});
+}
+
+// ─────────────────────────────────────────────
+// L(r) chart (square canvas)
+// ─────────────────────────────────────────────
+function renderChart(data){
+  const canvas=document.getElementById('lrChart');
+  const dpr=window.devicePixelRatio||1;
+  const size=Math.min(window.innerWidth-48, 500);
+  canvas.style.width=size+'px';
+  canvas.style.height=size+'px';
+  canvas.width=size*dpr;
+  canvas.height=size*dpr;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const S=size;
+
+  const pad={t:28,r:22,b:52,l:52};
+  const PW=S-pad.l-pad.r, PH=S-pad.t-pad.b;
+
+  // Find axis max (symmetric for square chart: same for r and L)
+  const allR=data.flatMap(d=>d.rs);
+  const allL=data.flatMap(d=>d.Lvals);
+  const mxR=Math.max(...allR);
+  const mxL=Math.max(...allL);
+  const axMax=Math.max(mxR, mxL)*1.06;
+
+  // Background
+  ctx.fillStyle='#faf9f6';
+  ctx.fillRect(0,0,S,S);
+
+  // Grid
+  ctx.strokeStyle='#e0ddd8';
+  ctx.lineWidth=1;
+  const tick=5;
+  const step=axMax/tick;
+  for(let i=0;i<=tick;i++){
+    const frac=i/tick;
+    ctx.beginPath();
+    ctx.moveTo(pad.l+frac*PW, pad.t);
+    ctx.lineTo(pad.l+frac*PW, pad.t+PH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t+PH-frac*PH);
+    ctx.lineTo(pad.l+PW, pad.t+PH-frac*PH);
+    ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle='#444';
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t);
+  ctx.lineTo(pad.l, pad.t+PH);
+  ctx.lineTo(pad.l+PW, pad.t+PH);
+  ctx.stroke();
+
+  // Tick labels
+  ctx.fillStyle='#555';
+  ctx.font=`${10/dpr*dpr}px 'JetBrains Mono', monospace`;
+  ctx.textAlign='center';
+  for(let i=0;i<=tick;i++){
+    const v=(i*step).toFixed(1);
+    const x=pad.l+i/tick*PW;
+    const y=pad.t+PH-(i/tick*PH);
+    ctx.textAlign='center';
+    ctx.fillText(v, x, pad.t+PH+16);
+    ctx.textAlign='right';
+    ctx.fillText(v, pad.l-5, y+4);
+  }
+
+  // Axis titles
+  ctx.fillStyle='#333';
+  ctx.font=`11px 'Source Sans 3',sans-serif`;
+  ctx.textAlign='center';
+  ctx.fillText('r (格子單位)', pad.l+PW/2, S-6);
+  ctx.save();
+  ctx.translate(14, pad.t+PH/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('L(r)', 0, 0);
+  ctx.restore();
+
+  // Diagonal dashed reference line L(r) = r
+  ctx.strokeStyle='#aaa';
+  ctx.lineWidth=1.5;
+  ctx.setLineDash([6,5]);
+  const diagEnd=Math.min(axMax,mxR);
+  const ex=pad.l+(diagEnd/axMax)*PW;
+  const ey=pad.t+PH-(diagEnd/axMax)*PH;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t+PH);
+  ctx.lineTo(ex, ey);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Plot L(r) curves
+  for(const d of data){
+    ctx.strokeStyle=d.col;
+    ctx.lineWidth=2.8;
+    ctx.beginPath();
+    let first=true;
+    for(let i=0;i<d.rs.length;i++){
+      const x=pad.l+(d.rs[i]/axMax)*PW;
+      const y=pad.t+PH-(d.Lvals[i]/axMax)*PH;
+      if(first){ctx.moveTo(x,y);first=false;}
+      else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+
+  // Legend (top-left inside plot)
+  const legItems=[
+    {col:'#aaa', dash:true, label:'L(r) = r (隨機基準)'},
+    ...data.map(d=>({col:d.col, dash:false, label:d.name}))
+  ];
+  let lx=pad.l+8, ly=pad.t+14;
+  for(const item of legItems){
+    ctx.strokeStyle=item.col;
+    ctx.lineWidth=item.dash?1.5:2.5;
+    if(item.dash) ctx.setLineDash([5,4]);
+    else ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(lx, ly); ctx.lineTo(lx+20, ly);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#222';
+    ctx.font=`9.5px 'JetBrains Mono',monospace`;
+    ctx.textAlign='left';
+    ctx.fillText(item.label, lx+24, ly+3.5);
+    ly+=15;
+  }
+
+  document.getElementById('s6').classList.remove('hidden');
+}
+
+// ─────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────
+(function init(){
+  // Responsive hex size
+  hexR = Math.min(22, Math.max(16, Math.floor((Math.min(window.innerWidth,720)-40)/(COLS+1.5)/Math.sqrt(3))));
+  renderGrid();
+  // Sync slider display values
+  ['ctX','ctY','ctSize','ctRot','ctOpa'].forEach(id=>{
+    const vId=id.replace('ct','v');
+    if(document.getElementById(vId))
+      document.getElementById(vId).textContent=document.getElementById(id).value;
+  });
+})();
+
+window.addEventListener('resize',()=>{
+  hexR=Math.min(22,Math.max(16,Math.floor((Math.min(window.innerWidth,720)-40)/(COLS+1.5)/Math.sqrt(3))));
+  renderGrid();
+});
+</script>
+</body>
+</html>
