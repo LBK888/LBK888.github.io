@@ -502,26 +502,39 @@
     <!-- STEP 3: EDIT GRID -->
     <div class="card" id="s3">
       <div class="card-title"><span class="step-badge">3</span>確認 / 手動調整格子</div>
-      
-      <button id="btnMigration" class="btn btn-primary hidden" onclick="toggleMigrationSection()" style="margin-bottom: 15px; width: 100%; background: #4a635d;">Migration and Adhesion</button>
 
-      <div id="migrationSection" class="hidden" style="margin-bottom: 15px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: #fdfdfc;">
-        <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--accent); font-family: 'Cormorant Garamond', serif; font-weight: 700;">4. Adhesion molecule setting</h3>
-        <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px;">設定細胞間的 Adhesion force (-1 ~ 1)。細胞移動機率為 1 扣除周圍平均 Adhesion。</p>
-        
+      <button id="btnMigration" class="btn btn-primary hidden" onclick="toggleMigrationSection()"
+        style="margin-bottom: 15px; width: 100%; background: #4a635d;">Migration and Adhesion</button>
+
+      <div id="migrationSection" class="hidden"
+        style="margin-bottom: 15px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: #fdfdfc;">
+        <h3
+          style="font-size: 1.1rem; margin-bottom: 10px; color: var(--accent); font-family: 'Cormorant Garamond', serif; font-weight: 700;">
+          4. Adhesion molecule setting</h3>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px;">設定細胞間的 Adhesion force (-1 ~ 1)。細胞移動機率為 1
+          扣除周圍平均 Adhesion。</p>
+
         <div style="font-size: 0.85rem; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-           <label style="display:flex; justify-content:space-between; align-items:center;">紅-紅: <input type="number" id="adh-r-r" value="0.7" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
-           <label style="display:flex; justify-content:space-between; align-items:center;">藍-藍: <input type="number" id="adh-b-b" value="0.5" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
-           <label style="display:flex; justify-content:space-between; align-items:center;">綠-綠: <input type="number" id="adh-g-g" value="0.4" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
-           <label style="display:flex; justify-content:space-between; align-items:center;">紅-藍: <input type="number" id="adh-r-b" value="0.3" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
-           <label style="display:flex; justify-content:space-between; align-items:center;">紅-綠: <input type="number" id="adh-r-g" value="-0.2" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
-           <label style="display:flex; justify-content:space-between; align-items:center;">藍-綠: <input type="number" id="adh-b-g" value="0.1" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+          <label style="display:flex; justify-content:space-between; align-items:center;">紅-紅: <input type="number"
+              id="adh-r-r" value="0.7" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+          <label style="display:flex; justify-content:space-between; align-items:center;">藍-藍: <input type="number"
+              id="adh-b-b" value="0.5" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+          <label style="display:flex; justify-content:space-between; align-items:center;">綠-綠: <input type="number"
+              id="adh-g-g" value="0.4" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+          <label style="display:flex; justify-content:space-between; align-items:center;">紅-藍: <input type="number"
+              id="adh-r-b" value="0.3" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+          <label style="display:flex; justify-content:space-between; align-items:center;">紅-綠: <input type="number"
+              id="adh-r-g" value="-0.2" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+          <label style="display:flex; justify-content:space-between; align-items:center;">藍-綠: <input type="number"
+              id="adh-b-g" value="0.1" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
-           <button class="btn btn-secondary" onclick="resetMigration()" style="flex: 1;">Reset</button>
-           <button class="btn btn-primary" onclick="playMigration()" style="flex: 1; background: var(--blue);">▶ Play</button>
+          <button class="btn btn-secondary" onclick="resetMigration()" style="flex: 1;">Reset</button>
+          <button class="btn btn-primary" onclick="playMigration()" style="flex: 1; background: var(--blue);">▶
+            Play</button>
         </div>
-        <div id="migrationProgress" style="font-size:0.8rem; text-align:center; margin-top:8px; color:var(--muted); height: 16px;"></div>
+        <div id="migrationProgress"
+          style="font-size:0.8rem; text-align:center; margin-top:8px; color:var(--muted); height: 16px;"></div>
       </div>
 
       <div class="color-legend">
@@ -555,6 +568,16 @@
     <div class="card hidden" id="s5">
       <div class="card-title">分佈分析結果</div>
       <div id="resBody"></div>
+
+      <!-- 動態出現的 Migration 提示 (於 s5 底部) -->
+      <div id="migrationUnlockAlert" class="hidden"
+        style="margin-top:20px; padding: 15px; border-radius: 8px; background: #e8f5e9; border: 1px solid #c8e6c9; text-align: center;">
+        <h3 style="color: #2e7d32; margin-bottom: 8px; font-weight: bold;">🎉 達成條件：解鎖 Migration 模擬</h3>
+        <p style="font-size: 0.9rem; color: #388e3c; margin-bottom: 12px;">細胞數量充足且符合分佈要求，已解鎖細胞移動與黏附模擬功能！</p>
+        <button class="btn btn-primary" onclick="scrollToMigration()"
+          style="background: #2e7d32; border: none; padding: 8px 24px; font-size: 1rem; cursor: pointer;">前往模擬
+          →</button>
+      </div>
     </div>
 
     <!-- CHART -->
@@ -758,11 +781,12 @@
         let widthA = Math.hypot(br.x - bl.x, br.y - bl.y);
         let widthB = Math.hypot(tr.x - tl.x, tr.y - tl.y);
 
-        // 根據紙本設計的比例：
-        // 外框寬度 = 12.5 * hw + 0.8 * hw = 13.3 * hw = 13.3 * sqrt(3) * r ≈ 23.036 r
-        // 外框高度 = 18.5 * r + 0.8 * hw = 18.5 * r + 0.8 * sqrt(3) * r ≈ 19.885 r
-        // 所以真實的長寬比固定為 23.036 / 19.885 ≈ 1.158437
-        let targetRatio = 1.158437;
+        // 根據紙本設計的比例 (動態計算)：
+        // 外框寬度 = (COLS + 0.5) * hw + 0.8 * hw = (COLS + 1.3) * hw
+        // 外框高度 = (ROWS * 1.5 + 0.5) * r + 0.8 * hw
+        let targetWidthR = (COLS + 1.3) * Math.sqrt(3);
+        let targetHeightR = (ROWS * 1.5 + 0.5) + 0.8 * Math.sqrt(3);
+        let targetRatio = targetWidthR / targetHeightR;
 
         // 以實際的寬度為基準，依比例換算出應該有的高度，避免強制變形為正方形
         let maxWidth = Math.max(Math.round(widthA), Math.round(widthB));
@@ -836,22 +860,24 @@
 
         if (isAligned) {
           // 自動計算比例
-          // 使用理論長寬比 1.158437 進行透視校正後，圖像已經還原了真實的物理比例
-          // 蜂巢格總共 12 欄，加上左右留白與框線，總寬度剛好是 13.3 個 hw
+          // 圖像已經還原了真實的物理比例
+          // 總寬度剛好是 (COLS + 1.3) 個 hw
 
-          let hw = cvs.width / 13.3;
+          let hw = cvs.width / (COLS + 1.3);
           let hexRVal = hw / Math.sqrt(3);
 
           document.getElementById('ctSize').value = Math.round(hexRVal);
           document.getElementById('vSize').textContent = Math.round(hexRVal);
 
           // 使用「畫布中心對齊法」，忽略上下左右邊距比例的不同，只要格子印在正方形正中央即適用
-          // 1. 計算 X 中心：12攔的中心是 5.75 * hw
-          document.getElementById('ctX').value = Math.round(cvs.width / 2 - 5.75 * hw);
+          // 1. 計算 X 中心：
+          let centerX = (COLS - 0.5) / 2 * hw;
+          document.getElementById('ctX').value = Math.round(cvs.width / 2 - centerX);
           document.getElementById('vX').textContent = document.getElementById('ctX').value;
 
-          // 2. 計算 Y 中心：12列的中心是 8.25 * hexRVal
-          document.getElementById('ctY').value = Math.round(cvs.height / 2 - 8.25 * hexRVal);
+          // 2. 計算 Y 中心：
+          let centerY = (ROWS - 1) * 0.75 * hexRVal;
+          document.getElementById('ctY').value = Math.round(cvs.height / 2 - centerY);
           document.getElementById('vY').textContent = document.getElementById('ctY').value;
 
           document.getElementById('ctRot').value = 0;
@@ -989,7 +1015,7 @@
       if (s < 0.22 || (s < 0.32 && v > 0.78)) return 0;             // white/empty
       if (s > 0.30 && v > 0.28 && (h >= 340 || h <= 20)) return 1;      // red
       if (s > 0.22 && v > 0.22 && h >= 190 && h <= 275) return 3;     // blue
-      if (v < 0.48 && s < 0.28) return 2;                         // dark neutral → green
+      if ((v < 0.48 && s < 0.28) || (s > 0.30 && v > 0.28 && (h >= 60 && h <= 170))) return 2;     // dark neutral or green → green
       return 0;
     }
 
@@ -1078,7 +1104,7 @@
     // ─────────────────────────────────────────────
     // Main analysis
     // ─────────────────────────────────────────────
-    function runAnalysis() {
+    function runAnalysis(isFromSimulation = false) {
       const cnt = calcStats();
       renderStats(cnt);
 
@@ -1133,12 +1159,23 @@
 
       if (validTypesCount === 3 && randomCount >= 2) {
         document.getElementById('btnMigration').classList.remove('hidden');
+        if (document.getElementById('migrationUnlockAlert')) {
+          document.getElementById('migrationUnlockAlert').classList.remove('hidden');
+        }
       } else {
-        document.getElementById('btnMigration').classList.add('hidden');
-        document.getElementById('migrationSection').classList.add('hidden');
+        // 如果不是因為模擬觸發的，才隱藏
+        if (!isFromSimulation) {
+          document.getElementById('btnMigration').classList.add('hidden');
+          document.getElementById('migrationSection').classList.add('hidden');
+          if (document.getElementById('migrationUnlockAlert')) {
+            document.getElementById('migrationUnlockAlert').classList.add('hidden');
+          }
+        }
       }
 
-      document.getElementById('s4').scrollIntoView({ behavior: 'smooth' });
+      if (!isFromSimulation) {
+        document.getElementById('s4').scrollIntoView({ behavior: 'smooth' });
+      }
     }
 
     // ─────────────────────────────────────────────
@@ -1292,6 +1329,17 @@
       }
     }
 
+    function scrollToMigration() {
+      document.getElementById('s3').scrollIntoView({ behavior: 'smooth' });
+      const sec = document.getElementById('migrationSection');
+      if (sec.classList.contains('hidden')) {
+        sec.classList.remove('hidden');
+      }
+      sec.style.transition = 'box-shadow 0.3s';
+      sec.style.boxShadow = '0 0 15px rgba(74, 99, 93, 0.5)';
+      setTimeout(() => sec.style.boxShadow = 'none', 2000);
+    }
+
     function getNeighbors(r, c) {
       const neighbors = [];
       const odd = (r % 2) !== 0;
@@ -1340,7 +1388,7 @@
         }
         renderGrid();
         document.getElementById('migrationProgress').textContent = '';
-        runAnalysis();
+        runAnalysis(true);
       }
     }
 
@@ -1359,23 +1407,23 @@
       }
 
       let step = 0;
-      const maxSteps = 150;
-      
+      const maxSteps = 500;
+
       const pText = document.getElementById('migrationProgress');
       pText.textContent = `Running... Step 0 / ${maxSteps}`;
 
       migrationInterval = setInterval(() => {
         migrationStep();
         step++;
-        
+
         renderGrid();
         pText.textContent = `Running... Step ${step} / ${maxSteps}`;
-        
+
         if (step >= maxSteps) {
           clearInterval(migrationInterval);
           migrationInterval = null;
           pText.textContent = 'Completed';
-          runAnalysis();
+          runAnalysis(true);
         }
       }, 50);
     }
@@ -1388,7 +1436,7 @@
         }
       }
 
-      // Shuffle coords
+      // Shuffle coords, 避免固定按照「從上到下、從左到右」的方式來移動細胞
       for (let i = coords.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [coords[i], coords[j]] = [coords[j], coords[i]];
@@ -1399,21 +1447,87 @@
         if (t === 0) continue;
 
         let neighbors = getNeighbors(p.r, p.c);
+        if (neighbors.length === 0) continue;
+
         let sumAdh = 0;
+        let Fx = 0, Fy = 0;
+        let nData = [];
+
         for (let n of neighbors) {
           let nt = gridData[n.r][n.c];
-          sumAdh += getAdhesion(t, nt);
-        }
-        let avgAdh = sumAdh / neighbors.length;
+          let adh = getAdhesion(t, nt);
+          sumAdh += adh;
 
+          // 計算鄰居 B 本身的平均黏著力 (avgAdhB)，用以判斷它有多難被擠走
+          let bNeighbors = getNeighbors(n.r, n.c);
+          let sumAdhB = 0;
+          if (nt !== 0 && bNeighbors.length > 0) {
+            for (let bn of bNeighbors) {
+              sumAdhB += getAdhesion(nt, gridData[bn.r][bn.c]);
+            }
+          }
+          let avgAdhB = (nt === 0 || bNeighbors.length === 0) ? 0 : sumAdhB / bNeighbors.length;
+
+          // 計算這個鄰居相對於中心細胞的方位向量
+          let dx = n.c - p.c;
+          let dy = n.r - p.r;
+          if (dy !== 0) {
+            let odd = (p.r % 2) !== 0;
+            if (odd) {
+              if (dx === 0) dx = -0.5;
+              else if (dx === 1) dx = 0.5;
+            } else {
+              if (dx === -1) dx = -0.5;
+              else if (dx === 0) dx = 0.5;
+            }
+          }
+          let vx = dx;
+          let vy = dy * 0.866025; // 蜂巢格 Y 軸比例 (sqrt(3)/2)
+
+          // 累加受力向量：正黏附力拉近，負黏附力推遠
+          Fx += adh * vx;
+          Fy += adh * vy;
+
+          nData.push({ r: n.r, c: n.c, vx, vy, nt, avgAdhB });
+        }
+
+        let avgAdh = sumAdh / neighbors.length;
         let prob = 1 - avgAdh;
         prob = Math.max(0, Math.min(1, prob));
 
         if (Math.random() < prob) {
-          let randN = neighbors[Math.floor(Math.random() * neighbors.length)];
+          // 計算朝每個鄰居方向移動的機率權重 (利用內積與 Softmax)
+          let weights = [];
+          let totalWeight = 0;
+          for (let n of nData) {
+            // 計算該鄰居方向與總受力向量的夾角一致性 (內積)
+            let alignment = Fx * n.vx + Fy * n.vy;
+
+            // 鄰居的活動力：如果鄰居本身已經被同類強烈包圍(avgAdhB 很高)，它應該很難被擠走
+            // 將 (1 - avgAdhB) 視為「鬆動度」(Mobility)。
+            // 空格的 avgAdhB 是 0，因此 mobility 是 1，非常容易被替換。
+            let mobilityB = Math.max(0.01, 1 - n.avgAdhB);
+
+            // 透過指數函數放大方向差異，同時乘上鄰居鬆動度的平方，讓卡死的結構極難被破壞
+            let w = Math.exp(alignment * 2.5) * Math.pow(mobilityB, 2);
+            weights.push(w);
+            totalWeight += w;
+          }
+
+          // 依權重隨機挑選一個鄰居進行交換
+          let rnd = Math.random() * totalWeight;
+          let selectedN = nData[0];
+          for (let i = 0; i < nData.length; i++) {
+            rnd -= weights[i];
+            if (rnd <= 0) {
+              selectedN = nData[i];
+              break;
+            }
+          }
+
           let temp = gridData[p.r][p.c];
-          gridData[p.r][p.c] = gridData[randN.r][randN.c];
-          gridData[randN.r][randN.c] = temp;
+          gridData[p.r][p.c] = gridData[selectedN.r][selectedN.c];
+          gridData[selectedN.r][selectedN.c] = temp;
         }
       }
     }
@@ -1423,7 +1537,7 @@
     // ─────────────────────────────────────────────
     (function init() {
       // Responsive hex size
-      hexR = Math.min(22, Math.max(16, Math.floor((Math.min(window.innerWidth, 720) - 40) / (COLS + 1.5) / Math.sqrt(3))));
+      hexR = Math.min(22, Math.max(14, Math.floor((Math.min(window.innerWidth, 720) - 40) / (COLS + 1.5) / Math.sqrt(3))));
       renderGrid();
       // Sync slider display values
       ['ctX', 'ctY', 'ctSize', 'ctRot', 'ctOpa'].forEach(id => {
@@ -1434,7 +1548,7 @@
     })();
 
     window.addEventListener('resize', () => {
-      hexR = Math.min(22, Math.max(16, Math.floor((Math.min(window.innerWidth, 720) - 40) / (COLS + 1.5) / Math.sqrt(3))));
+      hexR = Math.min(22, Math.max(14, Math.floor((Math.min(window.innerWidth, 720) - 40) / (COLS + 1.5) / Math.sqrt(3))));
       renderGrid();
     });
   </script>
