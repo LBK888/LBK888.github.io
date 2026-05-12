@@ -502,6 +502,28 @@
     <!-- STEP 3: EDIT GRID -->
     <div class="card" id="s3">
       <div class="card-title"><span class="step-badge">3</span>確認 / 手動調整格子</div>
+      
+      <button id="btnMigration" class="btn btn-primary hidden" onclick="toggleMigrationSection()" style="margin-bottom: 15px; width: 100%; background: #4a635d;">Migration and Adhesion</button>
+
+      <div id="migrationSection" class="hidden" style="margin-bottom: 15px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: #fdfdfc;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--accent); font-family: 'Cormorant Garamond', serif; font-weight: 700;">4. Adhesion molecule setting</h3>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px;">設定細胞間的 Adhesion force (-1 ~ 1)。細胞移動機率為 1 扣除周圍平均 Adhesion。</p>
+        
+        <div style="font-size: 0.85rem; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+           <label style="display:flex; justify-content:space-between; align-items:center;">紅-紅: <input type="number" id="adh-r-r" value="0.7" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+           <label style="display:flex; justify-content:space-between; align-items:center;">藍-藍: <input type="number" id="adh-b-b" value="0.5" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+           <label style="display:flex; justify-content:space-between; align-items:center;">綠-綠: <input type="number" id="adh-g-g" value="0.4" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+           <label style="display:flex; justify-content:space-between; align-items:center;">紅-藍: <input type="number" id="adh-r-b" value="0.3" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+           <label style="display:flex; justify-content:space-between; align-items:center;">紅-綠: <input type="number" id="adh-r-g" value="-0.2" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+           <label style="display:flex; justify-content:space-between; align-items:center;">藍-綠: <input type="number" id="adh-b-g" value="0.1" step="0.1" max="1" min="-1" style="width: 60px; padding: 2px 4px;"></label>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+           <button class="btn btn-secondary" onclick="resetMigration()" style="flex: 1;">Reset</button>
+           <button class="btn btn-primary" onclick="playMigration()" style="flex: 1; background: var(--blue);">▶ Play</button>
+        </div>
+        <div id="migrationProgress" style="font-size:0.8rem; text-align:center; margin-top:8px; color:var(--muted); height: 16px;"></div>
+      </div>
+
       <div class="color-legend">
         <span>
           <div class="dot" style="background:var(--red);"></div>紅細胞
@@ -559,7 +581,7 @@
       console.log('OpenCV.js loaded.');
     }
 
-    const ROWS = 12, COLS = 12;
+    const ROWS = 14, COLS = 14;
     let gridData = Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
     // 0=empty/white  1=red  2=green  3=blue
     let imgEl = null;
@@ -655,6 +677,7 @@
       cycleCell(+e.target.dataset.r, +e.target.dataset.c);
     }
     function cycleCell(r, c) {
+      originalGridData = null; // Invalidate saved migration state if manually edited
       gridData[r][c] = (gridData[r][c] + 1) % 4;
       const svg = document.getElementById('hexGrid');
       const poly = svg.querySelector(`[data-r="${r}"][data-c="${c}"]`);
@@ -931,6 +954,7 @@
           gridData[row][col] = classifyRGB(avg.r, avg.g, avg.b);
         }
       }
+      originalGridData = null; // Invalidate saved migration state
       renderGrid();
       toast('顏色提取完成！可手動調整後按 Analyze');
       document.getElementById('s3').scrollIntoView({ behavior: 'smooth' });
@@ -1097,6 +1121,23 @@
       // Chart
       if (chartData.length > 0) renderChart(chartData);
 
+      // Check migration conditions
+      let validTypesCount = 0;
+      let randomCount = 0;
+      for (const t of rows) {
+        if (!t.skip) {
+          validTypesCount++;
+          if (t.dist === 'random') randomCount++;
+        }
+      }
+
+      if (validTypesCount === 3 && randomCount >= 2) {
+        document.getElementById('btnMigration').classList.remove('hidden');
+      } else {
+        document.getElementById('btnMigration').classList.add('hidden');
+        document.getElementById('migrationSection').classList.add('hidden');
+      }
+
       document.getElementById('s4').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -1234,6 +1275,147 @@
       }
 
       document.getElementById('s6').classList.remove('hidden');
+    }
+
+    // ─────────────────────────────────────────────
+    // Migration and Adhesion
+    // ─────────────────────────────────────────────
+    let originalGridData = null;
+    let migrationInterval = null;
+
+    function toggleMigrationSection() {
+      const sec = document.getElementById('migrationSection');
+      if (sec.classList.contains('hidden')) {
+        sec.classList.remove('hidden');
+      } else {
+        sec.classList.add('hidden');
+      }
+    }
+
+    function getNeighbors(r, c) {
+      const neighbors = [];
+      const odd = (r % 2) !== 0;
+      const dirs = odd ? [
+        [-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]
+      ] : [
+        [-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]
+      ];
+      for (let d of dirs) {
+        let nr = r + d[0], nc = c + d[1];
+        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+          neighbors.push({ r: nr, c: nc });
+        }
+      }
+      return neighbors;
+    }
+
+    function getAdhesion(t1, t2) {
+      if (t1 === 0 || t2 === 0) return 0;
+      const r_r = +document.getElementById('adh-r-r').value;
+      const r_b = +document.getElementById('adh-r-b').value;
+      const r_g = +document.getElementById('adh-r-g').value;
+      const b_b = +document.getElementById('adh-b-b').value;
+      const b_g = +document.getElementById('adh-b-g').value;
+      const g_g = +document.getElementById('adh-g-g').value;
+
+      if (t1 === 1 && t2 === 1) return r_r;
+      if ((t1 === 1 && t2 === 3) || (t1 === 3 && t2 === 1)) return r_b;
+      if ((t1 === 1 && t2 === 2) || (t1 === 2 && t2 === 1)) return r_g;
+      if (t1 === 3 && t2 === 3) return b_b;
+      if ((t1 === 3 && t2 === 2) || (t1 === 2 && t2 === 3)) return b_g;
+      if (t1 === 2 && t2 === 2) return g_g;
+      return 0;
+    }
+
+    function resetMigration() {
+      if (migrationInterval) {
+        clearInterval(migrationInterval);
+        migrationInterval = null;
+      }
+      if (originalGridData) {
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            gridData[r][c] = originalGridData[r][c];
+          }
+        }
+        renderGrid();
+        document.getElementById('migrationProgress').textContent = '';
+        runAnalysis();
+      }
+    }
+
+    function playMigration() {
+      if (migrationInterval) clearInterval(migrationInterval);
+
+      if (!originalGridData) {
+        originalGridData = gridData.map(row => [...row]);
+      } else {
+        // Resume from original state
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            gridData[r][c] = originalGridData[r][c];
+          }
+        }
+      }
+
+      let step = 0;
+      const maxSteps = 150;
+      
+      const pText = document.getElementById('migrationProgress');
+      pText.textContent = `Running... Step 0 / ${maxSteps}`;
+
+      migrationInterval = setInterval(() => {
+        migrationStep();
+        step++;
+        
+        renderGrid();
+        pText.textContent = `Running... Step ${step} / ${maxSteps}`;
+        
+        if (step >= maxSteps) {
+          clearInterval(migrationInterval);
+          migrationInterval = null;
+          pText.textContent = 'Completed';
+          runAnalysis();
+        }
+      }, 50);
+    }
+
+    function migrationStep() {
+      let coords = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (gridData[r][c] !== 0) coords.push({ r, c });
+        }
+      }
+
+      // Shuffle coords
+      for (let i = coords.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [coords[i], coords[j]] = [coords[j], coords[i]];
+      }
+
+      for (let p of coords) {
+        let t = gridData[p.r][p.c];
+        if (t === 0) continue;
+
+        let neighbors = getNeighbors(p.r, p.c);
+        let sumAdh = 0;
+        for (let n of neighbors) {
+          let nt = gridData[n.r][n.c];
+          sumAdh += getAdhesion(t, nt);
+        }
+        let avgAdh = sumAdh / neighbors.length;
+
+        let prob = 1 - avgAdh;
+        prob = Math.max(0, Math.min(1, prob));
+
+        if (Math.random() < prob) {
+          let randN = neighbors[Math.floor(Math.random() * neighbors.length)];
+          let temp = gridData[p.r][p.c];
+          gridData[p.r][p.c] = gridData[randN.r][randN.c];
+          gridData[randN.r][randN.c] = temp;
+        }
+      }
     }
 
     // ─────────────────────────────────────────────
