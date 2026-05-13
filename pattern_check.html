@@ -1458,7 +1458,7 @@
           let adh = getAdhesion(t, nt);
           sumAdh += adh;
 
-          // 計算鄰居 B 本身的平均黏著力 (avgAdhB)，用以判斷它有多難被擠走
+          // 計算鄰居 B 本身的總黏附力，用以判斷它有多難被擠走
           let bNeighbors = getNeighbors(n.r, n.c);
           let sumAdhB = 0;
           if (nt !== 0 && bNeighbors.length > 0) {
@@ -1466,7 +1466,8 @@
               sumAdhB += getAdhesion(nt, gridData[bn.r][bn.c]);
             }
           }
-          let avgAdhB = (nt === 0 || bNeighbors.length === 0) ? 0 : sumAdhB / bNeighbors.length;
+          // 改進：只要有3個強黏附力細胞就視為完全穩定，解決小結構易被沖散的問題
+          let stabilityB = (nt === 0 || bNeighbors.length === 0) ? 0 : sumAdhB / 3.0;
 
           // 計算這個鄰居相對於中心細胞的方位向量
           let dx = n.c - p.c;
@@ -1488,11 +1489,39 @@
           Fx += adh * vx;
           Fy += adh * vy;
 
-          nData.push({ r: n.r, c: n.c, vx, vy, nt, avgAdhB });
+          nData.push({ r: n.r, c: n.c, vx, vy, nt, stabilityB });
         }
 
-        let avgAdh = sumAdh / neighbors.length;
-        let prob = 1 - avgAdh;
+        let prob = 1.0;
+        if (sumAdh > 0) {
+          // 正黏附力：累積達到 3 時 prob 降為 0，形成穩定結構
+          let stability = sumAdh / 3.0;
+          prob = 1.0 - stability;
+        } else if (sumAdh < 0) {
+          // 負黏附力：受排斥力必定移動
+          prob = 1.0;
+        } else {
+          // sumAdh == 0 時
+          let hasNeighbor = false;
+          for (let n of neighbors) {
+            if (gridData[n.r][n.c] !== 0) { hasNeighbor = true; break; }
+          }
+          if (hasNeighbor) {
+            // 有鄰居但正負相抵，處於矛盾狀態，允許移動
+            prob = 1.0;
+          } else {
+            // 完全孤立：檢查該細胞是否有想要靠近的對象
+            let wantsToBind = false;
+            for (let other = 1; other <= 3; other++) {
+              if (getAdhesion(t, other) > 0) {
+                wantsToBind = true; break;
+              }
+            }
+            // 若所有黏附力設定皆為負，細胞孤立時就達到最穩定狀態(不移動)
+            // 若有正黏附力，孤立細胞仍會隨機游走尋找同伴
+            prob = wantsToBind ? 0.8 : 0.0;
+          }
+        }
         prob = Math.max(0, Math.min(1, prob));
 
         if (Math.random() < prob) {
@@ -1503,10 +1532,10 @@
             // 計算該鄰居方向與總受力向量的夾角一致性 (內積)
             let alignment = Fx * n.vx + Fy * n.vy;
 
-            // 鄰居的活動力：如果鄰居本身已經被同類強烈包圍(avgAdhB 很高)，它應該很難被擠走
-            // 將 (1 - avgAdhB) 視為「鬆動度」(Mobility)。
-            // 空格的 avgAdhB 是 0，因此 mobility 是 1，非常容易被替換。
-            let mobilityB = Math.max(0.01, 1 - n.avgAdhB);
+            // 鄰居的活動力：如果鄰居本身已經被同類強烈包圍(stabilityB 很高)，它應該很難被擠走
+            // 將 (1 - stabilityB) 視為「鬆動度」(Mobility)。
+            // 空格的 stabilityB 是 0，因此 mobility 是 1，非常容易被替換。
+            let mobilityB = Math.max(0.01, 1 - n.stabilityB);
 
             // 透過指數函數放大方向差異，同時乘上鄰居鬆動度的平方，讓卡死的結構極難被破壞
             let w = Math.exp(alignment * 2.5) * Math.pow(mobilityB, 2);
