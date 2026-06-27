@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase 1 NFC Tag 讀取測試</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #1d2430;
+      --muted: #657080;
+      --line: #d8dde5;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --danger: #b42318;
+      --warning: #b54708;
+      --ok: #067647;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #101418;
+        --panel: #171d23;
+        --text: #eef2f6;
+        --muted: #aab4c0;
+        --line: #2b3540;
+        --accent: #2dd4bf;
+        --accent-strong: #5eead4;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      padding: 20px 14px 36px;
+    }
+
+    header {
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.45rem;
+      line-height: 1.2;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+
+    p {
+      margin: 0 0 10px;
+      color: var(--muted);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+
+    .status-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .status-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 70px;
+    }
+
+    .label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      overflow-wrap: anywhere;
+      font-weight: 650;
+    }
+
+    .ok {
+      color: var(--ok);
+    }
+
+    .warn {
+      color: var(--warning);
+    }
+
+    .bad {
+      color: var(--danger);
+    }
+
+    .actions {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+      margin-top: 12px;
+    }
+
+    button {
+      min-height: 56px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-weight: 750;
+      padding: 12px 16px;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--accent-strong);
+      border: 1px solid var(--accent);
+    }
+
+    button:disabled {
+      opacity: 0.48;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--panel), var(--bg) 45%);
+      font-size: 0.88rem;
+    }
+
+    .records {
+      display: grid;
+      gap: 10px;
+    }
+
+    .record {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .record-title {
+      font-weight: 750;
+      margin-bottom: 8px;
+    }
+
+    .small {
+      font-size: 0.9rem;
+    }
+
+    code {
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Phase 1 NFC Tag 讀取測試</h1>
+      <p>用途：測試手機瀏覽器是否能讀取 NTAG215 的 NDEF tag serial number 與內存字串。請用支援 Web NFC 的手機瀏覽器開啟此頁，按下開始掃描後再靠近 NFC tag。</p>
+    </header>
+
+    <section class="panel">
+      <h2>環境檢查</h2>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="label">Web NFC API</span>
+          <span id="supportValue" class="value">檢查中</span>
+        </div>
+        <div class="status-item">
+          <span class="label">安全連線</span>
+          <span id="secureValue" class="value">檢查中</span>
+        </div>
+        <div class="status-item">
+          <span class="label">掃描狀態</span>
+          <span id="scanValue" class="value">尚未開始</span>
+        </div>
+        <div class="status-item">
+          <span class="label">最後讀取時間</span>
+          <span id="timeValue" class="value">尚無</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="scanButton" type="button">開始掃描 NFC</button>
+        <button id="stopButton" class="secondary" type="button" disabled>停止掃描</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>讀取結果</h2>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="label">Tag serial number / ID</span>
+          <span id="serialValue" class="value">尚未讀取</span>
+        </div>
+        <div class="status-item">
+          <span class="label">NDEF record 數量</span>
+          <span id="recordCountValue" class="value">0</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>NDEF 內容</h2>
+      <div id="records" class="records">
+        <p>尚未讀取到 tag。若 tag 不是 NDEF 格式，Web NFC 可能只能回報讀取失敗，無法讀出 NTAG215 的原始記憶體頁面。</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>原始事件 JSON</h2>
+      <pre id="rawJson">{}</pre>
+    </section>
+
+    <section class="panel small">
+      <h2>測試注意事項</h2>
+      <p>1. Web NFC 通常需要 HTTPS、安全瀏覽環境，以及使用者按鈕觸發授權。</p>
+      <p>2. 本頁讀取的是 NDEF message；若 NTAG215 只有低階 memory pages 或 Amiibo 類資料，而非 NDEF text/URL record，瀏覽器不一定能讀取。</p>
+      <p>3. 若手機或瀏覽器不支援，請記錄手機型號、作業系統、瀏覽器版本與畫面錯誤訊息。</p>
+    </section>
+  </main>
+
+  <script>
+    const supportValue = document.getElementById("supportValue");
+    const secureValue = document.getElementById("secureValue");
+    const scanValue = document.getElementById("scanValue");
+    const timeValue = document.getElementById("timeValue");
+    const serialValue = document.getElementById("serialValue");
+    const recordCountValue = document.getElementById("recordCountValue");
+    const recordsContainer = document.getElementById("records");
+    const rawJson = document.getElementById("rawJson");
+    const scanButton = document.getElementById("scanButton");
+    const stopButton = document.getElementById("stopButton");
+
+    let abortController = null;
+    let ndefReader = null;
+
+    function setText(element, text, className) {
+      element.textContent = text;
+      element.className = className ? `value ${className}` : "value";
+    }
+
+    function bytesToHex(dataView) {
+      const bytes = new Uint8Array(dataView.buffer, dataView.byteOffset, dataView.byteLength);
+      return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, "0")).join(" ");
+    }
+
+    function decodeTextRecord(record) {
+      try {
+        return record.data ? new TextDecoder(record.encoding || "utf-8").decode(record.data) : "";
+      } catch (error) {
+        return `[文字解碼失敗: ${error.message}]`;
+      }
+    }
+
+    function decodeUrlRecord(record) {
+      try {
+        return record.data ? new TextDecoder("utf-8").decode(record.data) : "";
+      } catch (error) {
+        return `[URL 解碼失敗: ${error.message}]`;
+      }
+    }
+
+    function decodeGenericRecord(record) {
+      if (!record.data) return "";
+      try {
+        return new TextDecoder("utf-8", { fatal: false }).decode(record.data);
+      } catch (error) {
+        return "";
+      }
+    }
+
+    function summarizeRecord(record, index) {
+      const base = {
+        index,
+        recordType: record.recordType || "",
+        mediaType: record.mediaType || "",
+        id: record.id || "",
+        encoding: record.encoding || "",
+        lang: record.lang || "",
+        dataText: "",
+        dataHex: record.data ? bytesToHex(record.data) : ""
+      };
+
+      if (record.recordType === "text") {
+        base.dataText = decodeTextRecord(record);
+      } else if (record.recordType === "url" || record.recordType === "absolute-url") {
+        base.dataText = decodeUrlRecord(record);
+      } else {
+        base.dataText = decodeGenericRecord(record);
+      }
+
+      return base;
+    }
+
+    function renderRecords(records) {
+      recordsContainer.innerHTML = "";
+      if (!records.length) {
+        recordsContainer.innerHTML = "<p>讀到 tag，但沒有 NDEF records。</p>";
+        return;
+      }
+
+      for (const record of records) {
+        const node = document.createElement("div");
+        node.className = "record";
+        node.innerHTML = `
+          <div class="record-title">Record ${record.index + 1}: ${escapeHtml(record.recordType || "unknown")}</div>
+          <div><span class="label">文字 / URL / 解碼內容</span><code>${escapeHtml(record.dataText || "(空白或非文字資料)")}</code></div>
+          <div><span class="label">MIME type</span><code>${escapeHtml(record.mediaType || "(無)")}</code></div>
+          <div><span class="label">Record ID</span><code>${escapeHtml(record.id || "(無)")}</code></div>
+          <div><span class="label">Language / Encoding</span><code>${escapeHtml([record.lang, record.encoding].filter(Boolean).join(" / ") || "(無)")}</code></div>
+          <div><span class="label">Hex payload</span><code>${escapeHtml(record.dataHex || "(無)")}</code></div>
+        `;
+        recordsContainer.appendChild(node);
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function updateEnvironmentStatus() {
+      if ("NDEFReader" in window) {
+        setText(supportValue, "支援 NDEFReader", "ok");
+      } else {
+        setText(supportValue, "不支援 Web NFC", "bad");
+      }
+
+      if (window.isSecureContext) {
+        setText(secureValue, "安全環境", "ok");
+      } else {
+        setText(secureValue, "非 HTTPS / 非安全環境", "bad");
+      }
+
+      scanButton.disabled = !("NDEFReader" in window) || !window.isSecureContext;
+    }
+
+    async function startScan() {
+      if (!("NDEFReader" in window)) {
+        setText(scanValue, "此瀏覽器沒有 NDEFReader", "bad");
+        return;
+      }
+
+      if (!window.isSecureContext) {
+        setText(scanValue, "需要 HTTPS 或安全環境", "bad");
+        return;
+      }
+
+      abortController = new AbortController();
+      ndefReader = new NDEFReader();
+
+      try {
+        setText(scanValue, "等待授權", "warn");
+        await ndefReader.scan({ signal: abortController.signal });
+
+        setText(scanValue, "掃描中，請靠近 NTAG215", "ok");
+        scanButton.disabled = true;
+        stopButton.disabled = false;
+
+        ndefReader.addEventListener("readingerror", () => {
+          setText(scanValue, "讀取失敗：tag 可能非 NDEF 或距離不穩", "bad");
+        });
+
+        ndefReader.addEventListener("reading", (event) => {
+          const records = Array.from(event.message.records || []).map(summarizeRecord);
+          const result = {
+            serialNumber: event.serialNumber || "",
+            recordCount: records.length,
+            records,
+            readAt: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            secureContext: window.isSecureContext
+          };
+
+          setText(serialValue, result.serialNumber || "(瀏覽器未提供 serial number)", result.serialNumber ? "ok" : "warn");
+          setText(recordCountValue, String(records.length), records.length ? "ok" : "warn");
+          setText(timeValue, new Date().toLocaleString(), "ok");
+          setText(scanValue, "已讀取，可繼續掃描下一張 tag", "ok");
+          renderRecords(records);
+          rawJson.textContent = JSON.stringify(result, null, 2);
+        });
+      } catch (error) {
+        setText(scanValue, `${error.name || "Error"}: ${error.message}`, "bad");
+        scanButton.disabled = false;
+        stopButton.disabled = true;
+      }
+    }
+
+    function stopScan() {
+      if (abortController) {
+        abortController.abort();
+      }
+      abortController = null;
+      ndefReader = null;
+      setText(scanValue, "已停止掃描", "warn");
+      scanButton.disabled = !("NDEFReader" in window) || !window.isSecureContext;
+      stopButton.disabled = true;
+    }
+
+    scanButton.addEventListener("click", startScan);
+    stopButton.addEventListener("click", stopScan);
+
+    updateEnvironmentStatus();
+  </script>
+</body>
+</html>
