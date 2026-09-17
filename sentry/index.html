@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c131d">
+  <meta name="description" content="在手機瀏覽器執行的人臉辨識與離線警報教學系統">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/app.css">
+  <title>Face Sentry · 手機 AI 哨兵</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">⌁</span><div><span class="eyebrow">EDGE AI / FIELD LAB</span><strong>FACE SENTRY</strong></div></div>
+      <div id="modeBadge" class="mode-badge"><span class="status-dot"></span><span>待命中</span></div>
+    </header>
+
+    <main class="layout">
+      <section class="monitor-panel" aria-label="監控畫面">
+        <div class="section-heading"><div><span class="eyebrow">01 / LIVE MONITOR</span><h1>現場監控</h1></div><span id="clock" class="clock">--:--:--</span></div>
+        <div class="camera-frame" id="cameraFrame">
+          <video id="camera" autoplay muted playsinline></video>
+          <canvas id="overlay" aria-label="人臉偵測框；點選未登錄人物可登錄"></canvas>
+          <div class="camera-grid" aria-hidden="true"></div>
+          <div id="cameraPlaceholder" class="camera-placeholder"><div class="scan-symbol"><span></span></div><strong>等待相機啟動</strong><p>AI 推論在本機執行，畫面不會串流到伺服器</p></div>
+          <div class="camera-topline"><span class="live-indicator"><i></i> LIVE FEED</span><span id="cameraResolution">— × —</span></div>
+          <div class="camera-bottomline"><span id="cameraHint">點選「開始監控」並允許相機權限</span><span id="cameraFps">0 FPS</span></div>
+        </div>
+        <div class="monitor-actions"><button id="startBtn" class="primary-button" type="button">開始監控 <span>→</span></button><button id="stopBtn" class="secondary-button" type="button" disabled>停止</button><span id="wakeStatus" class="quiet-note">Wake Lock —</span></div>
+        <p id="notice" class="notice" role="status">系統準備就緒。請先閱讀資料使用說明。</p>
+
+        <div class="metric-strip" aria-label="監控指標">
+          <div><span>FACES</span><strong id="faceCount">0</strong></div>
+          <div><span>KNOWN</span><strong id="knownCount" class="green">0</strong></div>
+          <div><span>UNKNOWN</span><strong id="unknownCount" class="amber">0</strong></div>
+          <div><span>AI FPS</span><strong id="aiFps">0.0</strong></div>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <section class="status-card">
+          <div class="card-heading"><span class="eyebrow">02 / SYSTEM STATUS</span><span class="tiny-code">LOCAL FIRST</span></div>
+          <h2>系統狀態</h2>
+          <div class="status-row"><span><i id="cameraDot" class="dot"></i>相機</span><strong id="cameraState">待命</strong></div>
+          <div class="status-row"><span><i id="aiDot" class="dot"></i>AI 引擎</span><strong id="aiState">未載入</strong></div>
+          <div class="status-row"><span><i id="networkDot" class="dot"></i>網路</span><strong id="networkState">偵測中</strong></div>
+          <div class="status-row"><span><i id="backendDot" class="dot"></i>n8n 後端</span><strong id="backendState">尚未測試</strong></div>
+          <div class="queue-line"><div><span class="eyebrow">OUTBOX</span><strong><span id="pendingCount">0</span> 筆待送</strong></div><button id="retryBtn" type="button" class="text-button">立即重送 ↗</button></div>
+        </section>
+
+        <section class="workspace-card">
+          <nav class="tabs" aria-label="功能選單"><button class="tab active" type="button" data-tab="debug">偵錯</button><button class="tab" type="button" data-tab="persons">合法人物</button><button class="tab" type="button" data-tab="events">事件</button><button class="tab" type="button" data-tab="settings">設定</button></nav>
+          <div id="debugPanel" class="tab-panel">
+            <div class="panel-intro"><span class="eyebrow">RUNTIME TELEMETRY</span><p>觀察手機端每一段 AI 與網路狀態</p></div>
+            <div class="debug-group"><h3>SYSTEM</h3><dl><div><dt>Camera</dt><dd id="debugCamera">—</dd></div><div><dt>Wake Lock</dt><dd id="debugWake">—</dd></div></dl></div>
+            <div class="debug-group"><h3>AI</h3><dl><div><dt>Backend</dt><dd id="debugBackend">—</dd></div><div><dt>Detector</dt><dd>YuNet / 320 × 320</dd></div><div><dt>Detection time</dt><dd id="debugDetectorMs">— ms</dd></div><div><dt>Recognition time</dt><dd id="debugRecognizerMs">— ms</dd></div><div><dt>AI FPS</dt><dd id="debugAiFps">—</dd></div></dl></div>
+            <div class="debug-group"><h3>SELECTED FACE</h3><dl><div><dt>Track</dt><dd id="debugTrack">—</dd></div><div><dt>DET</dt><dd id="debugDet">—</dd></div><div><dt>SIM</dt><dd id="debugSim">—</dd></div><div><dt>Threshold</dt><dd id="debugThreshold">—</dd></div><div><dt>Status</dt><dd id="debugStatus">—</dd></div><div><dt>Timer</dt><dd id="debugTimer">—</dd></div></dl></div>
+            <div class="debug-group"><h3>NETWORK</h3><dl><div><dt>Internet</dt><dd id="debugInternet">—</dd></div><div><dt>n8n</dt><dd id="debugN8n">—</dd></div><div><dt>Outbox</dt><dd id="debugOutbox">0</dd></div><div><dt>LINE</dt><dd>由後端處理</dd></div></dl></div>
+          </div>
+          <div id="personsPanel" class="tab-panel hidden"><div class="panel-intro"><span class="eyebrow">LOCAL IDENTITY VAULT</span><p>點選畫面中的黃色人臉框，連續收集 10 筆有效樣本。</p></div><div id="personList" class="list-stack"></div><button id="clearPersonsBtn" class="danger-button" type="button">清除所有合法人物</button></div>
+          <div id="eventsPanel" class="tab-panel hidden"><div class="panel-intro"><span class="eyebrow">INCIDENT LOG</span><p>事件與截圖保留在本裝置，待送通知會自動重試。</p></div><div id="eventList" class="list-stack"></div><div class="list-actions"><button id="clearEventsBtn" class="danger-button" type="button">清除事件紀錄</button><button id="clearOutboxBtn" class="danger-button" type="button">清除 Outbox</button></div></div>
+          <div id="settingsPanel" class="tab-panel hidden"><div class="panel-intro"><span class="eyebrow">FIELD CONFIGURATION</span><p>辨識閾值須依課堂照片實測校正。</p></div>
+            <form id="settingsForm" class="settings-form">
+              <label>裝置名稱<input name="deviceName" maxlength="50" placeholder="例如：入口 A"></label>
+              <label>n8n webhook URL<input name="webhookUrl" type="url" required></label>
+              <label>課堂 Session Key<input name="sessionKey" type="password" autocomplete="off" placeholder="僅存本次分頁"></label>
+              <div class="field-pair"><label>辨識閾值<input name="recognitionThreshold" type="number" min="0" max="1" step="0.01"></label><label>偵測閾值<input name="detectionThreshold" type="number" min="0.1" max="0.99" step="0.01"></label></div>
+              <div class="field-pair"><label>警報延遲 / 秒<input name="alertDelaySec" type="number" min="1" max="30" step="0.1"></label><label>短暫遺失 / 秒<input name="lostGraceSec" type="number" min="0.2" max="3" step="0.1"></label></div>
+              <div class="field-pair"><label>冷卻時間 / 秒<input name="cooldownSec" type="number" min="0" max="600" step="1"></label><label>截圖上限 / KB<input name="screenshotMaxKb" type="number" min="20" max="100" step="1"></label></div>
+              <div class="field-pair"><label>效能模式<select name="performanceMode"><option>AUTO</option><option>QUALITY</option><option>BATTERY</option></select></label><label>Detector FPS<select name="detectorFps"><option>AUTO</option><option value="3">3</option><option value="6">6</option><option value="10">10</option></select></label></div>
+              <button class="primary-button" type="submit">儲存設定 <span>→</span></button>
+            </form><button id="resetBtn" class="danger-button" type="button">重設本機資料</button>
+          </div>
+        </section>
+      </aside>
+    </main>
+    <footer class="footer"><span>EDUCATIONAL / RESEARCH DEMO</span><span>僅適用於前景執行；鎖屏或切換背景後無法保證持續監控。</span></footer>
+  </div>
+
+  <dialog id="privacyDialog" class="modal"><div class="modal-icon">⌁</div><span class="eyebrow">BEFORE YOU BEGIN</span><h2>資料使用說明</h2><p>本系統為 AI 教學示範。人臉辨識資料只儲存在此裝置；只有陌生人警報的壓縮截圖會送至教學伺服器與 LINE 群組。請確認參與者已知悉攝影與辨識用途。</p><button id="acceptPrivacyBtn" class="primary-button" type="button">我已了解 <span>→</span></button></dialog>
+  <dialog id="registerDialog" class="modal"><button id="closeRegisterBtn" class="modal-close" type="button" aria-label="關閉">×</button><span class="eyebrow">LOCAL ENROLLMENT</span><h2>登錄合法人物</h2><canvas id="facePreview" width="112" height="112"></canvas><label>姓名<input id="personName" maxlength="40" placeholder="輸入姓名"></label><div class="progress-label"><span>正在收集有效臉部資料</span><strong id="sampleCount">0 / 10</strong></div><progress id="sampleProgress" value="0" max="10"></progress><p id="registerHint">請讓人物正對鏡頭並保持清晰。</p><div class="modal-actions"><button id="cancelRegisterBtn" class="secondary-button" type="button">取消</button><button id="savePersonBtn" class="primary-button" type="button" disabled>登錄 <span>→</span></button></div></dialog>
+  <script src="vendor/onnxruntime/ort.webgpu.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

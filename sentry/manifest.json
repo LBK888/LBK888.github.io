@@ -1,0 +1,9 @@
+{
+  "name": "Face Sentry · 手機 AI 哨兵",
+  "short_name": "Face Sentry",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0c131d",
+  "theme_color": "#0c131d",
+  "description": "手機端人臉辨識與離線警報教學示範"
+}
