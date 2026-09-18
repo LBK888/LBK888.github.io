@@ -39,7 +39,7 @@ export class OutboxWorker {
           })) form.append(key, String(value));
           form.append('image', event.screenshotBlob, `${event.eventId}.jpg`);
           const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 5000);
+          const timeout = setTimeout(() => controller.abort(), 15000);
           let response;
           try { response = await fetch(this.getSettings().webhookUrl, { method: 'POST', body: form, signal: controller.signal }); }
           finally { clearTimeout(timeout); }

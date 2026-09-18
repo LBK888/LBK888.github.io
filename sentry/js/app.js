@@ -265,18 +265,6 @@ async function refreshLists() {
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.tab === name));
   for (const key of ['debug', 'persons', 'events', 'settings']) $(`${key}Panel`).classList.toggle('hidden', key !== name);
-  if (name === 'debug') void checkBackend();
-}
-
-async function checkBackend() {
-  if (!navigator.onLine) { worker.backend = 'OFFLINE'; status(); return; }
-  const url = settings.webhookUrl.replace(/\/$/, '') + '/health';
-  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 3000);
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    const body = await response.json(); worker.backend = response.ok && body.ok ? 'ONLINE' : 'OFFLINE';
-  } catch { worker.backend = 'OFFLINE'; }
-  finally { clearTimeout(timer); status(); }
 }
 
 function fillSettings() {
@@ -291,7 +279,7 @@ function fillSettings() {
 async function saveSettings(event) {
   event.preventDefault();
   const form = event.currentTarget;
-  const url = form.elements.webhookUrl.value.trim();
+  const url = form.elements.webhookUrl.value.trim().replace(/\/$/, '');
   if (!/^https:\/\//.test(url) && !/^http:\/\/localhost(?::\d+)?\//.test(url)) { notice('Webhook URL 必須使用 HTTPS。', true); return; }
   const next = {
     deviceName: form.elements.deviceName.value.trim(), webhookUrl: url,
@@ -307,7 +295,8 @@ async function saveSettings(event) {
   settings = { ...settings, ...next }; if (tracker) tracker.settings = settings;
   await put('settings', { key: 'main', value: settings });
   sessionStorage.setItem('sentry-session-key', form.elements.sessionKey.value.trim());
-  notice('設定已儲存。'); status(); void checkBackend();
+  worker.backend = 'UNKNOWN';
+  notice('設定已儲存。警報送達後會更新 n8n 狀態。'); status(); void worker.flush(true);
 }
 
 async function init() {
@@ -319,8 +308,7 @@ async function init() {
   worker = new OutboxWorker(() => settings, () => void refreshLists()); worker.start();
   await refreshLists(); status();
   if (!localStorage.getItem('sentry-privacy-accepted')) $('privacyDialog').showModal();
-  else void checkBackend();
-  $('acceptPrivacyBtn').onclick = () => { localStorage.setItem('sentry-privacy-accepted', '1'); $('privacyDialog').close(); void checkBackend(); };
+  $('acceptPrivacyBtn').onclick = () => { localStorage.setItem('sentry-privacy-accepted', '1'); $('privacyDialog').close(); };
   $('startBtn').onclick = start; $('stopBtn').onclick = stop;
   $('retryBtn').onclick = () => void worker.flush(true);
   $('settingsForm').onsubmit = saveSettings;
@@ -342,7 +330,6 @@ async function init() {
   window.addEventListener('offline', status);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && running && !wakeLock) void acquireWakeLock(); });
   setInterval(() => { $('clock').textContent = new Date().toLocaleTimeString('zh-TW', { hour12: false }); status(); }, 1000);
-  setInterval(() => { if (pendingCount > 0) void checkBackend(); }, 30000);
 }
 
 init().catch(error => notice(`初始化失敗：${error.message}`, true));

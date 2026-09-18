@@ -1,4 +1,4 @@
-const CACHE = 'face-sentry-v1';
+const CACHE = 'face-sentry-v2';
 const SHELL = [
   './', './index.html', './manifest.json', './css/app.css',
   './js/app.js', './js/ai.js', './js/config.js', './js/db.js',
