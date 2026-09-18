@@ -74,3 +74,36 @@ export async function saveAlert(event) {
     tx.onerror = () => reject(tx.error);
   });
 }
+
+export async function touchEvent(eventId, at) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('events', 'readwrite');
+    const store = tx.objectStore('events');
+    const request = store.get(eventId);
+    let found = false;
+    request.onsuccess = () => {
+      const event = request.result;
+      if (!event) return;
+      found = true;
+      event.lastSeenAt = Math.max(event.lastSeenAt ?? event.alertAt, at);
+      store.put(event);
+    };
+    tx.oncomplete = () => resolve(found);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function updateEventStatus(eventId, status) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('events', 'readwrite');
+    const store = tx.objectStore('events');
+    const request = store.get(eventId);
+    request.onsuccess = () => {
+      if (request.result) store.put({ ...request.result, status });
+    };
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}

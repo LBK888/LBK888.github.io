@@ -1,9 +1,10 @@
 import { DEFAULTS, deviceId } from './config.js';
-import { all, clear, get, openDb, put, remove, saveAlert } from './db.js';
+import { all, clear, get, openDb, put, remove, saveAlert, touchEvent } from './db.js';
 import { FaceAI, bestMatch, meanEmbedding, qualityOkay } from './ai.js';
 import { FaceTracker } from './tracker.js';
 import { createAlert } from './alert.js';
 import { OutboxWorker } from './outbox.js';
+import { MIN_SAMPLES, MAX_SAMPLES, collectSample, finishIfFaceLost, suggestedName } from './enrollment.js';
 
 const $ = id => document.getElementById(id);
 const video = $('camera'), overlay = $('overlay'), ctx = overlay.getContext('2d');
@@ -103,27 +104,42 @@ function targetFps() {
   return total > 200 ? 3 : total > 100 ? 6 : 10;
 }
 
+function updateRegistrationUi() {
+  if (!registration) return;
+  const count = registration.samples.length;
+  $('sampleCount').textContent = `${count} / ${MAX_SAMPLES}`;
+  $('sampleProgress').value = count;
+  $('savePersonBtn').disabled = count < MIN_SAMPLES;
+  $('registerHint').textContent = registration.complete
+    ? `取樣已結束，使用 ${count} 筆樣本即可登錄。`
+    : count >= MIN_SAMPLES
+      ? '已可登錄；也可繼續收集至 20 筆，離開鏡頭後會結束取樣。'
+      : '請稍微轉動頭部，保持臉部清晰（至少 5 筆）。';
+}
+
 async function aiLoop() {
   while (running) {
     const began = performance.now();
     try {
       if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         const detections = await ai.detect(video, settings.detectionThreshold);
-        const tracks = tracker.update(detections);
+        const detectedAt = Date.now();
+        const tracks = tracker.update(detections, detectedAt);
+        if (finishIfFaceLost(registration, tracks)) {
+          if (registration.complete) updateRegistrationUi();
+          else $('registerHint').textContent = '人臉訊號中斷，樣本不足 5 筆；請取消後重新點選人臉。';
+        }
         for (const track of tracks) {
+          if (track.lastSeen !== detectedAt) continue;
           if (!running || Date.now() - track.lastRecognition < (settings.performanceMode === 'BATTERY' ? 500 : 250)) continue;
           if (track.bbox[2] - track.bbox[0] < 60) continue;
           const result = await ai.recognize(video, track);
           const match = bestMatch(result.embedding, persons, settings.recognitionThreshold);
           tracker.recognize(track, { embedding: result.embedding, ...match });
-          if (registration?.trackId === track.id && registration.samples.length < 10 && Date.now() - registration.lastSample > 140 && qualityOkay(result.aligned, track)) {
-            registration.samples.push(result.embedding);
-            registration.lastSample = Date.now();
+          if (registration?.track === track && !registration.complete && qualityOkay(result.aligned, track)
+            && collectSample(registration, result.embedding, Date.now())) {
             $('facePreview').getContext('2d').drawImage(result.aligned, 0, 0);
-            $('sampleCount').textContent = `${registration.samples.length} / 10`;
-            $('sampleProgress').value = registration.samples.length;
-            $('savePersonBtn').disabled = registration.samples.length < 10;
-            $('registerHint').textContent = registration.samples.length === 10 ? '已收集 10 筆有效樣本，可以登錄。' : '請稍微轉動頭部，保持臉部清晰。';
+            updateRegistrationUi();
           }
         }
         const done = performance.now();
@@ -165,7 +181,8 @@ async function start() {
     notice('正在載入本機 AI 模型…');
     if (!ai.detector) await ai.init(message => notice(message));
     running = true;
-    tracker = new FaceTracker(settings, onAlert);
+    tracker = new FaceTracker(settings, onAlert, onActivity);
+    tracker.restore(await all('events'));
     frameTimes = [];
     $('stopBtn').disabled = false;
     $('cameraHint').textContent = '黃色人臉框可點選登錄合法人物';
@@ -183,6 +200,7 @@ async function start() {
 
 async function stop() {
   running = false;
+  tracker?.flushActivity();
   stream?.getTracks().forEach(track => track.stop());
   stream = null; video.srcObject = null;
   if (wakeLock) { try { await wakeLock.release(); } catch {} wakeLock = null; }
@@ -195,24 +213,31 @@ async function stop() {
   status();
 }
 
-async function onAlert(track, at) {
+async function onAlert(track, at, record) {
   try {
     const event = await createAlert(video, track, settings, at);
+    event.unknownEmbedding = record.embedding;
+    event.lastSeenAt = Math.max(at, record.at);
     await saveAlert(event);
+    record.eventId = event.eventId;
     notice(`陌生人物 ${track.id} 已記錄，通知進入待送佇列。`);
     await refreshLists();
     void worker.flush();
   } catch (error) { notice(`警報保存失敗：${error.message}`, true); }
 }
 
+async function onActivity(track, at, eventId) {
+  try {
+    if (await touchEvent(eventId, at) && !$('eventsPanel').classList.contains('hidden')) await refreshLists();
+  } catch (error) { notice(`事件時間更新失敗：${error.message}`, true); }
+}
+
 function openRegistration(track) {
   if (!track || track.status === 'KNOWN') return;
   selectedTrack = track;
-  registration = { trackId: track.id, samples: [], lastSample: 0 };
-  $('personName').value = '';
-  $('sampleCount').textContent = '0 / 10'; $('sampleProgress').value = 0;
-  $('savePersonBtn').disabled = true;
-  $('registerHint').textContent = '請讓人物正對鏡頭並保持清晰。';
+  registration = { track, samples: [], lastSample: 0, complete: false };
+  $('personName').value = suggestedName(persons.map(person => person.name));
+  updateRegistrationUi();
   $('registerDialog').showModal();
 }
 
@@ -224,12 +249,15 @@ function closeRegistration() {
 async function savePerson() {
   const name = $('personName').value.trim();
   if (!name) { $('registerHint').textContent = '請輸入姓名。'; $('personName').focus(); return; }
-  if (registration?.samples.length !== 10) return;
-  const person = { id: crypto.randomUUID(), name, embedding: meanEmbedding(registration.samples), sampleCount: 10, createdAt: Date.now() };
+  if (!registration || registration.samples.length < MIN_SAMPLES) return;
+  const { track } = registration;
+  const samples = registration.samples.slice();
+  registration.complete = true;
+  $('savePersonBtn').disabled = true;
+  const person = { id: crypto.randomUUID(), name, embedding: meanEmbedding(samples), sampleCount: samples.length, createdAt: Date.now() };
   await put('persons', person);
   persons.push(person);
-  const track = tracker.tracks.find(t => t.id === registration.trackId);
-  if (track) tracker.recognize(track, { embedding: person.embedding, person, similarity: 1 });
+  if (tracker.tracks.includes(track)) tracker.recognize(track, { embedding: person.embedding, person, similarity: 1 });
   closeRegistration(); await refreshLists(); notice(`${name} 已儲存在此裝置。`);
 }
 
@@ -242,13 +270,13 @@ async function refreshLists() {
     const icon = document.createElement('span'); icon.className = 'icon'; icon.textContent = person.name.slice(0, 1);
     const detail = document.createElement('div');
     const title = document.createElement('strong'); title.textContent = person.name;
-    const sub = document.createElement('small'); sub.textContent = `10 筆樣本 · ${new Date(person.createdAt).toLocaleString('zh-TW')}`;
+    const sub = document.createElement('small'); sub.textContent = `${person.sampleCount} 筆樣本 · ${new Date(person.createdAt).toLocaleString('zh-TW')}`;
     const del = document.createElement('button'); del.type = 'button'; del.textContent = '移除';
     del.onclick = async () => { if (!confirm(`移除 ${person.name}？`)) return; await remove('persons', person.id); persons = persons.filter(p => p.id !== person.id); await refreshLists(); };
     detail.append(title, sub); item.append(icon, detail, del); personList.append(item);
   }
   objectUrls.forEach(URL.revokeObjectURL); objectUrls = [];
-  const events = (await all('events')).sort((a, b) => b.alertAt - a.alertAt);
+  const events = (await all('events')).sort((a, b) => (b.lastSeenAt ?? b.alertAt) - (a.lastSeenAt ?? a.alertAt));
   const eventList = $('eventList'); eventList.replaceChildren();
   if (!events.length) eventList.innerHTML = '<div class="empty-state">尚無警報事件。</div>';
   for (const event of events.slice(0, 50)) {
@@ -257,7 +285,7 @@ async function refreshLists() {
     const url = URL.createObjectURL(event.screenshotBlob); objectUrls.push(url); image.src = url;
     const detail = document.createElement('div');
     const title = document.createElement('strong'); title.textContent = `陌生人物 ${event.trackId}`;
-    const sub = document.createElement('small'); sub.textContent = `${new Date(event.alertAt).toLocaleString('zh-TW')} · ${event.status} · DET ${event.detScore.toFixed(2)} / SIM ${event.maxKnownSimilarity.toFixed(2)}`;
+    const sub = document.createElement('small'); sub.textContent = `初次警報 ${new Date(event.alertAt).toLocaleString('zh-TW')} · 最近出現 ${new Date(event.lastSeenAt ?? event.alertAt).toLocaleString('zh-TW')} · ${event.status} · DET ${event.detScore.toFixed(2)} / SIM ${event.maxKnownSimilarity.toFixed(2)}`;
     detail.append(title, sub); item.append(image, detail); eventList.append(item);
   }
 }
@@ -265,6 +293,7 @@ async function refreshLists() {
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.tab === name));
   for (const key of ['debug', 'persons', 'events', 'settings']) $(`${key}Panel`).classList.toggle('hidden', key !== name);
+  if (name === 'events') void refreshLists();
 }
 
 function fillSettings() {
@@ -302,7 +331,13 @@ async function saveSettings(event) {
 async function init() {
   await openDb();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
-  settings = { ...DEFAULTS, ...(await get('settings', 'main'))?.value };
+  const stored = (await get('settings', 'main'))?.value;
+  settings = { ...DEFAULTS, ...stored };
+  if (stored && !stored.unknownMergeVersion) {
+    if (stored.cooldownMs === 60000) settings.cooldownMs = DEFAULTS.cooldownMs;
+    settings.unknownMergeVersion = 1;
+    await put('settings', { key: 'main', value: settings });
+  }
   persons = await all('persons');
   deviceId(); fillSettings();
   worker = new OutboxWorker(() => settings, () => void refreshLists()); worker.start();
@@ -321,6 +356,7 @@ async function init() {
     if (track) { selectedTrack = track; if (track.status !== 'KNOWN') openRegistration(track); }
   };
   $('closeRegisterBtn').onclick = $('cancelRegisterBtn').onclick = closeRegistration;
+  $('registerDialog').addEventListener('close', () => { registration = null; });
   $('savePersonBtn').onclick = () => void savePerson();
   $('clearPersonsBtn').onclick = async () => { if (!confirm('清除所有合法人物？')) return; await clear('persons'); persons = []; await refreshLists(); };
   $('clearEventsBtn').onclick = async () => { if (!confirm('清除所有事件紀錄與截圖？')) return; await clear('events'); await clear('outbox'); await refreshLists(); };

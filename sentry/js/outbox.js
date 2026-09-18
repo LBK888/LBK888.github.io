@@ -1,4 +1,4 @@
-import { all, get, put } from './db.js';
+import { all, get, put, updateEventStatus } from './db.js';
 import { RETRY_DELAYS_MS } from './config.js';
 
 export class OutboxWorker {
@@ -46,7 +46,7 @@ export class OutboxWorker {
           const body = await response.json();
           if (!response.ok || !body.ok || !body.stored || body.eventId !== event.eventId) throw new Error(body.error || `HTTP ${response.status}`);
           job.status = 'SENT'; job.sentAt = Date.now(); job.lastError = '';
-          event.status = 'SENT'; await put('events', event);
+          await updateEventStatus(event.eventId, 'SENT');
           this.backend = 'ONLINE';
         } catch (error) {
           job.attempts++;

@@ -7,15 +7,47 @@ function distance(a, b) {
 }
 
 export class FaceTracker {
-  constructor(settings, onAlert) {
+  constructor(settings, onAlert, onActivity = () => {}) {
     this.settings = settings;
     this.onAlert = onAlert;
+    this.onActivity = onActivity;
     this.tracks = [];
     this.nextId = 1;
     this.recent = [];
   }
 
+  restore(events, now = Date.now()) {
+    for (const event of events) {
+      const id = /^U(\d+)$/.exec(event.trackId || '');
+      if (id) this.nextId = Math.max(this.nextId, Number(id[1]) + 1);
+      const at = event.lastSeenAt ?? event.alertAt;
+      if (event.unknownEmbedding?.length && now - at <= this.settings.cooldownMs) {
+        this.recent.push({ id: event.trackId, embedding: event.unknownEmbedding, at, eventId: event.eventId, lastReportedAt: at });
+      }
+    }
+  }
+
+  allocateId() { return `U${String(this.nextId++).padStart(3, '0')}`; }
+
+  findRecent(embedding, now) {
+    if (!embedding) return null;
+    return this.recent
+      .filter(record => now - record.at <= this.settings.cooldownMs && cosine(embedding, record.embedding) >= 0.72)
+      .sort((a, b) => cosine(embedding, b.embedding) - cosine(embedding, a.embedding))[0] || null;
+  }
+
+  reportActivity(track, at, force = false) {
+    const record = track.record;
+    if (!record?.eventId || at <= record.lastReportedAt || (!force && at - record.lastReportedAt < 2000)) return;
+    record.lastReportedAt = at;
+    this.onActivity(track, at, record.eventId);
+  }
+
   update(detections, now = Date.now()) {
+    for (const track of this.tracks) {
+      if (now - track.lastSeen > this.settings.lostGraceMs) this.reportActivity(track, track.lastSeen, true);
+    }
+    this.tracks = this.tracks.filter(track => now - track.lastSeen <= this.settings.lostGraceMs);
     const unmatched = new Set(this.tracks);
     for (const detection of detections) {
       let best = null, score = -Infinity;
@@ -36,18 +68,23 @@ export class FaceTracker {
         best.seenCount++;
       } else {
         best = {
-          id: `U${String(this.nextId++).padStart(3, '0')}`,
+          id: this.allocateId(),
           bbox: detection.bbox,
           landmarks: detection.landmarks,
           detectionScore: detection.detectionScore,
           firstSeen: now, lastSeen: now, seenCount: 1,
           status: 'DETECTING', person: null, similarity: -1,
-          unknownSince: null, alerted: false, embedding: null, lastRecognition: 0
+          unknownSince: null, alerted: false, embedding: null, lastRecognition: 0, record: null
         };
         this.tracks.push(best);
       }
     }
-    this.tracks = this.tracks.filter(track => now - track.lastSeen <= this.settings.lostGraceMs);
+    for (const track of this.tracks) {
+      if (track.record && track.lastSeen === now) {
+        track.record.at = now;
+        this.reportActivity(track, now);
+      }
+    }
     this.tick(now);
     return this.tracks;
   }
@@ -61,25 +98,53 @@ export class FaceTracker {
     if (result.person) {
       track.status = 'KNOWN';
       track.unknownSince = null;
+      track.alerted = false;
+      track.record = null;
     } else {
+      if (!track.record) {
+        this.recent = this.recent.filter(record => now - record.at <= this.settings.cooldownMs);
+        const record = this.findRecent(track.embedding, now);
+        if (record) {
+          track.record = record;
+          track.id = record.id;
+          track.alerted = true;
+        }
+      }
       if (track.unknownSince === null) track.unknownSince = now;
       track.status = track.alerted ? 'ALERTED' : 'UNKNOWN_PENDING';
+      if (track.record) {
+        track.record.at = now;
+        this.reportActivity(track, now);
+      }
     }
     this.tick(now);
   }
 
   tick(now = Date.now()) {
-    this.recent = this.recent.filter(alert => now - alert.at < this.settings.cooldownMs);
+    this.recent = this.recent.filter(record => this.tracks.some(track => track.record === record) || now - record.at <= this.settings.cooldownMs);
     for (const track of this.tracks) {
       if (track.status !== 'UNKNOWN_PENDING' || track.alerted || track.unknownSince === null) continue;
       if (now - track.lastSeen > this.settings.lostGraceMs || now - track.unknownSince < this.settings.alertDelayMs) continue;
+      const existing = this.findRecent(track.embedding, now);
+      if (existing) {
+        track.record = existing;
+        track.id = existing.id;
+        track.alerted = true;
+        track.status = 'ALERTED';
+        existing.at = now;
+        this.reportActivity(track, now);
+        continue;
+      }
       track.alerted = true;
       track.status = 'ALERTED';
-      const samePerson = track.embedding && this.recent.some(alert => cosine(track.embedding, alert.embedding) >= 0.72);
-      if (!samePerson) {
-        if (track.embedding) this.recent.push({ embedding: track.embedding, at: now });
-        this.onAlert(track, now);
-      }
+      const record = { id: track.id, embedding: [...track.embedding], at: now, eventId: null, lastReportedAt: now };
+      track.record = record;
+      this.recent.push(record);
+      this.onAlert(track, now, record);
     }
+  }
+
+  flushActivity() {
+    for (const track of this.tracks) this.reportActivity(track, track.lastSeen, true);
   }
 }

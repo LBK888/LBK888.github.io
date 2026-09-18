@@ -1,7 +1,7 @@
-const CACHE = 'face-sentry-v2';
+const CACHE = 'face-sentry-v3';
 const SHELL = [
   './', './index.html', './manifest.json', './css/app.css',
-  './js/app.js', './js/ai.js', './js/config.js', './js/db.js',
+  './js/app.js', './js/ai.js', './js/config.js', './js/db.js', './js/enrollment.js',
   './js/tracker.js', './js/alert.js', './js/outbox.js',
   './vendor/onnxruntime/ort.webgpu.min.js'
 ];
