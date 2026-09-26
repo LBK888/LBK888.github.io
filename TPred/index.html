@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101a22">
+  <title>Sequence Duel — Can a pattern beat you?</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main>
+    <section class="game-section" aria-label="Rock paper scissors game">
+      <div class="game-shell" id="game-shell">
+        <header class="game-top">
+          <div class="brand"><span class="brand-mark" aria-hidden="true">◆</span><span>SEQUENCE<br><b>DUEL</b></span></div>
+          <div class="round-badge"><span class="eyebrow">ROUND</span><strong id="round-label">01 / 24</strong></div>
+          <button class="icon-button" id="settings-button" aria-label="Open settings" title="Settings">⚙</button>
+        </header>
+
+        <div class="camera-card" id="camera-card">
+          <video id="camera" autoplay muted playsinline aria-label="Front camera preview"></video>
+          <div class="camera-grain"></div>
+          <div class="camera-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <div class="camera-topline"><span class="live-dot"></span><span id="camera-state">CAMERA OFF</span><span class="camera-private">LOCAL ONLY</span></div>
+          <div class="camera-placeholder" id="camera-placeholder"><div class="placeholder-hand">✋</div><span id="placeholder-label">PLACE YOUR HAND HERE</span></div>
+          <div class="recognized" id="recognized" aria-live="polite">—</div>
+        </div>
+
+        <div class="arena" aria-live="polite">
+          <div class="arena-heading"><span>YOU</span><span>VS</span><span>AI</span></div>
+          <div class="hands"><div class="hand-display player-hand" id="player-hand">?</div><div class="versus">✦</div><div class="hand-display ai-hand" id="ai-hand">?</div></div>
+          <div class="countdown" id="countdown">READY</div>
+          <div class="phase-indicator" id="phase-indicator">Watch the camera, then throw on the pulse</div>
+          <div class="pulse-track" aria-hidden="true"><span id="pulse-fill"></span></div>
+        </div>
+
+        <div class="hud">
+          <div class="score-strip"><div><span>AI WINS</span><strong id="ai-score">0</strong></div><div><span>YOUR WINS</span><strong id="player-score">0</strong></div><div><span>DRAWS</span><strong id="draw-score">0</strong></div></div>
+          <div class="accuracy-strip"><div><span>LIVE PREDICTION</span><strong id="accuracy-value">—</strong></div><div class="accuracy-baseline"><span>CHANCE</span><strong>33%</strong></div><div><span>LAST 10 AI WINS</span><strong id="recent-value">—</strong></div></div>
+          <div class="game-actions"><button id="main-button" class="primary-button">ENABLE CAMERA <span>↗</span></button><button id="pause-button" class="subtle-button" hidden>PAUSE</button><div id="manual-inline" class="manual-inline" hidden><button data-move="R" aria-label="Throw rock">✊</button><button data-move="P" aria-label="Throw paper">✋</button><button data-move="S" aria-label="Throw scissors">✌️</button></div></div>
+        </div>
+      </div>
+      <div class="scroll-hint"><span>ANALYSIS & LESSON BELOW</span><span>↓</span></div>
+    </section>
+
+    <section class="below" id="analysis">
+      <div class="section-intro"><div><span class="eyebrow amber">01 / THE EXPERIMENT</span><h1>Every throw<br><em>leaves a trace.</em></h1></div><p>Play first. Then inspect exactly what each model knew before your hand appeared. <span lang="zh-Hant">每局都先預測，才看答案。</span></p></div>
+
+      <div class="report-head"><div><span class="eyebrow">SESSION REPORT</span><h2 id="report-title">Your story starts with the first throw.</h2></div><div class="report-buttons"><button id="export-button" class="outline-button">EXPORT JSON ↗</button><button id="delete-button" class="outline-button danger">DELETE DATA</button></div></div>
+      <div class="report-grid">
+        <article class="metric-card"><span>AI WIN RATE</span><strong id="report-ai">—</strong><small>Draws remain in the denominator</small></article>
+        <article class="metric-card"><span>YOUR WIN RATE</span><strong id="report-player">—</strong><small id="report-draw">0 draws</small></article>
+        <article class="metric-card accent-card"><span>PREQUENTIAL ACCURACY</span><strong id="report-accuracy">—</strong><small id="accuracy-count">Collecting evidence</small></article>
+      </div>
+      <p id="report-insight" class="report-insight">Play a few rounds to see what the data suggests.</p>
+
+      <div class="charts-grid"><article class="panel"><div class="panel-heading"><div><span class="eyebrow">PERFORMANCE</span><h3>Win rate over time</h3></div><div class="legend"><span><i class="legend-ai"></i>AI</span><span><i class="legend-you"></i>You</span></div></div><div id="win-chart" class="chart"></div><p id="policy-timeline" class="policy-timeline"></p><p class="panel-note">Cumulative wins ÷ rounds, including draws. <span lang="zh-Hant">平手也計入總回合。</span></p></article><article class="panel"><div class="panel-heading"><div><span class="eyebrow">RECENT FORM</span><h3>Last-10 AI win rate</h3></div></div><div id="rolling-chart" class="chart"></div><p class="panel-note">A short window shows changes, but fluctuates more.</p></article></div>
+
+      <div class="charts-grid lower-grid"><article class="panel"><div class="panel-heading"><div><span class="eyebrow">MODEL LAB</span><h3>Who predicted best?</h3></div></div><div id="model-chart" class="model-chart"></div><p class="panel-note">Scores use probabilities saved before each throw. Highest individual score is exploratory; seven models compete on a very short sequence.</p></article><article class="panel"><div class="panel-heading"><div><span class="eyebrow">YOUR SEQUENCE</span><h3>Patterns & transitions</h3></div></div><div id="sequence-view" class="sequence-view"></div><div id="transition-view" class="transition-view"></div></article></div>
+
+      <div class="replay-section"><div class="panel-heading"><div><span class="eyebrow">ROUND BY ROUND</span><h3>Replay the evidence</h3></div></div><div id="replay-list" class="replay-list"><p class="empty">No rounds yet. Start the game above.</p></div></div>
+
+      <section class="lesson" id="lesson"><div class="section-intro"><div><span class="eyebrow amber">02 / THE LESSON</span><h2>From a hand<br><em>to a genome.</em></h2></div><p>Six short motion stories explain the crucial ideas. Pause each one to discuss it in class. <span lang="zh-Hant">完整推導可搭配紙本講義。</span></p></div><div class="lesson-tabs" role="tablist"><button class="lesson-tab active" data-lesson="0" role="tab" aria-selected="true">01 · FAIRNESS</button><button class="lesson-tab" data-lesson="1" role="tab" aria-selected="false">02 · FREQUENCY</button><button class="lesson-tab" data-lesson="2" role="tab" aria-selected="false">03 · MARKOV</button><button class="lesson-tab" data-lesson="3" role="tab" aria-selected="false">04 · CONTEXT</button><button class="lesson-tab" data-lesson="4" role="tab" aria-selected="false">05 · HIDDEN STATE</button><button class="lesson-tab" data-lesson="5" role="tab" aria-selected="false">06 · FOUNDATION</button></div><div class="lesson-stage"><div class="lesson-motion" id="lesson-motion"></div><div class="lesson-copy"><span class="eyebrow" id="lesson-kicker"></span><h3 id="lesson-title"></h3><p id="lesson-body"></p><p class="translation" id="lesson-zh" lang="zh-Hant"></p><div class="lesson-controls"><button id="lesson-play" class="outline-button">PAUSE</button><span id="lesson-progress">01 / 06</span></div></div></div><div class="bio-grid"><div><b>Rock / Paper / Scissors</b><span>3-symbol alphabet</span></div><div><b>DNA: A / C / G / T</b><span>4-symbol alphabet</span></div><div><b>Protein: 20 amino acids</b><span>larger alphabet, sparser contexts</span></div><div><b>RP → ? / ACG → ?</b><span>next-symbol prediction</span></div></div><p class="lesson-footnote">The analogy is mathematical. DNA evolution, biological selection, and human choices are different processes. A fixed-prior HMM here illustrates hidden states; the context mixture is not a full CTW implementation. TabPFN is optional and does not update pretrained neural-network weights during a session.</p></section>
+      <footer>SEQUENCE DUEL <span>CAMERA FRAMES STAY ON YOUR DEVICE · ENGLISH INTERFACE / 中文補充</span></footer>
+    </section>
+  </main>
+
+  <div id="settings-dialog" role="dialog" aria-modal="true" aria-label="Settings" hidden><div class="settings-panel"><div class="dialog-head"><div><span class="eyebrow">CONTROL ROOM</span><h2>Settings</h2></div><button class="icon-button" id="close-settings" aria-label="Close settings">×</button></div><div class="settings-content"><label>Session length <select id="rounds-setting"><option value="20">20 rounds</option><option value="24" selected>24 rounds</option><option value="30">30 rounds</option></select></label><label>Capture window <select id="capture-setting"><option value="900">Fast · 0.9 s</option><option value="1200" selected>Balanced · 1.2 s</option><option value="1700">Relaxed · 1.7 s</option></select></label><label>Input mode <select id="input-setting"><option value="camera">Camera gesture</option><option value="manual">Manual demo buttons</option></select></label><label class="toggle-line"><input type="checkbox" id="sound-setting" checked> Audible countdown</label><div class="backend-settings"><label for="api-setting">Backend URL</label><input id="api-setting" type="url" inputmode="url" autocapitalize="off" autocomplete="url" spellcheck="false" placeholder="https://your-tunnel.ngrok-free.app"><button id="api-check" type="button" class="outline-button">CHECK CONNECTION</button><p id="api-status" class="save-status" role="status">Local play is available without a backend.</p><p class="backend-help">Paste the HTTPS ngrok URL from the host PC. This device saves only the URL for next time.</p></div><label class="toggle-line"><input type="checkbox" id="save-setting"> Save anonymous session on the PC backend</label><p id="save-status" class="save-status">Local only. Server storage is off.</p><div class="settings-note"><b>Privacy</b><p>Only R/P/S, scores and model snapshots are saved when server storage is on. Camera frames and audio never leave this browser. Delete Data removes the current record.</p></div><div class="settings-note"><b>How to play</b><p>Keep your hand out of the frame until the countdown. Show rock, paper or scissors on SHOOT. Remove your hand after the result to start the next round automatically. A missed gesture retries the same round.</p></div><div class="manual-buttons" id="manual-buttons" hidden><p>Demo input — use after SHOOT</p><div><button data-move="R">✊ Rock</button><button data-move="P">✋ Paper</button><button data-move="S">✌️ Scissors</button></div></div></div></div></div>
+
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
