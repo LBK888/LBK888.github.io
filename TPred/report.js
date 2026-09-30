@@ -1,8 +1,10 @@
-import { MOVES, MODEL_KEYS, MODEL_NAMES, predictionCredit, summary, hmmState } from './models.js';
+import { MOVES, MODEL_KEYS, MODEL_NAMES, summary, hmmState, modelMetrics, actedProbability } from './models.js';
 
 const $ = id => document.getElementById(id);
 const percent = value => `${(value * 100).toFixed(1)}%`;
 const symbols = { R: '✊', P: '✋', S: '✌️' };
+const REPLAY_LIMIT = 50;
+const policyName = key => !key || key === 'ensemble' ? 'Live ensemble' : MODEL_NAMES[key] ?? key;
 const safe = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 function chart(series, colors, maxRounds, rolling = false) {
@@ -17,20 +19,6 @@ function chart(series, colors, maxRounds, rolling = false) {
   }).join('');
   const labels = [1, Math.ceil(maxRounds/2), maxRounds].filter((v, i, a) => a.indexOf(v) === i).map(v => `<text x="${x(v-1)}" y="${h-3}" text-anchor="middle">${v}</text>`).join('');
   return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${rolling ? 'Rolling ten-round' : 'Cumulative'} win rate by round">${grid}${lines}${labels}</svg>`;
-}
-
-function modelMetrics(history, key) {
-  const rows = history.filter(row => row.models?.[key]);
-  if (!rows.length) return null;
-  let correct = 0, logLoss = 0, brier = 0;
-  for (const row of rows) {
-    const probability = row.models[key];
-    const observed = MOVES.indexOf(row.player);
-    correct += predictionCredit(probability, row.player);
-    logLoss -= Math.log(Math.max(0.001, probability[observed]));
-    brier += probability.reduce((sum, p, i) => sum + (p - Number(i === observed)) ** 2, 0);
-  }
-  return { accuracy: correct / rows.length, correct, total: rows.length, logLoss: logLoss / rows.length, brier: brier / rows.length };
 }
 
 function transitionText(history) {
@@ -48,10 +36,10 @@ function replayRow(row) {
   const result = row.result === 'ai' ? 'AI WIN' : row.result === 'player' ? 'YOU WIN' : 'DRAW';
   const probabilities = Object.entries(row.models ?? {}).map(([key, p]) => `<div class="prob-line"><b>${safe(MODEL_NAMES[key] ?? key)}</b><span>R ${Math.round(p[0]*100)}%</span><span>P ${Math.round(p[1]*100)}%</span><span>S ${Math.round(p[2]*100)}%</span></div>`).join('');
   const p = row.ensemble;
-  return `<details class="replay-row"><summary><b>#${String(row.round).padStart(2,'0')}</b><span>YOU ${symbols[row.player]}</span><span>AI ${symbols[row.ai]}</span><span>${result}</span></summary><div class="replay-detail"><div><b>Prior sequence:</b> ${safe(row.historyBefore || 'none')}</div><div><b>Policy:</b> ${safe(row.mode)} · <b>Locked:</b> ${safe(row.lockedAt)} · <b>Observed:</b> ${safe(row.observedAt)}</div>${row.serverLockedAt ? `<div><b>Server received commitment:</b> ${safe(row.serverLockedAt)}</div>` : ''}<div><b>Commit SHA-256:</b> <code>${safe(row.commitment)}</code></div><div><b>Nonce:</b> <code>${safe(row.nonce)}</code></div><button class="verify-button" data-round="${row.round}">VERIFY COMMIT</button> <span class="verify-result"></span><div><b>Gesture confidence:</b> ${Math.round(row.confidence*100)}%</div><h4>Probabilities before your throw</h4>${probabilities}<div class="prob-line"><b>Live ensemble</b><span>R ${Math.round(p[0]*100)}%</span><span>P ${Math.round(p[1]*100)}%</span><span>S ${Math.round(p[2]*100)}%</span></div></div></details>`;
+  return `<details class="replay-row"><summary><b>#${String(row.round).padStart(2,'0')}</b><span>YOU ${symbols[row.player]}</span><span>AI ${symbols[row.ai]}</span><span>${result}</span></summary><div class="replay-detail"><div><b>Prior sequence:</b> ${safe(row.historyBefore || 'none')}</div><div><b>AI used:</b> ${safe(policyName(row.policy))} · <b>Policy:</b> ${safe(row.mode)} · <b>Locked:</b> ${safe(row.lockedAt)} · <b>Observed:</b> ${safe(row.observedAt)}</div>${row.serverLockedAt ? `<div><b>Server received commitment:</b> ${safe(row.serverLockedAt)}</div>` : ''}<div><b>Commit SHA-256:</b> <code>${safe(row.commitment)}</code></div><div><b>Nonce:</b> <code>${safe(row.nonce)}</code></div><button class="verify-button" data-round="${row.round}">VERIFY COMMIT</button> <span class="verify-result"></span><div><b>Gesture confidence:</b> ${Math.round(row.confidence*100)}%</div><h4>Probabilities before your throw</h4>${probabilities}<div class="prob-line"><b>Live ensemble</b><span>R ${Math.round(p[0]*100)}%</span><span>P ${Math.round(p[1]*100)}%</span><span>S ${Math.round(p[2]*100)}%</span></div></div></details>`;
 }
 
-export function renderReport(history) {
+export function renderReport(history, policy = 'ensemble') {
   const stats = summary(history);
   $('report-title').textContent = history.length ? `${history.length} ${history.length === 1 ? 'throw' : 'throws'}. One evolving sequence.` : 'Your story starts with the first throw.';
   $('report-ai').textContent = history.length ? percent(stats.aiRate) : '—';
@@ -59,8 +47,8 @@ export function renderReport(history) {
   $('report-draw').textContent = `${stats.draws} draws`;
   $('report-accuracy').textContent = stats.accuracy.total >= 5 ? percent(stats.accuracy.rate) : '—';
   $('accuracy-count').textContent = stats.accuracy.total >= 5 ? `${stats.accuracy.correct.toFixed(1)} / ${stats.accuracy.total} tie-adjusted · chance 33.3%` : `Collecting evidence · ${stats.accuracy.total}/5 rounds`;
-  const meanLogLoss = history.length ? history.reduce((sum, row) => sum - Math.log(Math.max(0.001, row.ensemble[MOVES.indexOf(row.player)])), 0) / history.length : Math.log(3);
-  $('report-insight').textContent = history.length < 10 ? 'Early evidence is noisy. Keep playing before interpreting the pattern. / 前幾局樣本不足。' : meanLogLoss < Math.log(3) - 0.1 && stats.accuracy.rate > 0.45 ? 'This short sequence shows some predictability, but 24 rounds cannot prove a stable habit. Try another session. / 可能有規律，仍需重複驗證。' : 'No stable pattern detected in this short session. Near-random play is a valid result. / 未偵測到穩定規律，也是重要結果。';
+  const meanLogLoss = history.length ? history.reduce((sum, row) => sum - Math.log(Math.max(0.001, actedProbability(row)[MOVES.indexOf(row.player)])), 0) / history.length : Math.log(3);
+  $('report-insight').textContent = history.length < 10 ? 'Early evidence is noisy. Keep playing before interpreting the pattern. / 前幾局樣本不足。' : meanLogLoss < Math.log(3) - 0.1 && stats.accuracy.rate > 0.45 ? `This sequence shows some predictability, but ${history.length} rounds cannot prove a stable habit. Try another session. / 可能有規律，仍需重複驗證。` : 'No stable pattern detected in this short session. Near-random play is a valid result. / 未偵測到穩定規律，也是重要結果。';
 
   const aiSeries = [], playerSeries = [], rollingSeries = [];
   let ai = 0, player = 0;
@@ -72,7 +60,8 @@ export function renderReport(history) {
   });
   $('win-chart').innerHTML = chart([aiSeries, playerSeries], ['#c76e31', '#4a8b92'], history.length);
   $('rolling-chart').innerHTML = chart([rollingSeries], ['#c76e31'], history.length, true);
-  const changes = history.filter((row, i) => i === 0 || row.mode !== history[i-1].mode).map(row => `R${row.round} ${row.mode}`);
+  const policyLabel = row => row.mode === 'leader' ? `leader ${policyName(row.policy)}` : row.mode;
+  const changes = history.filter((row, i) => i === 0 || policyLabel(row) !== policyLabel(history[i-1])).map(row => `R${row.round} ${policyLabel(row)}`);
   $('policy-timeline').textContent = history.length ? `AI policy: ${changes.join(' · ')}` : 'AI policy changes will appear here.';
 
   const modelKeys = history.some(row => row.models?.tabpfn) ? [...MODEL_KEYS, 'tabpfn'] : MODEL_KEYS;
@@ -80,9 +69,14 @@ export function renderReport(history) {
     const metric = modelMetrics(history, key);
     if (!metric) return '';
     if (metric.total < 5) return `<div class="model-row"><span>${safe(MODEL_NAMES[key] ?? 'TabPFN')}</span><div class="bar"></div><strong>—</strong><small>Collecting ${metric.total}/5 predictions</small></div>`;
-    return `<div class="model-row ${key === 'random' ? '' : 'primary'}"><span>${safe(MODEL_NAMES[key] ?? 'TabPFN')}</span><div class="bar"><i style="width:${Math.round(metric.accuracy*100)}%"></i></div><strong>${Math.round(metric.accuracy*100)}%</strong><small>${metric.correct.toFixed(1)}/${metric.total} · log loss ${metric.logLoss.toFixed(2)} · Brier ${metric.brier.toFixed(2)}</small></div>`;
+    const tag = key === policy ? ' <em class="model-tag" title="The AI is playing this model">AI</em>' : '';
+    return `<div class="model-row ${key === 'random' ? '' : 'primary'}"><span>${safe(MODEL_NAMES[key] ?? 'TabPFN')}${tag}</span><div class="bar"><i style="width:${Math.round(metric.accuracy*100)}%"></i></div><strong>${Math.round(metric.accuracy*100)}%</strong><small>${metric.correct.toFixed(1)}/${metric.total} · log loss ${metric.logLoss.toFixed(2)} · Brier ${metric.brier.toFixed(2)}</small></div>`;
   }).join('') + '<p class="panel-note">Prequential, tie-adjusted top-choice scores. Equal probabilities split credit among tied choices. A higher short-run score does not prove a model is better.</p>' : `<p class="empty">Collecting model evidence · ${history.length}/5 rounds.</p>`;
   $('sequence-view').innerHTML = history.length ? history.map(row => `<span title="${safe(row.player)}">${safe(row.player)}</span>`).join('') : '<p class="empty">Your R / P / S sequence will appear here.</p>';
   $('transition-view').innerHTML = transitionText(history);
-  $('replay-list').innerHTML = history.length ? [...history].reverse().map(replayRow).join('') : '<p class="empty">No rounds yet. Start the game above.</p>';
+  // Long sessions keep the full record in memory and in the JSON export; only the latest rows are drawn.
+  const hidden = Math.max(0, history.length - REPLAY_LIMIT);
+  $('replay-list').innerHTML = history.length ? history.slice(hidden).reverse().map(replayRow).join('') +
+    (hidden ? `<p class="empty">Showing the latest ${REPLAY_LIMIT} of ${history.length} rounds. Export JSON for the full record.</p>` : '')
+    : '<p class="empty">No rounds yet. Start the game above.</p>';
 }

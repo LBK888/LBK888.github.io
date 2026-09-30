@@ -1,4 +1,4 @@
-import { MOVES, NAMES, GLYPHS, predictModels, ensemble, strategy, chooseAction, resultFor, summary, MODEL_NAMES } from './models.js';
+import { MOVES, NAMES, GLYPHS, SHORT_NAMES, MODEL_NAMES, predictModels, ensemble, strategy, chooseAction, resultFor, summary, aiPolicy, leadingModel, actedProbability } from './models.js';
 import { CameraInput } from './camera.js';
 import { renderReport } from './report.js';
 import { initLesson } from './tutorial.js';
@@ -8,15 +8,15 @@ const $ = id => document.getElementById(id);
 const els = Object.fromEntries([
   'camera','camera-card','camera-state','camera-placeholder','placeholder-label','recognized','round-label','player-hand','ai-hand',
   'countdown','phase-indicator','pulse-fill','ai-score','player-score','draw-score','accuracy-value','recent-value',
-  'main-button','pause-button','manual-inline','settings-dialog','settings-button','close-settings','rounds-setting',
+  'main-button','pause-button','end-button','manual-inline','settings-dialog','settings-button','close-settings','rounds-setting',
   'capture-setting','input-setting','sound-setting','save-setting','save-status','manual-buttons',
-  'api-setting','api-check','api-status',
+  'api-setting','api-check','api-status','api-indicator','policy-cell','policy-value','result-mark',
 ].map(id => [id, $(id)]));
 
 const game = {
   state: 'idle', history: [], pending: null, sessionId: crypto.randomUUID(), total: 24,
   captureMs: 1200, manual: false, save: false, serverSession: false, sound: true,
-  token: 0, clearSince: null, readings: [], external: null, externalFor: -1,
+  token: 0, clearSince: null, holdUntil: 0, readings: [], external: null, externalFor: -1,
 };
 let camera = null;
 let audioContext = null;
@@ -30,9 +30,24 @@ function setStatus(title, subtitle, className = '') {
   els['phase-indicator'].textContent = subtitle;
 }
 
+// The model behind the round on screen: the locked round, the one just revealed, or the next one.
+function currentPolicy() {
+  if (game.pending) return game.pending.policy;
+  if (game.state === 'reveal') return game.history.at(-1)?.policy ?? 'ensemble';
+  return aiPolicy(game.history, game.total);
+}
+
+function showMark(result) { els['result-mark'].dataset.result = result; els['result-mark'].hidden = false; }
+function hideMark() { els['result-mark'].hidden = true; }
+
 function render() {
   const s = summary(game.history);
-  els['round-label'].textContent = `${String(Math.min(s.rounds + 1, game.total)).padStart(2, '0')} / ${game.total}`;
+  const round = String(s.rounds + 1).padStart(2, '0');
+  els['round-label'].textContent = s.rounds < game.total ? `${round} / ${game.total}` : `${round} / ∞`;
+  const policy = currentPolicy();
+  els['policy-value'].textContent = SHORT_NAMES[policy] ?? policy;
+  els['policy-cell'].title = policy === 'ensemble' ? 'Weighted mix of all models' : `${MODEL_NAMES[policy]}: best record so far`;
+  els['policy-cell'].classList.toggle('leader', policy !== 'ensemble');
   els['ai-score'].textContent = s.ai;
   els['player-score'].textContent = s.player;
   els['draw-score'].textContent = s.draws;
@@ -40,6 +55,7 @@ function render() {
   els['recent-value'].textContent = s.rounds ? percent(s.recentAiRate) : '—';
   els['main-button'].hidden = !['idle', 'error', 'paused', 'finished'].includes(game.state);
   els['pause-button'].hidden = !['clear', 'countdown', 'capture', 'reveal'].includes(game.state);
+  els['end-button'].hidden = game.state !== 'paused';
   els['manual-inline'].hidden = !(game.manual && game.state === 'capture');
   els['main-button'].innerHTML = ({ idle: 'ENABLE CAMERA <span>↗</span>', error: 'TRY AGAIN <span>↗</span>', paused: 'RESUME <span>→</span>', finished: 'VIEW REPORT <span>↓</span>' })[game.state] ?? '';
   if (game.manual && game.state === 'idle') els['main-button'].innerHTML = 'START DEMO <span>↗</span>';
@@ -48,7 +64,7 @@ function render() {
   els['input-setting'].disabled = !['idle', 'error', 'finished'].includes(game.state);
   els['save-setting'].disabled = game.history.length > 0 || !!game.pending;
   els['api-setting'].disabled = !['idle', 'error'].includes(game.state) || game.serverSession;
-  renderReport(game.history);
+  renderReport(game.history, policy);
 }
 
 function pulse(fraction) { els['pulse-fill'].style.width = `${Math.max(0, Math.min(100, fraction * 100))}%`; }
@@ -79,16 +95,17 @@ async function prepareRound() {
   const models = predictModels(game.history);
   const external = game.externalFor === game.history.length ? game.external : null;
   const mixed = ensemble(game.history, models, external);
-  const mode = strategy(game.history, mixed.probability);
+  const policy = aiPolicy(game.history, game.total);
+  const mode = policy === 'ensemble' ? strategy(game.history, mixed.probability) : 'leader';
   const predictedAt = new Date().toISOString();
-  const ai = chooseAction(mixed.probability, mode);
+  const ai = chooseAction(policy === 'ensemble' ? mixed.probability : models[policy], mode);
   const round = game.history.length + 1;
   const nonce = randomBytes();
   const commitment = await hashCommit(game.sessionId, round, ai, nonce);
   const pending = {
     sessionId: game.sessionId, round, ai, nonce, commitment, predictedAt, lockedAt: new Date().toISOString(),
     historyBefore: game.history.map(row => row.player).join(''),
-    models: structuredClone(models), ensemble: [...mixed.probability], weights: { ...mixed.weights }, mode,
+    models: structuredClone(models), ensemble: [...mixed.probability], weights: { ...mixed.weights }, mode, policy,
   };
   game.pending = pending;
   if (game.save && game.serverSession) {
@@ -104,18 +121,30 @@ async function prepareRound() {
   return pending;
 }
 
+// A fresh round whose leading model differs from the one that played last round.
+function modelSwitch() {
+  const last = game.history.at(-1);
+  if (game.pending || !last || game.history.length < game.total) return null;
+  const leader = leadingModel(game.history);
+  return leader && leader.key !== last.policy ? leader : null;
+}
+
 function enterClear(message = 'MOVE HAND OUT TO RESET') {
-  if (game.history.length >= game.total) { finish(); return; }
   game.state = 'clear'; game.clearSince = null; game.readings = [];
   els['player-hand'].textContent = '?'; els['ai-hand'].textContent = '?';
-  setStatus('READY', game.manual ? 'Next countdown starts automatically' : message);
+  const leader = modelSwitch();
+  // Hold a switch announcement long enough to read before the next countdown.
+  game.holdUntil = leader ? Date.now() + 1500 : 0;
+  if (leader) setStatus(`AI → ${SHORT_NAMES[leader.key]}`, `Best record so far · ${percent(leader.accuracy)} predicted${game.manual ? '' : ' · remove hand'}`);
+  else setStatus('READY', game.manual ? 'Next countdown starts automatically' : message);
   pulse(0); render();
-  if (game.manual) setTimeout(() => { if (game.state === 'clear') beginCountdown(); }, 1100);
+  if (game.manual) setTimeout(() => { if (game.state === 'clear') beginCountdown(); }, leader ? 2400 : 1100);
 }
 
 async function beginCountdown() {
   if (game.state !== 'clear') return;
   game.state = 'locking';
+  hideMark();
   const token = ++game.token;
   setStatus('LOCKING', 'AI chooses before your hand appears');
   pulse(0); render();
@@ -167,12 +196,14 @@ async function acceptMove(player, confidence, observedAt) {
   game.state = 'reveal';
   els['player-hand'].textContent = GLYPHS[player];
   els['ai-hand'].textContent = GLYPHS[pending.ai];
-  const peak = Math.max(...pending.ensemble);
-  const favorites = pending.ensemble.filter(p => Math.abs(p - peak) < 1e-9).length;
-  const forecast = favorites === 1 ? `AI forecast ${NAMES[MOVES[pending.ensemble.indexOf(peak)]]}` : 'AI forecast: no favorite';
+  const acted = actedProbability(pending);
+  const peak = Math.max(...acted);
+  const favorites = acted.filter(p => Math.abs(p - peak) < 1e-9).length;
+  const forecast = favorites === 1 ? `AI forecast ${NAMES[MOVES[acted.indexOf(peak)]]}` : 'AI forecast: no favorite';
   setStatus(result === 'ai' ? 'AI WINS' : result === 'player' ? 'YOU WIN' : 'DRAW',
     `${NAMES[player]}  ·  ${NAMES[pending.ai]}  |  ${forecast}`,
     `result-${result}`);
+  showMark(result);
   pulse(0); tone(result === 'player' ? 970 : result === 'ai' ? 400 : 670, 0.2);
   render();
   const completedRounds = game.history.length;
@@ -180,7 +211,7 @@ async function acceptMove(player, confidence, observedAt) {
   const token = ++game.token;
   await delay(1200);
   if (token !== game.token || game.state !== 'reveal') return;
-  if (game.history.length >= game.total) finish(); else enterClear();
+  enterClear();
 }
 
 function onReading(reading) {
@@ -188,7 +219,7 @@ function onReading(reading) {
   if (game.state === 'clear') {
     if (reading.hands === 0) {
       game.clearSince ??= reading.time;
-      if (reading.time - game.clearSince >= 400) beginCountdown();
+      if (reading.time - game.clearSince >= 400 && reading.time >= game.holdUntil) beginCountdown();
     } else game.clearSince = null;
   } else if (game.state === 'capture' && reading.time >= game.captureStarted) {
     game.readings.push(reading);
@@ -235,12 +266,14 @@ function pause() {
   if (!['clear', 'countdown', 'capture', 'reveal', 'locking'].includes(game.state)) return;
   game.token++;
   game.state = 'paused';
-  setStatus('PAUSED', 'Resume without losing this round');
+  hideMark();
+  setStatus('PAUSED', 'Resume, or end the session to turn the camera off');
   pulse(0); render();
 }
 
 function finish() {
   game.state = 'finished'; game.token++;
+  hideMark();
   camera?.stop(); camera = null;
   els['camera-card'].classList.remove('live');
   els['camera-placeholder'].hidden = false;
@@ -281,6 +314,7 @@ async function requestExternalPrediction(afterRound) {
 
 els['main-button'].addEventListener('click', start);
 els['pause-button'].addEventListener('click', pause);
+els['end-button'].addEventListener('click', () => { if (game.state === 'paused') finish(); });
 els['settings-button'].addEventListener('click', () => { if (['clear', 'countdown', 'capture', 'reveal', 'locking'].includes(game.state)) pause(); els['settings-dialog'].hidden = false; els['close-settings'].focus(); });
 els['close-settings'].addEventListener('click', () => { els['settings-dialog'].hidden = true; els['settings-button'].focus(); });
 els['settings-dialog'].addEventListener('click', event => { if (event.target === els['settings-dialog']) els['settings-dialog'].hidden = true; });
@@ -290,8 +324,25 @@ els['rounds-setting'].addEventListener('change', () => { game.total = Number(els
 els['capture-setting'].addEventListener('change', () => { game.captureMs = Number(els['capture-setting'].value); });
 els['sound-setting'].addEventListener('change', () => { game.sound = els['sound-setting'].checked; });
 els['save-setting'].addEventListener('change', () => { els['save-status'].textContent = els['save-setting'].checked ? 'Server connection will be checked when play starts.' : 'Local only. Server storage is off.'; });
+const API_ICONS = {
+  checking: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="38 19"/></svg>',
+  ok: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="currentColor"/><path d="M6.5 12.5l3.6 3.6L17.5 8.7" fill="none" stroke="#0b171c" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  fail: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="currentColor"/><path d="M8 8l8 8M16 8l-8 8" fill="none" stroke="#0b171c" stroke-width="2.8" stroke-linecap="round"/></svg>',
+};
+const API_LABELS = { checking: 'Checking connection', ok: 'Connected', fail: 'Connection failed' };
+function setApiIndicator(state) {
+  const indicator = els['api-indicator'];
+  indicator.hidden = !state;
+  els['api-status'].dataset.state = state ?? '';
+  if (!state) return;
+  indicator.dataset.state = state;
+  indicator.innerHTML = API_ICONS[state];
+  indicator.setAttribute('aria-label', API_LABELS[state]);
+}
+
 els['api-setting'].value = getApiBase();
 els['api-setting'].addEventListener('change', () => {
+  setApiIndicator(null);
   try {
     const origin = setApiBase(els['api-setting'].value);
     els['api-setting'].value = origin;
@@ -303,9 +354,11 @@ els['api-check'].addEventListener('click', async () => {
     const origin = setApiBase(els['api-setting'].value);
     els['api-setting'].value = origin;
     els['api-status'].textContent = 'Connecting…';
+    setApiIndicator('checking');
     await checkApiHealth();
     els['api-status'].textContent = `Connected to ${origin}.`;
-  } catch (error) { els['api-status'].textContent = `Connection failed: ${error.message}`; }
+    setApiIndicator('ok');
+  } catch (error) { els['api-status'].textContent = `Connection failed: ${error.message}`; setApiIndicator('fail'); }
 });
 els['manual-buttons'].querySelectorAll('[data-move]').forEach(button => button.addEventListener('click', () => {
   if (game.state === 'capture' && game.manual) { els['settings-dialog'].hidden = true; acceptMove(button.dataset.move, 1, Date.now()); }
@@ -332,7 +385,7 @@ $('delete-button').addEventListener('click', async () => {
   game.token++;
   camera?.stop(); camera = null;
   if (game.serverSession) { try { await apiFetch(`/api/sessions/${game.sessionId}`, { method: 'DELETE' }); } catch {} }
-  game.history = []; game.pending = null; game.state = 'idle'; game.serverSession = false;
+  game.history = []; game.pending = null; game.state = 'idle'; game.serverSession = false; hideMark();
   game.sessionId = crypto.randomUUID(); game.external = null; game.externalFor = -1;
   els['save-status'].textContent = 'Local only. Server storage is off.'; els['save-setting'].checked = false;
   els['camera-card'].classList.remove('live'); els['camera-placeholder'].hidden = false;

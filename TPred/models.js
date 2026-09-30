@@ -7,6 +7,11 @@ export const MODEL_NAMES = {
   context: 'Variable context', hmm: 'Fixed-prior HMM',
 };
 export const MODEL_KEYS = Object.keys(MODEL_NAMES);
+// Compact labels for the in-game HUD.
+export const SHORT_NAMES = {
+  ensemble: 'ENSEMBLE', random: 'RANDOM', frequency: 'FREQUENCY', markov1: 'MARKOV 1',
+  outcome: 'OUTCOME', markov2: 'MARKOV 2', context: 'CONTEXT', hmm: 'HMM', tabpfn: 'TABPFN',
+};
 const UNIFORM = [1 / 3, 1 / 3, 1 / 3];
 const index = move => MOVES.indexOf(move);
 const normal = counts => {
@@ -111,9 +116,47 @@ export function validProbability(value) {
 }
 
 export function predictAccuracy(history, key = 'ensemble') {
-  const eligible = history.filter(row => row[key] && validProbability(row[key]));
-  const correct = eligible.reduce((sum, row) => sum + predictionCredit(row[key], row.player), 0);
+  const pick = typeof key === 'function' ? key : row => row[key];
+  const eligible = history.filter(row => validProbability(pick(row)));
+  const correct = eligible.reduce((sum, row) => sum + predictionCredit(pick(row), row.player), 0);
   return { correct, total: eligible.length, rate: eligible.length ? correct / eligible.length : null };
+}
+
+export function modelMetrics(history, key) {
+  const rows = history.filter(row => row.models?.[key]);
+  if (!rows.length) return null;
+  let correct = 0, logLoss = 0, brier = 0;
+  for (const row of rows) {
+    const probability = row.models[key];
+    const observed = index(row.player);
+    correct += predictionCredit(probability, row.player);
+    logLoss -= Math.log(Math.max(0.001, probability[observed]));
+    brier += probability.reduce((sum, p, i) => sum + (p - Number(i === observed)) ** 2, 0);
+  }
+  return { accuracy: correct / rows.length, correct, total: rows.length, logLoss: logLoss / rows.length, brier: brier / rows.length };
+}
+
+// Follow the leader: best prequential top-choice score so far, ties broken by log loss.
+// Optional TabPFN is excluded because it may not be ready before the next commitment.
+export function leadingModel(history) {
+  let best = null;
+  for (const key of MODEL_KEYS) {
+    const metric = modelMetrics(history, key);
+    if (!metric) continue;
+    if (!best || metric.accuracy > best.accuracy + 1e-9 ||
+      (metric.accuracy > best.accuracy - 1e-9 && metric.logLoss < best.logLoss)) best = { key, ...metric };
+  }
+  return best;
+}
+
+// The ensemble plays the first `ensembleRounds`; afterwards the current leader plays, re-chosen every round.
+export function aiPolicy(history, ensembleRounds) {
+  return history.length < ensembleRounds ? 'ensemble' : leadingModel(history)?.key ?? 'ensemble';
+}
+
+// The probabilities the AI actually acted on in a round.
+export function actedProbability(row) {
+  return row.policy && row.policy !== 'ensemble' && row.models?.[row.policy] ? row.models[row.policy] : row.ensemble;
 }
 
 export function predictionCredit(probability, observed) {
@@ -134,15 +177,18 @@ export function strategy(history, probability) {
   return 'observe';
 }
 
-export function bestResponse(probability) {
+export function bestResponse(probability, random = Math.random) {
   const [r, p, s] = probability;
   const payoff = [s - p, r - s, p - r];
-  return MOVES[payoff.indexOf(Math.max(...payoff))];
+  const peak = Math.max(...payoff);
+  const best = MOVES.filter((_, i) => peak - payoff[i] < 1e-9);
+  // Break ties randomly so an uninformative forecast does not always yield Rock.
+  return best.length === 1 ? best[0] : best[Math.floor(random() * best.length)];
 }
 
 export function chooseAction(probability, mode, random = Math.random) {
-  const exploitChance = { observe: 0, adapt: 0.7, exploit: 0.95 }[mode];
-  return random() < exploitChance ? bestResponse(probability) : MOVES[Math.floor(random() * 3)];
+  const exploitChance = { observe: 0, adapt: 0.7, exploit: 0.95, leader: 1 }[mode];
+  return random() < exploitChance ? bestResponse(probability, random) : MOVES[Math.floor(random() * 3)];
 }
 
 export function resultFor(player, ai) {
@@ -158,6 +204,6 @@ export function summary(history) {
     aiRate: history.length ? count('ai') / history.length : 0,
     playerRate: history.length ? count('player') / history.length : 0,
     recentAiRate: recent.length ? recent.filter(row => row.result === 'ai').length / recent.length : 0,
-    accuracy: predictAccuracy(history),
+    accuracy: predictAccuracy(history, actedProbability),
   };
 }
