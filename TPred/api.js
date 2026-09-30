@@ -10,10 +10,11 @@ export function normalizeApiBase(value) {
   if (url.protocol !== 'https:' && !(local && url.protocol === 'http:')) {
     throw new Error('Use an HTTPS backend URL (HTTP is allowed for localhost).');
   }
-  if (url.username || url.password || url.search || url.hash || url.pathname !== '/') {
-    throw new Error('Enter only the backend origin, without a path or credentials.');
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error('Enter only the backend URL, without a query or credentials.');
   }
-  return url.origin;
+  // A path is the reverse-proxy prefix, e.g. https://domain.ngrok-free.app/tpred.
+  return url.origin + url.pathname.replace(/\/+$/, '');
 }
 
 function initialBase() {
