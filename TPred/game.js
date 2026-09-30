@@ -1,4 +1,4 @@
-import { MOVES, NAMES, GLYPHS, SHORT_NAMES, MODEL_NAMES, predictModels, ensemble, strategy, chooseAction, resultFor, summary, aiPolicy, leadingModel, actedProbability } from './models.js';
+import { MOVES, NAMES, GLYPHS, MODEL_KEYS, RECENT_ROUNDS, predictModels, ensemble, strategy, chooseAction, resultFor, summary, aiPolicy, leadingModel, actedProbability, forecastOf, modelLabel, isAnti, baseModel } from './models.js';
 import { CameraInput } from './camera.js';
 import { renderReport } from './report.js';
 import { initLesson } from './tutorial.js';
@@ -16,12 +16,13 @@ const els = Object.fromEntries([
 const game = {
   state: 'idle', history: [], pending: null, sessionId: crypto.randomUUID(), total: 24,
   captureMs: 1200, manual: false, save: false, serverSession: false, sound: true,
-  token: 0, clearSince: null, holdUntil: 0, readings: [], external: null, externalFor: -1,
+  token: 0, clearSince: null, readings: [], external: null, externalFor: -1, externalRequest: null, announcedRound: 0,
 };
 let camera = null;
 let audioContext = null;
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const percent = rate => `${Math.round(rate * 100)}%`;
+const signed = rate => `${rate < 0 ? '−' : '+'}${Math.round(Math.abs(rate) * 100)}%`;
 const randomBytes = () => crypto.randomUUID();
 
 function setStatus(title, subtitle, className = '') {
@@ -45,8 +46,10 @@ function render() {
   const round = String(s.rounds + 1).padStart(2, '0');
   els['round-label'].textContent = s.rounds < game.total ? `${round} / ${game.total}` : `${round} / ∞`;
   const policy = currentPolicy();
-  els['policy-value'].textContent = SHORT_NAMES[policy] ?? policy;
-  els['policy-cell'].title = policy === 'ensemble' ? 'Weighted mix of all models' : `${MODEL_NAMES[policy]}: best record so far`;
+  const label = modelLabel(policy, true);
+  els['policy-value'].textContent = label;
+  els['policy-cell'].title = policy === 'ensemble' ? 'Weighted mix of all models' : `${modelLabel(policy)}: best AI net score over the last ${RECENT_ROUNDS} rounds`;
+  els['policy-cell'].classList.toggle('long', label.length > 10);
   els['policy-cell'].classList.toggle('leader', policy !== 'ensemble');
   els['ai-score'].textContent = s.ai;
   els['player-score'].textContent = s.player;
@@ -90,15 +93,18 @@ async function hashCommit(sessionId, round, ai, nonce) {
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
+// Models with a prediction for the next round; optional TabPFN only when its answer arrived.
+const availableModels = models => models.tabpfn ? [...MODEL_KEYS, 'tabpfn'] : MODEL_KEYS;
+
 async function prepareRound() {
   if (game.pending) return game.pending;
   const models = predictModels(game.history);
   const external = game.externalFor === game.history.length ? game.external : null;
   const mixed = ensemble(game.history, models, external);
-  const policy = aiPolicy(game.history, game.total);
+  const policy = aiPolicy(game.history, game.total, availableModels(models));
   const mode = policy === 'ensemble' ? strategy(game.history, mixed.probability) : 'leader';
   const predictedAt = new Date().toISOString();
-  const ai = chooseAction(policy === 'ensemble' ? mixed.probability : models[policy], mode);
+  const ai = chooseAction(policy === 'ensemble' ? mixed.probability : forecastOf(models, policy), mode);
   const round = game.history.length + 1;
   const nonce = randomBytes();
   const commitment = await hashCommit(game.sessionId, round, ai, nonce);
@@ -121,24 +127,32 @@ async function prepareRound() {
   return pending;
 }
 
-// A fresh round whose leading model differs from the one that played last round.
-function modelSwitch() {
-  const last = game.history.at(-1);
-  if (game.pending || !last || game.history.length < game.total) return null;
-  const leader = leadingModel(game.history);
-  return leader && leader.key !== last.policy ? leader : null;
-}
-
 function enterClear(message = 'MOVE HAND OUT TO RESET') {
   game.state = 'clear'; game.clearSince = null; game.readings = [];
   els['player-hand'].textContent = '?'; els['ai-hand'].textContent = '?';
-  const leader = modelSwitch();
-  // Hold a switch announcement long enough to read before the next countdown.
-  game.holdUntil = leader ? Date.now() + 1500 : 0;
-  if (leader) setStatus(`AI → ${SHORT_NAMES[leader.key]}`, `Best record so far · ${percent(leader.accuracy)} predicted${game.manual ? '' : ' · remove hand'}`);
-  else setStatus('READY', game.manual ? 'Next countdown starts automatically' : message);
+  setStatus('READY', game.manual ? 'Next countdown starts automatically' : message);
   pulse(0); render();
-  if (game.manual) setTimeout(() => { if (game.state === 'clear') beginCountdown(); }, leader ? 2400 : 1100);
+  if (game.manual) setTimeout(() => { if (game.state === 'clear') beginCountdown(); }, 1100);
+}
+
+// When TabPFN leads, give its in-flight answer a moment so the AI does not fall back needlessly.
+async function waitForTabpfn() {
+  const rounds = game.history.length;
+  if (game.pending || rounds < game.total || game.externalFor === rounds || game.externalRequest?.afterRound !== rounds) return;
+  if (leadingModel(game.history)?.key !== 'tabpfn') return;
+  await Promise.race([game.externalRequest.promise, delay(1500)]);
+}
+
+// Announce, once per round, a model that differs from the one that played last round.
+function switchNotice(pending) {
+  const previous = game.history.at(-1)?.policy;
+  if (pending.policy === 'ensemble' || !previous || pending.policy === previous || game.announcedRound === pending.round) return null;
+  game.announcedRound = pending.round;
+  const used = leadingModel(game.history, availableModels(pending.models));
+  const leader = leadingModel(game.history);
+  return leader?.key === used.key
+    ? `Best of last ${used.total} · AI net ${signed(used.net)} per round`
+    : `${modelLabel(leader.key, true)} not ready · next best, AI net ${signed(used.net)}`;
 }
 
 async function beginCountdown() {
@@ -148,9 +162,17 @@ async function beginCountdown() {
   const token = ++game.token;
   setStatus('LOCKING', 'AI chooses before your hand appears');
   pulse(0); render();
+  await waitForTabpfn();
+  if (token !== game.token || game.state !== 'locking') return;
   try { await prepareRound(); }
   catch (error) { game.state = 'error'; setStatus('ERROR', error.message); render(); return; }
   if (token !== game.token || game.state !== 'locking') return;
+  const notice = switchNotice(game.pending);
+  if (notice) {
+    setStatus(`AI → ${modelLabel(game.pending.policy, true)}`, notice); render();
+    await delay(1600);
+    if (token !== game.token || game.state !== 'locking') return;
+  }
   game.state = 'countdown'; render();
   for (const [step, number] of ['3', '2', '1'].entries()) {
     if (token !== game.token) return;
@@ -196,10 +218,13 @@ async function acceptMove(player, confidence, observedAt) {
   game.state = 'reveal';
   els['player-hand'].textContent = GLYPHS[player];
   els['ai-hand'].textContent = GLYPHS[pending.ai];
-  const acted = actedProbability(pending);
-  const peak = Math.max(...acted);
-  const favorites = acted.filter(p => Math.abs(p - peak) < 1e-9).length;
-  const forecast = favorites === 1 ? `AI forecast ${NAMES[MOVES[acted.indexOf(peak)]]}` : 'AI forecast: no favorite';
+  // An anti model states the move it rules out; any other model states its favourite.
+  const anti = isAnti(pending.policy);
+  const shown = anti ? pending.models[baseModel(pending.policy)] : actedProbability(pending);
+  const peak = Math.max(...shown);
+  const favorites = shown.filter(p => Math.abs(p - peak) < 1e-9).length;
+  const forecast = favorites !== 1 ? 'AI forecast: no favorite'
+    : `${anti ? 'AI ruled out' : 'AI forecast'} ${NAMES[MOVES[shown.indexOf(peak)]]}`;
   setStatus(result === 'ai' ? 'AI WINS' : result === 'player' ? 'YOU WIN' : 'DRAW',
     `${NAMES[player]}  ·  ${NAMES[pending.ai]}  |  ${forecast}`,
     `result-${result}`);
@@ -207,7 +232,10 @@ async function acceptMove(player, confidence, observedAt) {
   pulse(0); tone(result === 'player' ? 970 : result === 'ai' ? 400 : 670, 0.2);
   render();
   const completedRounds = game.history.length;
-  if (game.save) saveRound(row).then(saved => { if (saved) requestExternalPrediction(completedRounds); });
+  if (game.save) {
+    const promise = saveRound(row).then(saved => saved && requestExternalPrediction(completedRounds));
+    game.externalRequest = { afterRound: completedRounds, promise };
+  }
   const token = ++game.token;
   await delay(1200);
   if (token !== game.token || game.state !== 'reveal') return;
@@ -219,7 +247,7 @@ function onReading(reading) {
   if (game.state === 'clear') {
     if (reading.hands === 0) {
       game.clearSince ??= reading.time;
-      if (reading.time - game.clearSince >= 400 && reading.time >= game.holdUntil) beginCountdown();
+      if (reading.time - game.clearSince >= 400) beginCountdown();
     } else game.clearSince = null;
   } else if (game.state === 'capture' && reading.time >= game.captureStarted) {
     game.readings.push(reading);
@@ -388,7 +416,7 @@ $('delete-button').addEventListener('click', async () => {
   camera?.stop(); camera = null;
   if (game.serverSession) { try { await apiFetch(`/api/sessions/${game.sessionId}`, { method: 'DELETE' }); } catch {} }
   game.history = []; game.pending = null; game.state = 'idle'; game.serverSession = false; hideMark();
-  game.sessionId = crypto.randomUUID(); game.external = null; game.externalFor = -1;
+  game.sessionId = crypto.randomUUID(); game.external = null; game.externalFor = -1; game.externalRequest = null; game.announcedRound = 0;
   els['save-status'].textContent = 'Local only. Server storage is off.'; els['save-setting'].checked = false;
   els['camera-card'].classList.remove('live'); els['camera-placeholder'].hidden = false;
   els['placeholder-label'].textContent = 'PLACE YOUR HAND HERE';

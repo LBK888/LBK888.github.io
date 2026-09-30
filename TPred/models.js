@@ -122,41 +122,97 @@ export function predictAccuracy(history, key = 'ensemble') {
   return { correct, total: eligible.length, rate: eligible.length ? correct / eligible.length : null };
 }
 
+// An "anti" model reads a saved forecast the other way round: the model's top pick is the move
+// the player will NOT throw. It is derived from stored probabilities; nothing is retrained.
+const ANTI = ':anti';
+export const isAnti = key => key.endsWith(ANTI);
+export const baseModel = key => isAnti(key) ? key.slice(0, -ANTI.length) : key;
+export function forecastOf(models, key) {
+  const probability = models?.[baseModel(key)];
+  return probability && isAnti(key) ? probability.map(p => (1 - p) / 2) : probability;
+}
+
+export function modelLabel(key, short = false) {
+  const base = baseModel(key);
+  const name = short ? SHORT_NAMES[base] ?? base.toUpperCase() : MODEL_NAMES[base] ?? (base === 'tabpfn' ? 'TabPFN' : base);
+  return isAnti(key) ? `${short ? 'ANTI' : 'Anti'} ${name}` : name;
+}
+
+// The AI's score had it best-responded to this forecast: +1 win, 0 draw, -1 loss,
+// averaged over equally good responses (the live game picks one of them at random).
+export function responseScore(probability, player) {
+  const best = bestResponses(probability);
+  return best.reduce((sum, ai) => {
+    const result = resultFor(player, ai);
+    return sum + (result === 'ai' ? 1 : result === 'player' ? -1 : 0);
+  }, 0) / best.length;
+}
+
 export function modelMetrics(history, key) {
-  const rows = history.filter(row => row.models?.[key]);
+  const rows = history.filter(row => forecastOf(row.models, key));
   if (!rows.length) return null;
-  let correct = 0, logLoss = 0, brier = 0;
+  let correct = 0, logLoss = 0, brier = 0, net = 0;
   for (const row of rows) {
-    const probability = row.models[key];
+    const probability = forecastOf(row.models, key);
     const observed = index(row.player);
     correct += predictionCredit(probability, row.player);
     logLoss -= Math.log(Math.max(0.001, probability[observed]));
     brier += probability.reduce((sum, p, i) => sum + (p - Number(i === observed)) ** 2, 0);
+    net += responseScore(probability, row.player);
   }
-  return { accuracy: correct / rows.length, correct, total: rows.length, logLoss: logLoss / rows.length, brier: brier / rows.length };
+  const total = rows.length;
+  return { accuracy: correct / total, correct, total, logLoss: logLoss / total, brier: brier / total, net: net / total };
 }
 
-// Follow the leader: best prequential top-choice score so far, ties broken by log loss.
-// Optional TabPFN is excluded because it may not be ready before the next commitment.
-export function leadingModel(history) {
+// Optional TabPFN starts predicting at round 9 and can miss a round when late.
+// It joins the comparison once it has this many predictions (the report's usual minimum).
+export const MIN_OPTIONAL_PREDICTIONS = 5;
+// The AI plays the model with the best score over this many latest shared rounds.
+export const RECENT_ROUNDS = 15;
+
+export function comparedModels(history) {
+  const tabpfn = history.filter(row => row.models?.tabpfn).length;
+  return tabpfn >= MIN_OPTIONAL_PREDICTIONS ? [...MODEL_KEYS, 'tabpfn'] : [...MODEL_KEYS];
+}
+
+// Like-for-like rounds: every compared model had a prediction. Without this, a model that
+// skipped the early, data-poor rounds would look better than models scored on all rounds.
+export function sharedRows(history, keys = comparedModels(history)) {
+  return history.filter(row => keys.every(key => row.models?.[key]));
+}
+
+// Compared models plus the anti version of each model that picked right less than a third of
+// the time over `recent`. Offering only these keeps lucky flukes among extra candidates rare.
+export function candidateModels(keys, recent) {
+  const below = keys.filter(key => key !== 'random' && modelMetrics(recent, key)?.accuracy < 1 / 3 - 1e-9);
+  return [...keys, ...below.map(key => key + ANTI)];
+}
+
+// Follow the recent leader: the candidate whose forecasts would have given the AI the best net
+// score (wins minus losses per round) over the latest RECENT_ROUNDS shared rounds, ties broken by
+// log loss. `available` limits the pick to models with a prediction for the next round.
+export function leadingModel(history, available = null) {
+  const keys = comparedModels(history);
+  const rows = sharedRows(history, keys).slice(-RECENT_ROUNDS);
   let best = null;
-  for (const key of MODEL_KEYS) {
-    const metric = modelMetrics(history, key);
+  for (const key of candidateModels(keys, rows)) {
+    if (available && !available.includes(baseModel(key))) continue;
+    const metric = modelMetrics(rows, key);
     if (!metric) continue;
-    if (!best || metric.accuracy > best.accuracy + 1e-9 ||
-      (metric.accuracy > best.accuracy - 1e-9 && metric.logLoss < best.logLoss)) best = { key, ...metric };
+    if (!best || metric.net > best.net + 1e-9 ||
+      (metric.net > best.net - 1e-9 && metric.logLoss < best.logLoss)) best = { key, ...metric };
   }
   return best;
 }
 
 // The ensemble plays the first `ensembleRounds`; afterwards the current leader plays, re-chosen every round.
-export function aiPolicy(history, ensembleRounds) {
-  return history.length < ensembleRounds ? 'ensemble' : leadingModel(history)?.key ?? 'ensemble';
+export function aiPolicy(history, ensembleRounds, available = null) {
+  return history.length < ensembleRounds ? 'ensemble' : leadingModel(history, available)?.key ?? 'ensemble';
 }
 
 // The probabilities the AI actually acted on in a round.
 export function actedProbability(row) {
-  return row.policy && row.policy !== 'ensemble' && row.models?.[row.policy] ? row.models[row.policy] : row.ensemble;
+  return (row.policy && row.policy !== 'ensemble' && forecastOf(row.models, row.policy)) || row.ensemble;
 }
 
 export function predictionCredit(probability, observed) {
@@ -177,11 +233,15 @@ export function strategy(history, probability) {
   return 'observe';
 }
 
-export function bestResponse(probability, random = Math.random) {
+function bestResponses(probability) {
   const [r, p, s] = probability;
   const payoff = [s - p, r - s, p - r];
   const peak = Math.max(...payoff);
-  const best = MOVES.filter((_, i) => peak - payoff[i] < 1e-9);
+  return MOVES.filter((_, i) => peak - payoff[i] < 1e-9);
+}
+
+export function bestResponse(probability, random = Math.random) {
+  const best = bestResponses(probability);
   // Break ties randomly so an uninformative forecast does not always yield Rock.
   return best.length === 1 ? best[0] : best[Math.floor(random() * best.length)];
 }

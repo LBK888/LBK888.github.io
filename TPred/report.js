@@ -1,12 +1,10 @@
-import { MOVES, MODEL_KEYS, MODEL_NAMES, summary, hmmState, modelMetrics, actedProbability } from './models.js';
+import { MOVES, MIN_OPTIONAL_PREDICTIONS, RECENT_ROUNDS, summary, hmmState, modelMetrics, comparedModels, sharedRows, candidateModels, actedProbability, modelLabel, isAnti } from './models.js';
 
 const $ = id => document.getElementById(id);
 const percent = value => `${(value * 100).toFixed(1)}%`;
 const symbols = { R: '✊', P: '✋', S: '✌️' };
 const REPLAY_LIMIT = 50;
-// Optional TabPFN is not in MODEL_NAMES, which lists only the always-available browser models.
-const modelName = key => MODEL_NAMES[key] ?? (key === 'tabpfn' ? 'TabPFN' : key);
-const policyName = key => !key || key === 'ensemble' ? 'Live ensemble' : modelName(key);
+const policyName = key => !key || key === 'ensemble' ? 'Live ensemble' : modelLabel(key);
 const safe = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 function chart(series, colors, maxRounds, rolling = false) {
@@ -36,7 +34,7 @@ function transitionText(history) {
 
 function replayRow(row) {
   const result = row.result === 'ai' ? 'AI WIN' : row.result === 'player' ? 'YOU WIN' : 'DRAW';
-  const probabilities = Object.entries(row.models ?? {}).map(([key, p]) => `<div class="prob-line"><b>${safe(modelName(key))}</b><span>R ${Math.round(p[0]*100)}%</span><span>P ${Math.round(p[1]*100)}%</span><span>S ${Math.round(p[2]*100)}%</span></div>`).join('');
+  const probabilities = Object.entries(row.models ?? {}).map(([key, p]) => `<div class="prob-line"><b>${safe(modelLabel(key))}</b><span>R ${Math.round(p[0]*100)}%</span><span>P ${Math.round(p[1]*100)}%</span><span>S ${Math.round(p[2]*100)}%</span></div>`).join('');
   const p = row.ensemble;
   return `<details class="replay-row"><summary><b>#${String(row.round).padStart(2,'0')}</b><span>YOU ${symbols[row.player]}</span><span>AI ${symbols[row.ai]}</span><span>${result}</span></summary><div class="replay-detail"><div><b>Prior sequence:</b> ${safe(row.historyBefore || 'none')}</div><div><b>AI used:</b> ${safe(policyName(row.policy))} · <b>Policy:</b> ${safe(row.mode)} · <b>Locked:</b> ${safe(row.lockedAt)} · <b>Observed:</b> ${safe(row.observedAt)}</div>${row.serverLockedAt ? `<div><b>Server received commitment:</b> ${safe(row.serverLockedAt)}</div>` : ''}<div><b>Commit SHA-256:</b> <code>${safe(row.commitment)}</code></div><div><b>Nonce:</b> <code>${safe(row.nonce)}</code></div><button class="verify-button" data-round="${row.round}">VERIFY COMMIT</button> <span class="verify-result"></span><div><b>Gesture confidence:</b> ${Math.round(row.confidence*100)}%</div><h4>Probabilities before your throw</h4>${probabilities}<div class="prob-line"><b>Live ensemble</b><span>R ${Math.round(p[0]*100)}%</span><span>P ${Math.round(p[1]*100)}%</span><span>S ${Math.round(p[2]*100)}%</span></div></div></details>`;
 }
@@ -66,14 +64,27 @@ export function renderReport(history, policy = 'ensemble') {
   const changes = history.filter((row, i) => i === 0 || policyLabel(row) !== policyLabel(history[i-1])).map(row => `R${row.round} ${policyLabel(row)}`);
   $('policy-timeline').textContent = history.length ? `AI policy: ${changes.join(' · ')}` : 'AI policy changes will appear here.';
 
-  const modelKeys = history.some(row => row.models?.tabpfn) ? [...MODEL_KEYS, 'tabpfn'] : MODEL_KEYS;
-  $('model-chart').innerHTML = history.length >= 5 ? modelKeys.map(key => {
-    const metric = modelMetrics(history, key);
-    if (!metric) return '';
-    if (metric.total < 5) return `<div class="model-row"><span>${safe(modelName(key))}</span><div class="bar"></div><strong>—</strong><small>Collecting ${metric.total}/5 predictions</small></div>`;
+  // Same basis as the AI's choice: after the ensemble rounds it plays the leader of the AI NET column.
+  const compared = comparedModels(history);
+  const scored = sharedRows(history, compared);
+  const recent = scored.slice(-RECENT_ROUNDS);
+  const withTabpfn = compared.includes('tabpfn');
+  const overallLabel = withTabpfn ? `FROM R${scored[0]?.round ?? 9}` : 'ALL';
+  const tabpfnCount = history.filter(row => row.models?.tabpfn).length;
+  const waiting = tabpfnCount && !withTabpfn ? `<div class="model-row"><span>TabPFN</span><strong>—</strong><strong>—</strong><strong>—</strong><small>Collecting ${tabpfnCount}/${MIN_OPTIONAL_PREDICTIONS} predictions</small></div>` : '';
+  const basis = withTabpfn
+    ? `${overallLabel} counts only the ${scored.length} rounds TabPFN also predicted, so every model is scored on the same rounds. LAST ${RECENT_ROUNDS} is the latest ${RECENT_ROUNDS} of them.`
+    : `ALL counts every round. LAST ${RECENT_ROUNDS} is the latest ${RECENT_ROUNDS} rounds.`;
+  const pct = metric => `${Math.round(metric.accuracy * 100)}%`;
+  const net = metric => `${metric.net < 0 ? '−' : '+'}${Math.round(Math.abs(metric.net) * 100)}%`;
+  $('model-chart').innerHTML = history.length >= 5 ? `<div class="model-row model-head"><span>MODEL</span><span>${overallLabel}</span><span>LAST ${RECENT_ROUNDS}</span><span>AI NET</span></div>` + candidateModels(compared, recent).map(key => {
+    const overall = modelMetrics(scored, key);
+    if (!overall) return '';
+    if (overall.total < 5) return `<div class="model-row"><span>${safe(modelLabel(key))}</span><strong>—</strong><strong>—</strong><strong>—</strong><small>Collecting ${overall.total}/5 predictions</small></div>`;
+    const last = modelMetrics(recent, key);
     const tag = key === policy ? ' <em class="model-tag" title="The AI is playing this model">AI</em>' : '';
-    return `<div class="model-row ${key === 'random' ? '' : 'primary'}"><span>${safe(modelName(key))}${tag}</span><div class="bar"><i style="width:${Math.round(metric.accuracy*100)}%"></i></div><strong>${Math.round(metric.accuracy*100)}%</strong><small>${metric.correct.toFixed(1)}/${metric.total} · log loss ${metric.logLoss.toFixed(2)} · Brier ${metric.brier.toFixed(2)}</small></div>`;
-  }).join('') + '<p class="panel-note">Prequential, tie-adjusted top-choice scores. Equal probabilities split credit among tied choices. A higher short-run score does not prove a model is better.</p>' : `<p class="empty">Collecting model evidence · ${history.length}/5 rounds.</p>`;
+    return `<div class="model-row${isAnti(key) ? ' anti' : ''}"><span>${safe(modelLabel(key))}${tag}</span><strong class="overall">${pct(overall)}</strong><strong class="overall">${pct(last)}</strong><strong>${net(last)}</strong><small>${overall.correct.toFixed(1)}/${overall.total} ${withTabpfn ? `from R${scored[0].round}` : 'all'} · ${last.correct.toFixed(1)}/${last.total} last ${RECENT_ROUNDS} · log loss ${overall.logLoss.toFixed(2)} · Brier ${overall.brier.toFixed(2)}</small></div>`;
+  }).join('') + waiting + `<p class="panel-note">${basis} AI NET is wins minus losses per round over those ${RECENT_ROUNDS} rounds, had the AI followed that model. After the ensemble rounds, the AI plays the highest (marked AI), re-chosen every round. An Anti row reads a model the other way round and rules out its top pick; it appears when that model is right less than a third of the time over the last ${RECENT_ROUNDS}. Prequential, tie-adjusted top-choice scores; a higher short-run score does not prove a model is better.</p>` : `<p class="empty">Collecting model evidence · ${history.length}/5 rounds.</p>`;
   $('sequence-view').innerHTML = history.length ? history.map(row => `<span title="${safe(row.player)}">${safe(row.player)}</span>`).join('') : '<p class="empty">Your R / P / S sequence will appear here.</p>';
   $('transition-view').innerHTML = transitionText(history);
   // Long sessions keep the full record in memory and in the JSON export; only the latest rows are drawn.
