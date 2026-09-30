@@ -31,7 +31,7 @@ const LESSONS = [
   },
   {
     kicker: '06 / PRETRAINED MODEL', title: 'A model arrives with a prior.',
-    body: 'Optional TabPFN reads a table of earlier rounds and predicts the next hand through in-context inference. It is a comparison with the small classical models, not a guarantee of improvement. During a session, its pretrained neural-network weights are not fine-tuned.',
+    body: 'Optional TabPFN reads a table of earlier rounds and predicts the next hand through in-context inference. It is a comparison with the small classical models, not a guarantee of improvement. During a session, its pretrained neural-network weights are not fine-tuned. Built with PriorLabs-TabPFN (TabPFN-2 weights).',
     zh: '預訓練模型讀取少量回合作為情境；本活動不微調其神經網路權重。',
     motion: '<div class="motion-lock">PRETRAINED WEIGHTS</div><div class="motion-sequence"><div class="motion-token">R</div><div class="motion-token">P</div><div class="motion-token">S</div><div class="motion-arrow">→</div><div class="motion-token">?</div></div><div class="motion-caption">PAST ROUNDS + FEATURES → NEXT-HAND PROBABILITY</div>',
   },

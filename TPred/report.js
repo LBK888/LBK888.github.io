@@ -4,7 +4,9 @@ const $ = id => document.getElementById(id);
 const percent = value => `${(value * 100).toFixed(1)}%`;
 const symbols = { R: '✊', P: '✋', S: '✌️' };
 const REPLAY_LIMIT = 50;
-const policyName = key => !key || key === 'ensemble' ? 'Live ensemble' : MODEL_NAMES[key] ?? key;
+// Optional TabPFN is not in MODEL_NAMES, which lists only the always-available browser models.
+const modelName = key => MODEL_NAMES[key] ?? (key === 'tabpfn' ? 'TabPFN' : key);
+const policyName = key => !key || key === 'ensemble' ? 'Live ensemble' : modelName(key);
 const safe = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 function chart(series, colors, maxRounds, rolling = false) {
@@ -34,7 +36,7 @@ function transitionText(history) {
 
 function replayRow(row) {
   const result = row.result === 'ai' ? 'AI WIN' : row.result === 'player' ? 'YOU WIN' : 'DRAW';
-  const probabilities = Object.entries(row.models ?? {}).map(([key, p]) => `<div class="prob-line"><b>${safe(MODEL_NAMES[key] ?? key)}</b><span>R ${Math.round(p[0]*100)}%</span><span>P ${Math.round(p[1]*100)}%</span><span>S ${Math.round(p[2]*100)}%</span></div>`).join('');
+  const probabilities = Object.entries(row.models ?? {}).map(([key, p]) => `<div class="prob-line"><b>${safe(modelName(key))}</b><span>R ${Math.round(p[0]*100)}%</span><span>P ${Math.round(p[1]*100)}%</span><span>S ${Math.round(p[2]*100)}%</span></div>`).join('');
   const p = row.ensemble;
   return `<details class="replay-row"><summary><b>#${String(row.round).padStart(2,'0')}</b><span>YOU ${symbols[row.player]}</span><span>AI ${symbols[row.ai]}</span><span>${result}</span></summary><div class="replay-detail"><div><b>Prior sequence:</b> ${safe(row.historyBefore || 'none')}</div><div><b>AI used:</b> ${safe(policyName(row.policy))} · <b>Policy:</b> ${safe(row.mode)} · <b>Locked:</b> ${safe(row.lockedAt)} · <b>Observed:</b> ${safe(row.observedAt)}</div>${row.serverLockedAt ? `<div><b>Server received commitment:</b> ${safe(row.serverLockedAt)}</div>` : ''}<div><b>Commit SHA-256:</b> <code>${safe(row.commitment)}</code></div><div><b>Nonce:</b> <code>${safe(row.nonce)}</code></div><button class="verify-button" data-round="${row.round}">VERIFY COMMIT</button> <span class="verify-result"></span><div><b>Gesture confidence:</b> ${Math.round(row.confidence*100)}%</div><h4>Probabilities before your throw</h4>${probabilities}<div class="prob-line"><b>Live ensemble</b><span>R ${Math.round(p[0]*100)}%</span><span>P ${Math.round(p[1]*100)}%</span><span>S ${Math.round(p[2]*100)}%</span></div></div></details>`;
 }
@@ -68,9 +70,9 @@ export function renderReport(history, policy = 'ensemble') {
   $('model-chart').innerHTML = history.length >= 5 ? modelKeys.map(key => {
     const metric = modelMetrics(history, key);
     if (!metric) return '';
-    if (metric.total < 5) return `<div class="model-row"><span>${safe(MODEL_NAMES[key] ?? 'TabPFN')}</span><div class="bar"></div><strong>—</strong><small>Collecting ${metric.total}/5 predictions</small></div>`;
+    if (metric.total < 5) return `<div class="model-row"><span>${safe(modelName(key))}</span><div class="bar"></div><strong>—</strong><small>Collecting ${metric.total}/5 predictions</small></div>`;
     const tag = key === policy ? ' <em class="model-tag" title="The AI is playing this model">AI</em>' : '';
-    return `<div class="model-row ${key === 'random' ? '' : 'primary'}"><span>${safe(MODEL_NAMES[key] ?? 'TabPFN')}${tag}</span><div class="bar"><i style="width:${Math.round(metric.accuracy*100)}%"></i></div><strong>${Math.round(metric.accuracy*100)}%</strong><small>${metric.correct.toFixed(1)}/${metric.total} · log loss ${metric.logLoss.toFixed(2)} · Brier ${metric.brier.toFixed(2)}</small></div>`;
+    return `<div class="model-row ${key === 'random' ? '' : 'primary'}"><span>${safe(modelName(key))}${tag}</span><div class="bar"><i style="width:${Math.round(metric.accuracy*100)}%"></i></div><strong>${Math.round(metric.accuracy*100)}%</strong><small>${metric.correct.toFixed(1)}/${metric.total} · log loss ${metric.logLoss.toFixed(2)} · Brier ${metric.brier.toFixed(2)}</small></div>`;
   }).join('') + '<p class="panel-note">Prequential, tie-adjusted top-choice scores. Equal probabilities split credit among tied choices. A higher short-run score does not prove a model is better.</p>' : `<p class="empty">Collecting model evidence · ${history.length}/5 rounds.</p>`;
   $('sequence-view').innerHTML = history.length ? history.map(row => `<span title="${safe(row.player)}">${safe(row.player)}</span>`).join('') : '<p class="empty">Your R / P / S sequence will appear here.</p>';
   $('transition-view').innerHTML = transitionText(history);

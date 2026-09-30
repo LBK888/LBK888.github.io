@@ -55,6 +55,7 @@ export async function apiFetch(path, options = {}) {
 
 export async function checkApiHealth() {
   const response = await apiFetch('/api/health');
-  if (!response.ok || !(await response.json()).ok) throw new Error(`Backend returned HTTP ${response.status}.`);
-  return true;
+  const payload = response.ok ? await response.json() : null;
+  if (!payload?.ok) throw new Error(`Backend returned HTTP ${response.status}.`);
+  return payload;
 }

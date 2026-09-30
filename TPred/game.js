@@ -303,7 +303,8 @@ async function saveRound(row) {
 async function requestExternalPrediction(afterRound) {
   if (!game.serverSession || !game.save) return;
   try {
-    const response = await apiFetch(`/api/sessions/${game.sessionId}/predict`, { method: 'POST' });
+    // A late answer is still used if the next round has not been locked yet.
+    const response = await apiFetch(`/api/sessions/${game.sessionId}/predict`, { method: 'POST', signal: AbortSignal.timeout(8000) });
     if (!response.ok) return;
     const payload = await response.json();
     if (game.history.length === afterRound && payload.afterRound === afterRound && Array.isArray(payload.probability)) {
@@ -355,8 +356,9 @@ els['api-check'].addEventListener('click', async () => {
     els['api-setting'].value = origin;
     els['api-status'].textContent = 'Connecting…';
     setApiIndicator('checking');
-    await checkApiHealth();
-    els['api-status'].textContent = `Connected to ${origin}.`;
+    const health = await checkApiHealth();
+    const tabpfn = { ready: 'ready', loading: 'loading…', error: 'failed to load', disabled: 'off' }[health.tabpfn?.status] ?? 'unknown';
+    els['api-status'].textContent = `Connected to ${origin}. TabPFN: ${tabpfn}.`;
     setApiIndicator('ok');
   } catch (error) { els['api-status'].textContent = `Connection failed: ${error.message}`; setApiIndicator('fail'); }
 });
