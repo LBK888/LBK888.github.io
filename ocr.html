@@ -5,8 +5,11 @@ header{padding:12px 18px 0;gap:8px}header h1{font-size:25px;margin:4px 0}header 
 body.testing{height:100dvh;overflow:hidden;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}.testing header{width:100%;flex-shrink:0}.testing main{width:100%;flex:1;min-height:0;display:flex;flex-direction:column;padding-bottom:8px}.testing .workspace{flex:1;min-height:0;align-items:stretch}.testing .capture{display:flex;flex-direction:column;min-height:0}.testing .preview{flex:1;height:auto;min-height:70px;max-height:none}.testing .capture>details,.testing .history,.testing footer,.testing .preview-tools,.testing .measure details,.testing .measure>.toolbar{display:none}.testing #notice{position:fixed;left:14px;right:14px;bottom:12px;z-index:4;max-height:80px;overflow:auto;padding:8px;font-size:11px}.testing .measure{overflow:hidden}.testing .measure .primary-metric strong{font-size:52px}
 @media(max-width:820px){header,main{padding-left:10px;padding-right:10px}.workspace{gap:12px}.panel{padding:12px}.measure .primary-metric strong{font-size:48px}.preview{height:32dvh;max-height:320px}.testing .measure{display:none}.testing .workspace{display:flex}.testing .capture{width:100%}.testing .live-result strong{font-size:42px}.testing main{padding-top:8px}.settings{gap:12px}.toolbar>*{flex:initial}.roi-controls{grid-template-columns:1fr auto auto}.roi-controls label{grid-column:auto}}
 @media(max-height:450px) and (orientation:landscape){.testing header{padding-top:4px}.testing header h1{font-size:18px}.testing .capture{padding:6px;display:grid;grid-template-columns:1.6fr 1fr;grid-template-rows:48px 1fr 28px;gap:8px}.testing .preview{grid-row:1/4;height:100%;min-height:0}.testing .run-buttons{margin:0;grid-column:2}.testing .live-result{grid-column:2;align-items:center;padding:0}.testing .live-bar{grid-column:2;padding:4px 0 0}.testing .extra-results{display:none}}
+/* Keep the intrinsic canvas size out of grid sizing. A portrait camera must
+   letterbox inside the preview, not overflow and change its visible crop on Start. */
+.preview canvas{position:absolute;inset:0;width:100%;height:100%;min-width:0;min-height:0;object-fit:contain;object-position:center}
 </style></head><body>
-<header><h1>手機 OCR <span>面板偵測</span></h1><span class="local-badge">v2 · 本機辨識</span></header>
+<header><h1>手機 OCR <span>面板偵測</span></h1><span class="local-badge">v2.1 · 本機辨識</span></header>
 <main><div class="workspace">
 <section class="capture panel">
 <div class="preview"><video id="video" playsinline muted></video><canvas id="preview" width="800" height="480" aria-label="相機預覽；點選候選框，拖曳 ROI 移動，拖曳右下角縮放。"></canvas>
@@ -23,6 +26,7 @@ body.testing{height:100dvh;overflow:hidden;display:flex;flex-direction:column;pa
 <div id="candidates" class="toolbar"></div>
 <div class="roi-controls"><label>目前讀值框<select id="activeROI"><option value="0">ROI 1</option></select></label><button id="addROI" class="quiet">新增 ROI</button><button id="removeROI" class="quiet">刪除 ROI</button></div>
 <div class="settings">
+<label>相機鏡頭<select id="cameraDevice"><option value="">自動選擇後置鏡頭</option></select></label>
 <label>相機模式<select id="tracking"><option value="handheld">手持／自動補正</option><option value="fixed">固定手機／不補正</option></select></label>
 <label>取樣週期<select id="interval"><option value="1000">1 秒 / 1 Hz</option><option value="500">0.5 秒 / 2 Hz</option><option value="2000">2 秒 / 0.5 Hz</option></select></label>
 <label>測試時間<select id="duration"><option value="60000">60 秒</option><option value="180000">180 秒</option><option value="300000">300 秒</option></select></label>
@@ -465,7 +469,7 @@ function percentile(values, p) {
 const $ = id => document.getElementById(id);
 const preview = $('preview'), ctx = preview.getContext('2d');
 const state = {source: null, stream: null, image: null, facing: 'environment', active: 0,
-  rois: [{x: .32, y: .43, w: .36, h: .14}], candidates: [], running: false, loading: false, runner: null,
+  rois: [{x: .32, y: .43, w: .36, h: .14}], candidates: [], running: false, loading: false, runner: null, cameraSetup: null,
   rows: [], rounds: [], skipped: 0, errors: 0, started: 0, elapsedMs: 0, config: null, report: null};
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const tracker = new PanelTracker();
@@ -485,7 +489,7 @@ const engine = new BrowserOCR(message => {
 $('engine').textContent = `${OCR_VERSION} · ${navigator.hardwareConcurrency || '?'} logical cores · ${navigator.userAgent}`;
 
 function freezeControls(busy) {
-  for (const id of ['camera','switch','detect','tracking','synthetic','imageFile','addROI','removeROI','activeROI','interval','duration','burst','preprocess','height','threshold','decimals','expected','load','start']) $(id).disabled = busy;
+  for (const id of ['camera','cameraDevice','switch','detect','tracking','synthetic','imageFile','addROI','removeROI','activeROI','interval','duration','burst','preprocess','height','threshold','decimals','expected','load','start']) $(id).disabled = busy;
   $('stop').disabled = !state.running;
 }
 async function loadEngine() {
@@ -502,21 +506,60 @@ async function loadEngine() {
 }
 $('load').onclick = guarded(loadEngine);
 
-function stopCamera() { state.stream?.getTracks().forEach(track => track.stop()); state.stream = null; }
+function cameraSnapshot() {
+  const track = state.stream?.getVideoTracks()[0];
+  if (!track) return null;
+  const settings = track.getSettings();
+  return {trackId: track.id, label: track.label, deviceId: settings.deviceId,
+    nativeWidth: $('video').videoWidth, nativeHeight: $('video').videoHeight,
+    width: settings.width, height: settings.height, facingMode: settings.facingMode, zoom: settings.zoom};
+}
+function assertCameraStable() {
+  if (state.source !== 'camera') return;
+  const current = cameraSnapshot(), setup = state.cameraSetup;
+  if (!current || !setup || $('video').srcObject !== state.stream || state.stream.getVideoTracks()[0].readyState !== 'live' ||
+      ['trackId','deviceId','nativeWidth','nativeHeight','zoom'].some(key => current[key] !== setup[key])) {
+    const error = Error('相機取像範圍已改變；請重新開啟相機並設定 ROI。');
+    error.name = 'CameraChangedError'; throw error;
+  }
+}
+async function refreshCameraDevices() {
+  const selected = state.cameraSetup.deviceId, cameras = navigator.mediaDevices.enumerateDevices ?
+    (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind === 'videoinput' && device.deviceId) : [];
+  // Some browsers expose only the active camera. Keep it selectable without reopening it.
+  if (selected && !cameras.some(device => device.deviceId === selected)) cameras.push({deviceId: selected, label: state.cameraSetup.label});
+  $('cameraDevice').replaceChildren(new Option('自動選擇鏡頭', ''), ...cameras.map((device, i) => new Option(device.label || `相機 ${i + 1}`, device.deviceId)));
+  $('cameraDevice').value = selected || '';
+}
+function stopCamera() {
+  state.stream?.getTracks().forEach(track => track.stop()); state.stream = null; state.cameraSetup = null;
+  $('video').srcObject = null; if (state.source === 'camera') state.source = null;
+}
 async function openCamera() {
+  if (state.running || state.loading || state.starting) return;
   if (!navigator.mediaDevices?.getUserMedia) throw Error('手機相機需要 HTTPS 網址。請用靜態 HTTPS 網站開啟測試頁；電腦可用 localhost。');
-  stopCamera();
-  const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: {ideal: state.facing}, width: {ideal: 1920}, height: {ideal: 1080}}, audio: false});
-  $('video').srcObject = stream;
-  try { await $('video').play(); } catch (error) { stream.getTracks().forEach(track => track.stop()); throw error; }
-  state.stream = stream; state.source = 'camera'; state.image = null;
-  preview.width = Math.min(1920, $('video').videoWidth);
-  preview.height = Math.round(preview.width * $('video').videoHeight / $('video').videoWidth);
-  sourceReady('手機相機');
+  state.loading = true; freezeControls(true); visibleStatus('正在開啟相機…');
+  try {
+    stopCamera();
+    const deviceId = $('cameraDevice').value;
+    const selection = deviceId ? {deviceId: {exact: deviceId}} : {facingMode: {ideal: state.facing}};
+    const stream = await navigator.mediaDevices.getUserMedia({video: {...selection, width: {ideal: 1920}, height: {ideal: 1080}}, audio: false});
+    state.stream = stream; $('video').srcObject = stream;
+    await $('video').play();
+    if (!$('video').videoWidth || !$('video').videoHeight) throw Error('相機影像尚未就緒；請重新開啟相機。');
+    state.source = 'camera'; state.image = null; state.cameraSetup = cameraSnapshot();
+    preview.width = Math.min(1920, state.cameraSetup.nativeWidth);
+    preview.height = Math.round(preview.width * state.cameraSetup.nativeHeight / state.cameraSetup.nativeWidth);
+    sourceReady(`${state.cameraSetup.label || '手機相機'} · ${state.cameraSetup.nativeWidth}×${state.cameraSetup.nativeHeight}`);
+    // Device enumeration is optional; a failure must not replace the live preview stream.
+    try { await refreshCameraDevices(); } catch { /* Camera remains usable with the facing selector. */ }
+  } catch (error) { stopCamera(); $('cameraHint').hidden = false; throw error; }
+  finally { state.loading = false; freezeControls(false); }
   await detectRegions();
 }
 $('camera').onclick = guarded(openCamera);
-$('switch').onclick = guarded(async () => { state.facing = state.facing === 'environment' ? 'user' : 'environment'; await openCamera(); });
+$('cameraDevice').onchange = guarded(openCamera);
+$('switch').onclick = guarded(async () => { if(state.running||state.loading||state.starting)return;state.facing = state.facing === 'environment' ? 'user' : 'environment'; $('cameraDevice').value = ''; await openCamera(); });
 function sourceReady(label) { tracker.reset();state.tracking=null;state.candidates=[];$('candidates').replaceChildren();$('sourceLabel').textContent = label; $('cameraHint').hidden = true; }
 async function detectRegions(){
   if(state.running||state.loading)return;
@@ -560,6 +603,7 @@ function syntheticFrame(tick = 0) {
   return {canvas: c, expected};
 }
 function capture(tick = 0) {
+  assertCameraStable();
   if (state.source === 'synthetic') return syntheticFrame(tick);
   const c = document.createElement('canvas'); c.width = preview.width; c.height = preview.height;
   const source = state.source === 'camera' ? $('video') : state.image;
@@ -579,6 +623,11 @@ function trackingFrame(frame){
 function renderPreview(timestamp = 0) {
   if (state.source && timestamp - lastPreview > 65) {
     lastPreview = timestamp;
+    try { assertCameraStable(); } catch (error) {
+      if(state.running)state.runner?.stop('camera-changed');
+      visibleStatus(error.message);
+      requestAnimationFrame(renderPreview); return;
+    }
     const image = state.source === 'camera' ? $('video') : state.source === 'image' ? state.image : syntheticFrame(state.lastTick || 0).canvas;
     ctx.drawImage(image,0,0,preview.width,preview.height);
     if(state.running&&state.config.tracking==='handheld'&&timestamp-lastTrack>180){lastTrack=timestamp;try{state.tracking=tracker.track(capture(state.lastTick||0).canvas);}catch{state.tracking={ok:false,reason:'追蹤失敗'};}}
@@ -624,6 +673,7 @@ async function sample(tick, target) {
       if(state.source==='synthetic')expected=frame.expected[i];
       else if(i===0&&settings.expected!==null)expected=settings.expected;
       const result=await engine.recognize(input,{mode:settings.preprocess,height:settings.height});
+      assertCameraStable();
       readings.push({text:result.text,rawText:result.rawText,confidence:result.confidence,decimal_evidence:result.decimal_evidence,decimal_checked:true,decimal:result.decimal,inputWidth:result.inputWidth,inputHeight:result.inputHeight,characterScores:result.characterScores,numericConflict:result.numericConflict});processed=result.processed;if(i===0){state.lastInput=input;state.lastProcessed=processed;}
       if(n<settings.burst-1)await sleep(80);
     }
@@ -642,6 +692,7 @@ function addRows(rows) {
   }
 }
 function onResult({tick,target,finished,result,error}) {
+  if(error?.name==='CameraChangedError')state.runner?.stop('camera-changed');
   if(error){const trackingLost=error.message.startsWith('Tracking：');if(!trackingLost)state.errors++;addRows([{tick,capturedAt:Date.now(),status:trackingLost?'TRACKING_LOST':'ERROR',error:error.message}]);$('latest').textContent='—';$('raw').textContent=trackingLost?'停收，請重新對準原面板':error.message;$('readingStatus').textContent=trackingLost?'追蹤遺失':'辨識失敗';visibleStatus(error.message);document.querySelector('.live-result').classList.add('rejected');}
   else {
     state.rounds.push({tick,target,finished,milliseconds:result.milliseconds,latenessMs:result.latenessMs,tracking:result.tracking});
@@ -686,10 +737,15 @@ function onDone({reason,elapsedMs}) {
   const s=summary(),targetHz=1000/state.config.intervalMs;
   const pass=reason==='duration'&&s.errors===0&&s.skippedTicks===0&&s.roundP95Ms!==null&&s.roundP95Ms<=state.config.intervalMs&&s.effectiveHz>=targetHz*.98;
   $('runState').textContent=reason==='duration'?'測試完成':reason==='hidden'?'背景暫停':'已停止';
+  if(reason==='camera-changed'){
+    const message='相機取像範圍已改變；請重新開啟相機並設定 ROI。';
+    $('runState').textContent='相機範圍已變更';$('latest').textContent='—';$('raw').textContent=message;
+    $('readingStatus').textContent='已停止，請重新設定 ROI';visibleStatus(message);
+  }
   $('verdict').classList.toggle('good',pass);
   $('verdict').textContent=pass?`速度達標（${targetHz} Hz）。${s.checkedAccuracy===null?'正確率尚未核對，請比對儀器或填入已知讀值。':`有效且正確比例 ${(s.checkedAccuracy*100).toFixed(1)}%；仍需真實面板驗證。`}`:reason==='duration'?'此設定未達目標頻率。查看漏格與 p95；可縮小 ROI、使用 1 張或降低取樣率後重測。':'測試未完成完整時間；請重新測試後判讀頻率。';
   state.report={engine:OCR_VERSION,device:{userAgent:navigator.userAgent,hardwareConcurrency:navigator.hardwareConcurrency},source:state.source,
-    capture:{nativeWidth:$('video').videoWidth,nativeHeight:$('video').videoHeight,frameWidth:preview.width,frameHeight:preview.height},
+    capture:{nativeWidth:$('video').videoWidth,nativeHeight:$('video').videoHeight,frameWidth:preview.width,frameHeight:preview.height,cameraAtSetup:state.cameraSetup,cameraAtEnd:cameraSnapshot()},
     startedAt:state.startedAt,settings:state.config,rois:state.rois.map(r=>({...r})),reason,summary:s,rows:state.rows.map(r=>({...r})),rounds:state.rounds};
   $('exportCSV').disabled=$('exportJSON').disabled=!state.rows.length;
 }
@@ -698,7 +754,9 @@ $('start').onclick=guarded(async()=>{
   state.starting=true;
   try {
   if(!state.source)throw Error('請先選擇影像來源。');
+  assertCameraStable();
   await loadEngine();
+  assertCameraStable();
   freezeControls(true);
   if(document.hidden)throw Error('請回到前景後再開始。');
   state.config={intervalMs:+$('interval').value,durationMs:+$('duration').value,burst:+$('burst').value,preprocess:$('preprocess').value,height:+$('height').value,threshold:+$('threshold').value,decimals:+$('decimals').value,tracking:$('tracking').value,expected:$('expected').value===''?null:Number($('expected').value)};
