@@ -1,14 +1,14 @@
-import {BrowserOCR, OCR_VERSION} from '../frontend/browser-ocr.js';
-import {PanelTracker, roiPolygon, alignedCrop, sharpness} from '../frontend/panel-tracker.js';
-import {assessReading, wireReading, validateReadings, decimalsOf} from '../frontend/reading-parser.js';
-import {ChannelForecaster, latestGroups, scoreForecasts, PHONE_MODELS} from '../frontend2/forecast.js';
-import {modelColor, finite} from '../frontend2/alerts.js';
-import {drawChart} from '../frontend2/chart.js';
+import {BrowserOCR, OCR_VERSION} from './lib/browser-ocr.js';
+import {PanelTracker, roiPolygon, alignedCrop, sharpness} from './lib/panel-tracker.js';
+import {assessReading, wireReading, validateReadings, decimalsOf} from './lib/reading-parser.js';
+import {ChannelForecaster, latestGroups, scoreForecasts, PHONE_MODELS} from './lib/forecast.js';
+import {modelColor, finite} from './lib/alerts.js';
+import {drawChart} from './lib/chart.js';
 import {DemoPanel, demoItemFor} from './demo-panel.js';
 
 const LAB_VERSION = 'Panel OCR Lab 1.0';
-// Modular page: models and OpenCV from ../frontend/. The single-file build sets its own sources.
-globalThis.OCR_ASSET_BASE ??= new URL('../frontend/', import.meta.url).href;
+// Modular page: models/ and vendor/ next to this file. The single-file build sets its own sources.
+globalThis.OCR_ASSET_BASE ??= new URL('./', import.meta.url).href;
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const ACCEPTED = new Set(['VALID', 'AUTO_DECIMAL_RECOVERY']);
