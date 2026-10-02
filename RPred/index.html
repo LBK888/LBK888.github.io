@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light dark"><title>Water Lab · Read & Predict</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="top">
+  <div class="brand"><span class="eyebrow">READ & PREDICT · FIELD LAB</span><h1>Water Lab<span class="dot"></span></h1></div>
+  <div class="header-actions"><button id="theme" class="icon" type="button" aria-label="Switch light or dark theme" title="Theme">◐</button><button id="pause" class="primary" type="button" aria-pressed="false" title="Freeze the chart; data keeps recording">Pause</button></div>
+  <nav class="status-bar" aria-label="Connection status">
+    <button type="button" class="chip" id="chip-source" data-open="source-settings"><i></i><span>Sensor</span><b id="source-state">Not connected</b></button>
+    <button type="button" class="chip" id="chip-server" data-open="server-settings"><i></i><span>Server</span><b id="server-state">Phone only</b></button>
+    <span class="chip static" id="rate-state">— s</span>
+  </nav>
+</header>
+<main>
+  <section id="setup" class="panel setup" aria-label="Quick start" hidden>
+    <div id="setup-source">
+      <h2>Start</h2>
+      <p>Join your group's Wi‑Fi <b>WATER‑0X</b> and open <b>http://192.168.5X.1</b> (X = group number). No sensor here? Try the demo data (模擬資料).</p>
+      <div class="form-actions"><button id="start-demo" class="primary" type="button">▶ Start demo data</button><button id="open-source" type="button">Connect ESP32…</button></div>
+    </div>
+    <div id="setup-server">
+      <h2>Add server forecasts <small>optional</small></h2>
+      <p>Phone forecasts are already running. Scan the TA's QR code, or paste the server link, to add RNN / LSTM / Chronos‑2 (deep-learning models, 深度學習模型).</p>
+      <form id="quick-server" class="inline-form"><input id="quick-link" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Server link or join link" aria-label="Server link"><input id="quick-code" type="text" autocomplete="off" spellcheck="false" placeholder="Class code (課堂代碼)" aria-label="Class code"><button class="primary" type="submit">Connect</button><button id="setup-skip" type="button">Not now</button></form>
+    </div>
+  </section>
+  <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+  <section aria-label="Live readings">
+    <div class="section-heading"><h2>Live readings</h2><span id="updated">No data yet</span></div>
+    <div id="readings" class="readings"><div class="empty panel">Waiting for a sensor or demo data…</div></div>
+    <p class="key"><span class="normal-key">● Within limits</span><span class="warning-key">● Forecast warning</span><span class="danger-key">● Outside limits now</span><span class="muted-key">● No valid data</span></p>
+  </section>
+
+  <section class="panel chart-panel" aria-label="Time series and forecast">
+    <div class="section-heading"><div><span class="eyebrow">TIME SERIES + FORECAST</span><h2 id="chart-title">Select a reading</h2></div>
+      <div class="chart-controls">
+        <label class="compact">Window<select id="window"><option value="60">1 min</option><option value="120">2 min</option><option value="300" selected>5 min</option><option value="600">10 min</option></select></label>
+        <label class="compact">Forecast<select id="horizon"><option value="5">5 steps</option><option value="10" selected>10 steps</option><option value="20">20 steps</option><option value="30">30 steps</option></select></label>
+      </div></div>
+    <div id="alert-detail" class="alert-detail"></div>
+    <canvas id="chart" role="img" aria-label="Observed values, forecasts and alarm limits. Tap to read values."></canvas>
+    <div id="models" class="model-toggles" aria-label="Models shown on the chart"></div>
+    <div class="chart-options"><label><input id="historical" type="checkbox"> Show past forecasts <small>(歷史預測, step from the accuracy table)</small></label><span id="gap-stats"></span></div>
+    <p class="legend-line">Solid = observed · Dashed = latest forecast · Band = 80% range (預測區間) · Grey bar = missing sample (缺值) · Red mark = sensor error · Tap the chart to read values.</p>
+  </section>
+
+  <section class="panel accuracy" aria-label="Live forecast accuracy">
+    <div class="section-heading"><div><span class="eyebrow">LIVE ACCURACY</span><h2>Forecast accuracy <small>即時預測準確度</small></h2></div>
+      <div class="chart-controls"><label class="compact">Step<select id="acc-h"></select></label></div></div>
+    <div class="table-wrap"><table><thead><tr><th>Model</th><th title="Scored forecasts">n</th><th title="Mean absolute error (平均絕對誤差)">MAE</th><th title="Root mean square error (均方根誤差)">RMSE</th><th title="Symmetric mean absolute percentage error">sMAPE</th><th title="Improvement over Persistence">Skill</th></tr></thead><tbody id="metrics"></tbody></table></div>
+    <div class="chart-options"><label><input id="common" type="checkbox" checked> Same forecast times <small>(公平比較)</small></label></div>
+    <p class="hint" id="acc-note">A forecast is scored when its target time arrives (rolling window = chart window). Skill = 1 − MAE ÷ MAE of Persistence: above 0% beats “no change”.</p>
+  </section>
+
+  <details class="panel" id="learn"><summary>How the models work <span>演算法說明</span></summary>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="Persistence" aria-selected="true">Persistence</button><button type="button" role="tab" data-tab="Kalman">Kalman</button><button type="button" role="tab" data-tab="Holt">Holt</button><button type="button" role="tab" data-tab="ESN">ESN</button><button type="button" role="tab" data-tab="RNN">RNN / LSTM</button><button type="button" role="tab" data-tab="Chronos-2">Chronos‑2</button><button type="button" role="tab" data-tab="metrics">Metrics</button>
+    </div>
+    <article class="learn" data-panel="Persistence">
+      <h3>Persistence <small>持續法 · naive forecast · phone</small></h3>
+      <p>“The next value equals the last value.” No parameters. It is the baseline: a model is only useful if it beats Persistence, which is exactly what <b>Skill</b> measures.</p>
+      <pre class="eq">ŷ(t+h) = y(t)        for every step h = 1 … N</pre>
+      <p class="hint">Hard to beat for very noisy or random-walk data; always late on trends and cycles.</p>
+    </article>
+    <article class="learn" data-panel="Kalman" hidden>
+      <h3>Kalman filter <small>卡爾曼濾波 · local linear trend · phone</small></h3>
+      <p>Tracks a hidden <b>level</b> and <b>slope</b>. Every reading: <b>predict</b> → compare with the measurement → <b>correct</b> by the Kalman gain K (卡爾曼增益). K balances trust in the model (process noise Q, 過程雜訊) against trust in the sensor (measurement noise R, 量測雜訊). It also reports its uncertainty (the shaded band). A missing reading means “predict only, no correction”, so the band widens.</p>
+      <pre class="eq">state x = [level, slope],  F = [[1,1],[0,1]],  H = [1, 0]
+Predict:  x⁻ = F·x          P⁻ = F·P·Fᵀ + Q
+Update:   K = P⁻Hᵀ / (H·P⁻·Hᵀ + R)
+          x = x⁻ + K·(y − H·x⁻)     P = (I − K·H)·P⁻
+Forecast: ŷ(t+h) = level + h·slope</pre>
+      <div class="params" data-model="Kalman">
+        <label class="check"><input type="checkbox" data-param="auto"> Auto: choose Q/R from the last 5 minutes</label>
+        <label>Process noise Q × <output></output><input type="range" data-param="q" min="-2.5" max="1" step="0.1" data-log></label>
+        <label>Measurement noise R × <output></output><input type="range" data-param="r" min="-1" max="1" step="0.1" data-log></label>
+      </div>
+      <p class="hint">Q and R are multipliers of the data's own step size, so they work for °C and ppm alike. Only Q/R changes the line: large Q/R reacts fast but is jumpy; small Q/R is smooth but lags.</p>
+    </article>
+    <article class="learn" data-panel="Holt" hidden>
+      <h3>Holt's method <small>雙指數平滑 · damped trend · phone</small></h3>
+      <p>Splits the series into a <b>level L</b> (水平) and a <b>trend B</b> (趨勢), both updated with exponential weights. α: how fast the level follows new data. β: how fast the trend changes. φ (damping, 阻尼): shrinks the trend for far steps so a 30‑step forecast does not shoot off.</p>
+      <pre class="eq">L(t) = α·y(t) + (1−α)·(L(t−1) + φ·B(t−1))
+B(t) = β·(L(t) − L(t−1)) + (1−β)·φ·B(t−1)
+ŷ(t+h) = L(t) + (φ + φ² + … + φʰ)·B(t)</pre>
+      <div class="params" data-model="Holt">
+        <label class="check"><input type="checkbox" data-param="auto"> Auto: grid-search α, β, φ every 60 samples</label>
+        <label>α level <output></output><input type="range" data-param="alpha" min="0.05" max="0.95" step="0.05"></label>
+        <label>β trend <output></output><input type="range" data-param="beta" min="0.01" max="0.5" step="0.01"></label>
+        <label>φ damping <output></output><input type="range" data-param="phi" min="0.7" max="1" step="0.01"></label>
+      </div>
+    </article>
+    <article class="learn" data-panel="ESN" hidden>
+      <h3>Echo state network <small>ESN · 回聲狀態網路 · phone</small></h3>
+      <p>A fixed, random recurrent network — the <b>reservoir</b> (儲備池) — turns recent readings into an “echo” state r(t). Only the linear <b>readout</b> is learned, online, by recursive least squares (RLS, 遞迴最小平方法). Each forecast step h has its own readout that predicts the change y(t+h) − y(t) directly. Light enough for a phone; weak at events it has never seen (try the first pollution spike in the demo).</p>
+      <pre class="eq">r(t) = (1−a)·r(t−1) + a·tanh(W·r(t−1) + W_in·[1; u(t)])     u = normalised reading
+ŷ(t+h) = y(t) + σ · w_hᵀ·[1; u(t); r(t)]
+RLS:  k = P·x / (λ + xᵀ·P·x)
+      w_h ← w_h + k·(target_h − w_hᵀ·x)      P ← (P − k·xᵀ·P) / λ</pre>
+      <div class="params" data-model="ESN">
+        <label>Reservoir size N <output></output><input type="range" data-param="size" min="10" max="80" step="5"></label>
+        <label>Spectral radius ρ (光譜半徑) <output></output><input type="range" data-param="rho" min="0.3" max="1.2" step="0.05"></label>
+        <label>Leak rate a <output></output><input type="range" data-param="leak" min="0.05" max="1" step="0.05"></label>
+        <label>Input scale <output></output><input type="range" data-param="inputScale" min="0.1" max="2" step="0.1"></label>
+        <label>Forgetting λ (遺忘因子) <output></output><input type="range" data-param="forget" min="0.98" max="1" step="0.001"></label>
+        <label>Regularisation δ (正則化) <output></output><input type="range" data-param="delta" min="-1" max="1" step="0.1" data-log></label>
+      </div>
+      <p class="hint">Changes are replayed over the stored history at once, so the chart and accuracy update immediately.</p>
+    </article>
+    <article class="learn" data-panel="RNN" hidden>
+      <h3>RNN / LSTM <small>循環神經網路 / 長短期記憶 · server</small></h3>
+      <p>Trained on the Colab server, as in Module 02: the last 24 readings → 32 hidden units → the next 10 values. The server starts from a model pre-trained on synthetic water-like curves, fine-tunes (微調) it on class data as it arrives, and saves it to Google Drive, so a restarted server does not train from zero.</p>
+      <pre class="eq">RNN:   h(t) = tanh(W_x·x(t) + W_h·h(t−1) + b)
+LSTM:  gates (閘門) f, i, o;  c(t) = f⊙c(t−1) + i⊙tanh(W_c·[h(t−1); x(t)])
+       h(t) = o⊙tanh(c(t))
+Out:   [ŷ(t+1) … ŷ(t+10)] = y(t) + s·Linear(h(24))      s = window spread
+Train: 80/10/10 time split · Adam · MSE loss · early stopping</pre>
+      <p class="hint">Status PRETRAINED = synthetic data only; READY = fine-tuned and better than Persistence on validation data; WEAK = fine-tuned but not better than Persistence. Live Skill above shows how it does right now.</p>
+    </article>
+    <article class="learn" data-panel="Chronos-2" hidden>
+      <h3>Chronos‑2 <small>time-series foundation model, 時間序列基礎模型 · server</small></h3>
+      <p>A transformer pre-trained by Amazon on many time series and used <b>zero-shot</b> (零樣本): it never trains on class data. It reads up to 512 past values and returns quantiles (分位數) P10 / P50 / P90; the line is P50 and the band P10–P90. Needs at least 32 continuous readings; refreshed every few seconds on a GPU.</p>
+    </article>
+    <article class="learn" data-panel="metrics" hidden>
+      <h3>Accuracy metrics <small>評估指標</small></h3>
+      <pre class="eq">MAE   = mean |y − ŷ|                          same unit as the reading (平均絕對誤差)
+RMSE  = √ mean (y − ŷ)²                       punishes big misses (均方根誤差)
+sMAPE = mean 200·|y − ŷ| / (|y| + |ŷ|)  [%]   scale-free (對稱百分比誤差)
+Skill = 1 − MAE_model / MAE_Persistence        > 0 % = better than “no change”</pre>
+      <p><b>Step h</b>: forecasts made h samples before the target. <b>Avg</b>: all steps 1…N. <b>Same forecast times</b>: every model is scored on the same (origin, step) pairs, so a model that started late is not judged on easier moments. Missing readings are never scored.</p>
+    </article>
+  </details>
+
+  <details class="panel"><summary>Alarm limits <span>警戒值</span></summary>
+    <form id="limits-form" class="form-grid"><label>Reading<select id="limit-channel"></select></label><label>Lower limit<input id="lower" type="number" step="any" placeholder="No lower limit"></label><label>Upper limit<input id="upper" type="number" step="any" placeholder="No upper limit"></label><div class="form-actions"><button type="submit" class="primary">Apply</button><button id="reset-limits" type="button">Default</button></div></form>
+    <p id="limit-origin" class="hint"></p>
+    <p class="hint">Empty = no limit on that side; limits stay on this phone until refresh. Rapid change (劇烈變化) = (max − min) of the next 10 forecasts ÷ |current value| ≥ 20%. Alerts use the models shown on the chart.</p>
+  </details>
+
+  <details class="panel" id="source-settings"><summary>Sensor &amp; sampling <span>感測器與取樣</span></summary>
+    <div class="segmented" role="radiogroup" aria-label="Data source"><label><input type="radio" name="source" value="esp32"> ESP32 sensor</label><label><input type="radio" name="source" value="demo"> Demo data <small>(模擬資料)</small></label></div>
+    <div id="esp32-box">
+      <form id="local-form" class="form-grid"><label>ESP32 address<input id="local-url" type="url" placeholder="http://192.168.51.1"></label><button class="primary" type="submit">Connect</button></form>
+      <div class="device"><b id="device-name">No device</b> <span id="device-detail"></span></div>
+      <div class="telemetry"><span id="signal">RSSI (訊號強度) —</span><span id="clients">Phones —</span><span id="sequence">SEQ —</span></div>
+      <form id="interval-form" class="form-grid"><label>Sampling interval (取樣間隔)<select id="device-interval"><option value="500">0.5 s</option><option value="1000">1 s</option><option value="2000">2 s</option><option value="5000">5 s</option></select></label><label>Admin PIN<input id="device-pin" type="password" autocomplete="off"></label><button type="submit">Apply to ESP32</button></form>
+      <p class="hint">Changing the interval restarts the ESP32 (a new boot). Every phone in the group reconnects by itself; server models trained at another interval are not reused.</p>
+    </div>
+    <div id="demo-box" hidden>
+      <div class="form-grid">
+        <label>Scenario<select id="demo-scenario"><option value="events">Random events</option><option value="calm">Calm water</option><option value="trend">Steady heating</option></select></label>
+        <label>Missing data (缺值)<select id="demo-missing"><option value="none">None</option><option value="some" selected>Some (≈5%)</option><option value="many">Many (≈15% + bursts)</option></select></label>
+        <label>Sampling interval<select id="demo-interval"><option value="500">0.5 s</option><option value="1000" selected>1 s</option><option value="2000">2 s</option><option value="5000">5 s</option></select></label>
+      </div>
+      <div class="form-actions"><button id="demo-restart" type="button">Restart demo</button></div>
+      <p class="hint">Generated on this phone in the ESP32 frame format. With a server connected it is uploaded as a separate simulated device and never mixes with real sensor models.</p>
+    </div>
+  </details>
+
+  <details class="panel" id="server-settings"><summary>Forecast server <span>預測伺服器</span></summary>
+    <form id="server-form" class="form-grid"><label>Server link (伺服器連結)<input id="server-url" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://….trycloudflare.com"></label><label>Class code (課堂代碼)<input id="class-code" type="text" autocomplete="off" spellcheck="false"></label><div class="form-actions"><button class="primary" type="submit">Connect</button><button id="disconnect-server" type="button">Disconnect</button><button id="forget-server" type="button">Forget</button></div></form>
+    <div class="telemetry"><span id="internet-state">Internet —</span><span id="role-state">Not signed in</span><span id="queue">Queue 0</span></div>
+    <p id="server-models" class="hint">Server models: not connected.</p>
+    <p class="hint">Link and code are remembered on this phone. A join link such as <code>http://192.168.51.1/?server=…&amp;code=…</code> connects in one tap. If the server drops, the phone keeps measuring and forecasting and re-sends up to 300 samples later.</p>
+    <div class="form-actions"><button id="export-local" type="button">Phone CSV</button><button id="export-readings" type="button">Server readings CSV</button><button id="export-forecasts" type="button">Server forecasts CSV</button></div>
+    <div id="ta-tools" hidden><hr><h3>TA tools <small>助教</small></h3>
+      <p class="hint">The server fine-tunes by itself every 300 new samples. “Fine-tune now” uses all data received so far for the selected reading.</p>
+      <div class="form-actions"><button id="train" type="button">Fine-tune now (微調)</button></div>
+      <p class="hint">Historical CSV for the selected reading: <code>timestamp,value</code>, Unix seconds, fixed interval, 180–2000 rows.</p>
+      <label class="file">CSV file<input id="csv-file" type="file" accept=".csv,text/csv"></label><button id="import-train" type="button">Import &amp; fine-tune</button>
+    </div>
+  </details>
+  <footer>WATER LAB · local sensing, shared learning <span>Alarm limits reset on refresh.</span></footer>
+</main><script type="module" src="app.js"></script></body></html>

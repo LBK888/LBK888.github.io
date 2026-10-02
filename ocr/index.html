@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light dark"><title>Panel OCR Lab</title><link rel="icon" href="data:,"><link rel="stylesheet" href="lab.css"></head>
+<body>
+<header class="top">
+  <div class="brand"><span class="eyebrow">READ & PREDICT · OCR LAB</span><h1>Panel OCR Lab<span class="dot"></span></h1></div>
+  <div class="header-actions"><button id="theme" class="icon" type="button" aria-label="Switch light or dark theme">◐</button><button id="start" class="primary" type="button">Start</button></div>
+  <nav class="status-bar" aria-label="Status"><span class="chip" id="chip-source"><i></i><span>Source</span><b>None</b></span><span class="chip" id="chip-ocr"><i></i><span>OCR</span><b>Not loaded</b></span><span class="chip" id="chip-track"><i></i><span>Tracking</span><b>Off</b></span></nav>
+</header>
+<main>
+  <section class="panel intro" id="intro">
+    <h2>Read a number from an instrument display — then forecast it</h2>
+    <p>Many water meters only have a screen. This lab turns camera pixels into a time series, step by step: <b>box</b> (ROI, 讀值框) → <b>find the text line</b> (text detection, 文字偵測) → <b>read characters</b> (recognition, 文字辨識) → <b>check</b> (validation, 驗證) → <b>place in time</b> → <b>forecast</b>. Everything runs on this phone; no image leaves it.</p>
+    <div class="form-actions"><button id="src-demo" class="primary" type="button">▶ Demo meter (模擬儀器)</button><button id="src-camera" type="button">Camera</button><label class="button">Photo<input id="src-photo" type="file" accept="image/*" hidden></label></div>
+    <p class="hint">Demo meter: a synthetic water meter streamed like a camera, so the true value of every frame is known and OCR accuracy can be measured. First use downloads the OCR models (≈13 MB) and OpenCV once.</p>
+  </section>
+  <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+  <div class="workspace">
+    <section class="panel capture" aria-label="Camera and reading boxes">
+      <div class="preview"><video id="video" playsinline muted></video><canvas id="preview" width="1280" height="720" aria-label="Camera preview. Tap an orange candidate to make it a box; drag a box to move it, drag its corner to resize."></canvas><div id="preview-hint" class="preview-hint">Choose Demo meter, Camera or Photo</div></div>
+      <div class="toolbar"><button id="find" type="button">Find values</button><button id="add-box" type="button">+ Box</button><button id="remove-box" type="button">− Box</button><button id="test-read" type="button">Test read</button></div>
+      <div id="boxes" class="boxes" aria-label="Reading boxes"></div>
+      <p class="hint">Find values marks every number with orange dashes; tap one to make it a box (name, unit and decimals are filled in from the label next to it). Keep panel edges or buttons in view: hand-held tracking follows them.</p>
+    </section>
+
+    <section class="panel pipeline" aria-label="How the latest reading was made">
+      <div class="section-heading"><div><span class="eyebrow">PIPELINE</span><h2>How this reading was made <small>辨識流程</small></h2></div><span id="pipe-box" class="pill">—</span></div>
+      <ol class="steps">
+        <li><b>Aligned crop</b> <small>box + 50% margin, corrected for hand shake (透視校正)</small><div class="img-frame"><canvas id="pipe-crop" width="320" height="100"></canvas></div><small class="legend"><span class="sw dash"></span>your box <span class="sw line"></span>detected text line (DB detector)</small></li>
+        <li><b>Model input</b> <small>contrast + polarity normalised, height 48 px for PP-OCRv5</small><div class="img-frame"><canvas id="pipe-input" width="320" height="60"></canvas></div></li>
+        <li><b>Characters</b> <small>colour = per-character confidence (信心)</small><div id="pipe-chars" class="chars">—</div><div id="pipe-raw" class="hint"></div></li>
+        <li><b>Frames</b> <small>burst of photos, majority vote (多數決)</small><div id="pipe-burst" class="burst">—</div></li>
+        <li><b>Decision</b><div id="pipe-decision" class="decision">—</div></li>
+      </ol>
+    </section>
+  </div>
+
+  <section class="panel chart-panel" aria-label="Time series and forecast">
+    <div class="section-heading"><div><span class="eyebrow">TIME SERIES + FORECAST</span><h2 id="chart-title">Accepted readings</h2></div>
+      <div class="chart-controls"><label class="compact">Box<select id="chart-box"></select></label><label class="compact">Forecast<select id="horizon"><option value="5" selected>5 steps</option><option value="10">10 steps</option></select></label></div></div>
+    <div id="readings" class="readings"></div>
+    <canvas id="chart" role="img" aria-label="Accepted readings, rejected readings as gaps, and phone forecasts"></canvas>
+    <div id="models" class="model-toggles"></div>
+    <p class="legend-line">Solid = accepted readings · Grey bar = rejected or skipped (缺值, never filled) · Dashed = forecasts (Persistence, Kalman, Holt, ESN — computed on this phone) · Tap the chart to read values.</p>
+    <div class="two-col">
+      <div><h3>Forecast accuracy <small>即時預測準確度</small></h3><div class="table-wrap"><table><thead><tr><th>Model</th><th>n</th><th>MAE</th><th>sMAPE</th><th>Skill</th></tr></thead><tbody id="metrics"></tbody></table></div><p class="hint">Average over steps 1…N; Skill = 1 − MAE ÷ MAE of Persistence.</p></div>
+      <div><h3>OCR quality <small>辨識品質</small></h3><div class="table-wrap"><table><tbody id="quality"></tbody></table></div><p id="quality-note" class="hint"></p></div>
+    </div>
+  </section>
+
+  <details class="panel" id="settings" open><summary>Settings <span>設定</span></summary>
+    <div class="form-grid">
+      <label>Sample every<select id="interval"><option value="2000">2 s</option><option value="4000" selected>4 s</option><option value="10000">10 s</option></select></label>
+      <label>Photos per reading<select id="burst"><option value="1">1</option><option value="3" selected>3 (majority vote)</option></select></label>
+      <label>Image processing<select id="preprocess"><option value="auto-retry" selected>Auto + 7-segment retry</option><option value="auto">Auto (polarity + contrast)</option><option value="segment">7-segment (join bars)</option><option value="gray">Gray only</option><option value="binary">Binary (dark digits)</option><option value="invert">Binary (light digits)</option></select></label>
+      <label>Camera<select id="tracking"><option value="handheld" selected>Hand-held (track panel)</option><option value="fixed">Fixed (tripod)</option></select></label>
+      <label>Confidence threshold (信心門檻)<select id="confidence"><option value="0.95">95%</option><option value="0.9" selected>90%</option><option value="0.85">85%</option><option value="0.8">80%</option></select></label>
+    </div>
+    <h3>Selected box <small>讀值框設定</small></h3>
+    <div class="form-grid" id="box-form">
+      <label>Name<input id="box-name" type="text"></label><label>Unit<input id="box-unit" type="text" placeholder="°C, %, pH…"></label>
+      <label>Decimals<select id="box-decimals"><option value="">Auto</option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
+      <label>Minimum<input id="box-min" type="number" step="any"></label><label>Maximum<input id="box-max" type="number" step="any"></label>
+    </div>
+    <p class="hint">Lower thresholds accept more readings but let more mistakes through: with the demo meter, watch “False accepts” in OCR quality while you change it.</p>
+    <p class="hint">A fixed number of decimals lets the checker restore a dot the model missed — only when the image shows a dot at exactly that place. Min/max reject impossible values.</p>
+    <h3>Demo meter</h3>
+    <div class="form-grid">
+      <label>Display<select id="demo-style"><option value="lcd">LCD font</option><option value="segment">7-segment</option></select></label>
+      <label>Hand shake<select id="demo-shake"><option value="0">None</option><option value="1" selected>Normal</option><option value="2">Strong</option></select></label>
+      <label>Glare<select id="demo-glare"><option value="0" selected>Off</option><option value="1">Moving reflection</option></select></label>
+    </div>
+    <div class="form-actions"><button id="export" type="button">Export CSV</button><button id="clear" type="button">Clear data</button></div>
+    <p id="engine" class="hint"></p>
+  </details>
+
+  <details class="panel" id="learn"><summary>How OCR works <span>原理</span></summary>
+    <div class="tabs" role="tablist"><button type="button" role="tab" data-tab="detect" aria-selected="true">Detection</button><button type="button" role="tab" data-tab="recognize">Recognition</button><button type="button" role="tab" data-tab="check">Checks</button><button type="button" role="tab" data-tab="track">Tracking</button><button type="button" role="tab" data-tab="time">Time series</button></div>
+    <article class="learn" data-panel="detect"><h3>Text detection <small>文字偵測 · PP-OCRv5 det</small></h3><p>A small segmentation network outputs, for every pixel, the probability that it belongs to text. The map is thresholded (DB, differentiable binarization, 可微分二值化), each blob becomes a box, and the box is enlarged (“unclip” ×1.5) because the network marks only the core of each glyph. Pieces on one line are merged, so split 7-segment digits become one line. Inside your box the tallest line is read; a slightly misplaced box therefore no longer cuts digits off.</p></article>
+    <article class="learn" data-panel="recognize" hidden><h3>Text recognition <small>文字辨識 · PP-OCRv5 rec + CTC</small></h3><p>The line image is resized to 48 px high and cut into narrow vertical slices. For every slice the network gives a probability for each character and for “blank”. CTC decoding (connectionist temporal classification) keeps the best character per slice, removes repeats and blanks: <code>2 2 – 5 . . 7</code> → <code>25.7</code>. Inside the number, letters that look like digits (O, S, I…) are re-decoded with digits only, and the reading then takes the <b>weakest</b> character’s confidence. Text before the number is kept as a label (pH, DO) and text after it as the unit (%, °C).</p><pre class="eq">confidence = mean character probability   (min if any character was replaced)
+It is the model's own score, not a calibrated probability of being right.</pre></article>
+    <article class="learn" data-panel="check" hidden><h3>Validation <small>驗證 · nothing is guessed</small></h3><p>A reading becomes a data point only if it is exactly one number, confidence ≥ 90%, inside min/max, the unit matches, and the decimal point is certain. With a fixed number of decimals a missing dot is restored only if the image or the model shows a dot at exactly that position (<code>AUTO_DECIMAL_RECOVERY</code>); a bare leading dot (<code>.79</code>) means a digit was cut off. With 3 photos, at least 2 must agree. Glare or a wrong box can make all photos wrong together (correlated error, 相關錯誤): a vote removes random slips, not shared ones.</p></article>
+    <article class="learn" data-panel="track" hidden><h3>Hand-held tracking <small>面板追蹤 · optical flow + ORB + RANSAC</small></h3><p>At Start the lab stores a reference picture of the panel. Corner points outside your boxes are followed frame by frame with Lucas–Kanade optical flow (光流); every few frames they are re-matched to the reference so errors do not pile up, and ORB features re-find the panel after a jump. RANSAC keeps only consistent points and fits a homography (單應矩陣) that moves the boxes with the panel and straightens the crop. If too few points agree, the reading is marked <code>TRACKING_ERROR</code> instead of read from the wrong place.</p></article>
+    <article class="learn" data-panel="time" hidden><h3>From readings to forecasts <small>時間序列</small></h3><p>Every sampling time is one tick. A rejected or skipped reading leaves a gap — it is never filled with the previous value, because a filled value would pretend the camera saw something it did not. The forecasts (Persistence, Kalman, Holt, ESN) are the same phone models as in the ESP32 Water Lab and are scored live. Compare the OCR quality table with the forecast table: one wrong but accepted reading (a false accept) pulls every forecast that follows.</p></article>
+  </details>
+  <footer>PANEL OCR LAB · PP-OCRv5 + OpenCV in the browser <span id="version"></span></footer>
+</main><script type="module" src="lab.js"></script></body></html>
