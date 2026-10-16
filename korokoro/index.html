@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FFE4EE">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="description" content="轉動手機，把迷宮罐裡的東西倒出來！">
+  <title>ころころ迷宮罐</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="safeProbe"></div>
+  <div id="app">
+    <canvas id="game"></canvas>
+
+    <!-- 遊戲中 HUD -->
+    <div id="hud" class="hud hidden">
+      <button id="btnPause" class="hud-btn" aria-label="暫停">
+        <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="2"/><rect x="14" y="5" width="4" height="14" rx="2"/></svg>
+      </button>
+      <div class="hud-pill stage"><small>STAGE</small><b id="hStage">1</b></div>
+      <div class="hud-pill time" id="hTimeBox">
+        <svg viewBox="0 0 24 24" class="ico line"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 3h6"/></svg>
+        <b id="hTime">60</b>
+      </div>
+      <div class="hud-pill score">
+        <svg viewBox="0 0 24 24" class="ico"><path d="M12 2.8l2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6L3.2 9.2l6.1-.8z"/></svg>
+        <b id="hScore">0</b>
+      </div>
+      <button id="btnTicket" class="hud-btn ticket" aria-label="使用重新整理卷">
+        <svg viewBox="0 0 24 24" class="ico"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2.2a2.8 2.8 0 0 0 0 5.6V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2.2a2.8 2.8 0 0 0 0-5.6z"/><path class="cut" d="M14.8 10.2a3.2 3.2 0 1 0 .4 2.6M15.3 7.6v2.8h-2.8"/></svg>
+        <b id="hTickets">1</b>
+        <span class="arm-tip">再按一次<br>重新生成迷宮</span>
+      </button>
+    </div>
+
+    <button id="btnFinish" class="float-btn finish hidden">完成 ▶</button>
+    <button id="btnShake" class="float-btn shake hidden">搖一搖</button>
+    <div id="stamp" class="stamp hidden">クリア！</div>
+    <div id="countdown" class="countdown hidden"></div>
+    <div id="toast" class="toast"></div>
+
+    <!-- 關卡介紹 -->
+    <div id="levelCard" class="level-card hidden">
+      <div class="lc-stage">STAGE <b id="lcStage">1</b></div>
+      <div class="lc-title" id="lcTitle"></div>
+      <div class="lc-items">
+        <canvas id="lcPreview" width="52" height="52"></canvas>
+        <div class="lc-chips">
+          <span class="chip">目標 <b id="lcTarget">50%</b></span>
+          <span class="chip">時間 <b id="lcTime">60</b> 秒</span>
+        </div>
+      </div>
+      <div class="lc-bonus">
+        <canvas id="lcBonusPreview" width="52" height="52"></canvas>
+        <div>特殊物「<b id="lcBonus"></b>」×<span id="lcBonusN">1</span><br><small>倒出可得 +300 分與重新整理卷</small></div>
+      </div>
+      <div class="lc-hint" id="lcHint"></div>
+      <div class="lc-skip">點一下跳過</div>
+    </div>
+
+    <!-- 標題 -->
+    <div id="title" class="screen title hidden">
+      <div class="logo">
+        <div class="logo-jp">ころころ</div>
+        <h1>迷宮罐</h1>
+        <div class="logo-en">Korokoro Maze Jar</div>
+      </div>
+      <div class="title-bottom">
+        <p class="tagline">轉動手機，把罐子裡的東西倒出來！</p>
+        <button id="btnStart" class="btn primary big">開始遊戲</button>
+        <button id="btnHow" class="btn">玩法說明</button>
+        <div class="toggles">
+          <button id="tBgm" class="toggle"><svg viewBox="0 0 24 24" class="ico"><path d="M9 17.5a2.5 2.5 0 1 1-2-2.45V5l11-2v11.5a2.5 2.5 0 1 1-2-2.45V7.4L9 8.6z"/></svg>音樂</button>
+          <button id="tSfx" class="toggle"><svg viewBox="0 0 24 24" class="ico"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>音效</button>
+        </div>
+        <div class="best">最高分 <b id="bestScore">0</b></div>
+      </div>
+    </div>
+
+    <!-- 玩法說明 -->
+    <div id="howModal" class="modal hidden">
+      <div class="card how">
+        <h2>玩法說明</h2>
+        <ul class="how-list">
+          <li><span class="tag">目標</span>在時間內，從瓶口倒出目標比例的內容物就過關！越快、越連續倒出，分數越高（COMBO）。</li>
+          <li><span class="tag">手機</span>直接<b>轉動手機</b>：東西會往真實的「下方」掉。順著迷宮把它們引到瓶口。</li>
+          <li><span class="tag">卡住</span><b>左右搖晃</b>手機會讓內容物晃動；<b>輕拍</b>手機背面，內容物會彈跳鬆開。</li>
+          <li><span class="tag">電腦</span>拖曳罐子或用 ← → 旋轉；空白鍵搖晃、↑ 輕拍；Esc 暫停。</li>
+          <li><span class="tag">特殊物</span>彩虹藥丸、金色彩球、冰塊、蜂蜜裡的蒼蠅…倒出可得 +300 分，還會送一張重新整理卷。</li>
+          <li><span class="tag">整理卷</span>覺得迷宮太難？用一張卷重新生成迷宮。時間不會重來、已倒出的會保留。開局送 1 張。</li>
+        </ul>
+        <p class="note">提示：手機上請開啟「螢幕方向鎖定」，玩起來最順。傾斜操作需要以 HTTPS 網址開啟。</p>
+        <button id="btnHowClose" class="btn primary">知道了！</button>
+      </div>
+    </div>
+
+    <!-- 暫停 -->
+    <div id="pauseModal" class="modal hidden">
+      <div class="card">
+        <h2>暫停中</h2>
+        <button id="btnResume" class="btn primary">繼續</button>
+        <div class="toggles">
+          <button id="pBgm" class="toggle"><svg viewBox="0 0 24 24" class="ico"><path d="M9 17.5a2.5 2.5 0 1 1-2-2.45V5l11-2v11.5a2.5 2.5 0 1 1-2-2.45V7.4L9 8.6z"/></svg>音樂</button>
+          <button id="pSfx" class="toggle"><svg viewBox="0 0 24 24" class="ico"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>音效</button>
+        </div>
+        <button id="pMode" class="btn small">操作方式</button>
+        <button id="btnRestart" class="btn">重新開始本關</button>
+        <button id="btnQuit" class="btn">回到標題</button>
+      </div>
+    </div>
+
+    <!-- 過關 -->
+    <div id="resultModal" class="modal hidden">
+      <div class="card result">
+        <div class="ribbon">STAGE <span id="resStage">1</span> CLEAR!</div>
+        <h2>クリア！</h2>
+        <ul class="stats">
+          <li><span>倒出</span><b id="resPct"></b></li>
+          <li><span>特殊物</span><b id="resBonus"></b></li>
+          <li><span>倒出得分</span><b id="resItems"></b></li>
+          <li><span>剩餘時間獎勵</span><b id="resTime"></b></li>
+          <li id="resPerfectRow"><span>全部倒光！</span><b>+500</b></li>
+          <li class="total"><span>總分</span><b id="resTotal"></b></li>
+        </ul>
+        <button id="btnNext" class="btn primary">下一關 ▶</button>
+      </div>
+    </div>
+
+    <!-- 失敗 -->
+    <div id="overModal" class="modal hidden">
+      <div class="card over">
+        <h2>時間到…</h2>
+        <p class="sub">目標 <b id="ovTarget"></b>，倒出了 <b id="ovPct"></b></p>
+        <ul class="stats">
+          <li><span>到達關卡</span><b id="ovStage"></b></li>
+          <li class="total"><span>總分</span><b id="ovScore"></b></li>
+          <li><span>最高分</span><b id="ovBest"></b></li>
+        </ul>
+        <button id="btnRetry" class="btn primary">再挑戰這一關</button>
+        <button id="btnTitle" class="btn">回到標題</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/util.js"></script>
+  <script src="js/shapes.js"></script>
+  <script src="js/maze.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/materials.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
