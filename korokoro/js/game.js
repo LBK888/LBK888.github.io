@@ -42,7 +42,7 @@
       this.paused = false;
       this.ranking = [];            // 排行榜只存在記憶體，重新整理頁面就清空
       this.best = 0;
-      this.gdx = 0; this.gdy = 1; this.gateT = 0;
+      this.gdx = 0; this.gdy = 1;
       this.score = 0; this.tickets = 1; this.levelIndex = 0;
       this.world = null; this.total = 0; this.poured = 0; this.need = 1; this.target = 1;
       this.cleared = false; this.combo = 0; this.lastPourT = -9; this.clock = 0; this.lastKnockT = 0;
@@ -209,6 +209,7 @@
     }
 
     startRun() {
+      PM.newRun();
       this.score = 0;
       this.tickets = 1;
       this.levelIndex = 0;
@@ -257,11 +258,7 @@
     // 生成迷宮與物理世界；keep = 重新整理卷時保留的尚未倒出物件
     setupLevel(cfg, rng, keep) {
       const shape = PM.SHAPES[cfg.shape], mat = PM.MATERIALS[cfg.mat];
-      let maze = PM.buildMaze(shape, cfg, rng);
-      // 至少要有一個回水彎，否則正拿手機內容物就會自己流光
-      for (let c = cfg.cols + 1; maze.traps < Math.min(1, cfg.traps || 0) && c <= 14; c++) {
-        maze = PM.buildMaze(shape, Object.assign({}, cfg, { cols: c }), rng);
-      }
+      const maze = PM.buildMaze(shape, cfg, rng);
       const S = maze.S;
       const spec = (def, bonus, extra) => Object.assign({
         geom: def.geom, r: def.r * S, d: (def.d || 0) * S,
@@ -340,7 +337,7 @@
       $('lcBonus').textContent = mat.bonus.name;
       $('lcBonusN').textContent = this.bonusTotal;
       $('lcHint').textContent = this.input.mode === 'tilt'
-        ? '直拿手機，東西往下流；卡在杯底就往杯口那側倒過水平再轉回來！'
+        ? '罐子是倒過來的：轉動手機，順著迷宮把東西倒出瓶口！卡住就搖一搖'
         : (this.touchDevice ? '拖曳旋轉罐子・雙擊或按「搖一搖」鬆動卡住的東西' : '拖曳 / ← → 旋轉・空白鍵搖晃・↑ 輕拍');
       this.drawPreview($('lcPreview'), mat, false);
       this.drawPreview($('lcBonusPreview'), mat, true);
@@ -408,7 +405,7 @@
       const [gx, gy] = toJar(inp.sgx, inp.sgy, view);
       if (this.state === 'intro') {
         this.updateIntro(dt);
-        this.stepWorld(dt, gx, gy, 0, 0, null, false);
+        if (this.introT >= 2.1) this.stepWorld(dt, gx, gy, 0, 0, null, false);
       } else if (this.state === 'play') {
         const [sx, sy] = toJar(inp.ssx * SHAKE_GAIN, inp.ssy * SHAKE_GAIN, view);
         const rot = inp.mode === 'touch' ? { w: inp.omega, alpha: inp.alpha, k: 0.45 } : null;
@@ -416,10 +413,6 @@
         const lvl = inp.shakeLevel;
         if (lvl > 0.35) this.world.agitate(Math.min(1.2, lvl - 0.3) * 0.5, Math.random);
         if (lvl > 0.8) this.world.shakeBonds(Math.min(0.5, (lvl - 0.6) * 0.35), Math.random);
-        if (this.gateT > 0) {
-          this.gateT -= dt;
-          if (this.gateT <= 0) this.openGates();
-        }
         this.stepWorld(dt, gx, gy, sx, sy, rot, true);
         if (this.state !== 'play') return;
         const prev = Math.ceil(this.timeLeft);
@@ -468,13 +461,12 @@
       this.sound.flow(this.mat.id, this.state === 'title' ? 0 : U.clamp((avg - 25) / 380, 0, 1) * Math.min(1, w.activeCount / 40 + 0.3));
     }
 
-    // 開場倒數結束（或重新整理後）：打開房間的閘門、放開固定在口袋裡的加分物
+    // 開場倒數結束（或重新整理後）：打開瓶口的閘門、放開固定在口袋裡的加分物
     openGates() {
       if (!this.world) return;
       this.world.gatesOn = false;
       this.world.unpinAll();
       this.renderer.gateOpen = 1;
-      this.gateT = 0;
     }
 
     onPoured(b, scoring) {
@@ -622,7 +614,7 @@
       this.tickets--;
       const remaining = this.world.bodies.filter((b) => !b.poured).map((b) => b.item);
       this.setupLevel(this.cfg, this.rng, remaining);
-      this.gateT = 0.9;
+      this.openGates();
       this.renderer.plate.pct = this.renderer.plate.shown = this.poured / this.total;
       this.renderer.flash = 1;
       this.renderer.pop = 1;

@@ -18,6 +18,7 @@
       this.x = new F(capacity); this.y = new F(capacity);
       this.vx = new F(capacity); this.vy = new F(capacity);
       this.lx = new F(capacity); this.ly = new F(capacity);
+      this.ox = new F(capacity); this.oy = new F(capacity);   // 子步開始時的位置（防穿牆用）
       this.r = new F(capacity); this.w = new F(capacity);
       this.e = new F(capacity); this.mu = new F(capacity); this.drag = new F(capacity);
       this.coh = new Uint8Array(capacity);
@@ -147,6 +148,7 @@
         const s2 = nvx * nvx + nvy * nvy;
         if (s2 > vmax2) { const f = vmax / Math.sqrt(s2); nvx *= f; nvy *= f; }
         vx[i] = nvx; vy[i] = nvy;
+        this.ox[i] = x[i]; this.oy[i] = y[i];
         x[i] += nvx * h; y[i] += nvy * h;
       }
       this.buildHash();
@@ -156,6 +158,30 @@
       this.solveWalls();
       this.solveLinks();
       this.solveWalls();
+      this.preventCrossing();
+    }
+
+    // 防穿牆：這一子步的移動若跨過任何牆（或關著的閘門）的中心線，就退回原位。
+    // 內容物堆很多時，彼此推擠可能一次把顆粒推過牆，這裡做最後把關。
+    preventCrossing() {
+      const { x, y, ox, oy, vx, vy, active, pin } = this;
+      const m = this.maze, segs = m.segs, idx = m.wallIdx, S = m.S, gx0 = m.x0, gy0 = m.y0, C = m.C, R = m.R;
+      const gates = this.gatesOn && this.gates ? this.gates : null;
+      const cellList = (px, py) => {
+        const ci = Math.floor((px - gx0) / S), cj = Math.floor((py - gy0) / S);
+        return ci < 0 || cj < 0 || ci >= C || cj >= R ? null : idx[cj * C + ci];
+      };
+      for (let i = 0; i < this.n; i++) {
+        if (!active[i] || pin[i]) continue;
+        const ax = ox[i], ay = oy[i], bx = x[i], by = y[i];
+        if (ax === bx && ay === by) continue;
+        let hit = false;
+        const l1 = cellList(ax, ay), l2 = cellList(bx, by);
+        if (l1) for (let q = 0; q < l1.length && !hit; q++) hit = crosses(ax, ay, bx, by, segs, l1[q] * 4);
+        if (l2 && l2 !== l1) for (let q = 0; q < l2.length && !hit; q++) hit = crosses(ax, ay, bx, by, segs, l2[q] * 4);
+        if (gates) for (let o = 0; o < gates.length && !hit; o += 4) hit = crosses(ax, ay, bx, by, gates, o);
+        if (hit) { x[i] = ax; y[i] = ay; vx[i] *= -0.2; vy[i] *= -0.2; }
+      }
     }
 
     addBond(i, j) {
@@ -450,6 +476,17 @@
         vy[i] += -gdy * up + gdx * side;
       }
     }
+  }
+
+  // 線段 a→b 是否穿過 arr[o..o+3] 這段牆的中心線
+  function crosses(ax, ay, bx, by, arr, o) {
+    const cx = arr[o], cy = arr[o + 1], dx = arr[o + 2], dy = arr[o + 3];
+    const d1 = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx);
+    const d2 = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
+    if ((d1 > 0 && d2 > 0) || (d1 < 0 && d2 < 0) || d1 === d2) return false;
+    const d3 = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+    const d4 = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
+    return (d3 > 0) !== (d4 > 0);
   }
 
   // 在指定格子中以六角格點擺放物件（由下往上填，開場就像已經沉澱好）
