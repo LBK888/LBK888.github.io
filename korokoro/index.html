@@ -73,7 +73,7 @@
         <div class="logo-en">Korokoro Maze Jar</div>
       </div>
       <div class="title-bottom">
-        <p class="tagline">轉動手機，把罐子裡的東西倒出來！</p>
+        <p class="tagline">轉動手機，把罐子裡的東西從底部倒出來！</p>
         <button id="btnStart" class="btn primary big">開始遊戲</button>
         <button id="btnHow" class="btn">玩法說明</button>
         <div class="toggles">
@@ -89,12 +89,13 @@
       <div class="card how">
         <h2>玩法說明</h2>
         <ul class="how-list">
-          <li><span class="tag">目標</span>在時間內，從瓶口倒出目標比例的內容物就過關！越快、越連續倒出，分數越高（COMBO）。</li>
-          <li><span class="tag">手機</span>直接<b>轉動手機</b>：東西會往真實的「下方」掉。順著迷宮把它們引到瓶口。</li>
-          <li><span class="tag">卡住</span><b>左右搖晃</b>手機會讓內容物晃動；<b>輕拍</b>手機背面，內容物會彈跳鬆開。</li>
+          <li><span class="tag">目標</span>在時間內，從罐子<b>底部的出口</b>倒出目標比例就過關！達標後最多只剩 10 秒，可以趁機多倒、去拿特殊物。越快、越連續倒出分數越高（COMBO）。</li>
+          <li><span class="tag">手機</span>直拿手機、<b>轉動手機</b>：東西會往真實的「下方」掉。迷宮裡有「回水彎」，東西會卡在杯底，要把手機往杯口那側<b>倒過水平</b>才翻得過去，再轉回來讓它往下掉。</li>
+          <li><span class="tag">卡住</span><b>用力搖晃</b>手機會攪動內容物、甩開黏在一起的冰糖與鹽；<b>輕拍</b>手機背面，內容物會彈跳鬆開。</li>
           <li><span class="tag">電腦</span>拖曳罐子或用 ← → 旋轉；空白鍵搖晃、↑ 輕拍；Esc 暫停。</li>
           <li><span class="tag">特殊物</span>彩虹藥丸、金色彩球、冰塊、蜂蜜裡的蒼蠅…倒出可得 +300 分，還會送一張重新整理卷。</li>
-          <li><span class="tag">整理卷</span>覺得迷宮太難？用一張卷重新生成迷宮。時間不會重來、已倒出的會保留。開局送 1 張。</li>
+          <li><span class="tag">整理卷</span>覺得迷宮太難？用一張卷重新生成迷宮。時間不會重來、已倒出的會保留。開局送 1 張，後面的關卡要好好規劃怎麼用。</li>
+          <li><span class="tag">難度</span>第 1 關 30 秒、目標 50%；每過一關時間 +1 秒，目標一路升到 95%。</li>
         </ul>
         <p class="note">提示：手機上請開啟「螢幕方向鎖定」，玩起來最順。傾斜操作需要以 HTTPS 網址開啟。</p>
         <button id="btnHowClose" class="btn primary">知道了！</button>
@@ -133,17 +134,20 @@
       </div>
     </div>
 
-    <!-- 失敗 -->
+    <!-- 遊戲結束：結算與排行榜 -->
     <div id="overModal" class="modal hidden">
       <div class="card over">
-        <h2>時間到…</h2>
-        <p class="sub">目標 <b id="ovTarget"></b>，倒出了 <b id="ovPct"></b></p>
-        <ul class="stats">
-          <li><span>到達關卡</span><b id="ovStage"></b></li>
-          <li class="total"><span>總分</span><b id="ovScore"></b></li>
-          <li><span>最高分</span><b id="ovBest"></b></li>
-        </ul>
-        <button id="btnRetry" class="btn primary">再挑戰這一關</button>
+        <h2>遊戲結束</h2>
+        <p class="sub">第 <b id="ovStage"></b> 關：目標 <b id="ovTarget"></b>，倒出了 <b id="ovPct"></b></p>
+        <div class="final-score">
+          <small>本次分數</small>
+          <b id="ovScore">0</b>
+          <span id="ovRankTag" class="rank-tag"></span>
+        </div>
+        <h3 class="rank-title">排行榜</h3>
+        <ol id="ovRanking" class="ranking"></ol>
+        <p class="note">排行榜只保存在這次開啟的頁面裡，重新整理後會清空。</p>
+        <button id="btnRestartRun" class="btn primary">重新開始</button>
         <button id="btnTitle" class="btn">回到標題</button>
       </div>
     </div>

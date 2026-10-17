@@ -67,8 +67,9 @@
         ox = (ext.x0 + ext.x1) / 2; oy = (ext.y0 + ext.y1) / 2;
       }
       this.scale = Math.min(s, 1.4);
-      this.cx = this.W / 2 - ox * this.scale;
-      this.cy = top + availH / 2 - oy * this.scale;
+      // 罐子固定轉 180° 畫，所以中心偏移要反過來
+      this.cx = this.W / 2 + ox * this.scale;
+      this.cy = top + availH / 2 + oy * this.scale;
       this.plateX = this.W / 2;
       this.plateY = this.H - this.safe.bottom - 74;
       this.buildStatic();
@@ -98,6 +99,7 @@
       this.time += dt;
       this.flash = Math.max(0, this.flash - dt * 2.5);
       this.pop = Math.max(0, this.pop - dt * 1.6);
+      this.gateOpen = Math.max(0, (this.gateOpen || 0) - dt * 3);
       this.plate.bump = Math.max(0, this.plate.bump - dt * 4);
       this.plate.shown += (this.plate.pct - this.plate.shown) * (1 - Math.exp(-dt * 6));
       this.jig.a = Math.max(0, this.jig.a - dt * 3.5);
@@ -109,7 +111,7 @@
       cat.blink -= dt;
       if (cat.blink < -0.12) cat.blink = 2 + Math.random() * 3;
       // 倒出的物件沿重力繼續掉落、縮小消失
-      const gx = game.input.dx * 1800, gy = game.input.dy * 1800;
+      const gx = game.gdx * 1800, gy = game.gdy * 1800;
       for (let i = this.poured.length - 1; i >= 0; i--) {
         const b = this.poured[i];
         b.vx = (b.vx + gx * dt) * (1 - 0.8 * dt);
@@ -203,6 +205,8 @@
         ctx.scale(s, s);
         const b = this.staticBox;
         ctx.drawImage(this.staticCv, b.x0, b.y0, b.w, b.h);
+        this.drawGates(ctx, game.world);
+        if (game.world.ba.length) this.drawBonds(ctx, game.world);
         // 亮點固定在螢幕左上方
         const c = Math.cos(-rot), sn = Math.sin(-rot);
         const v = { hx: -0.62 * c + 0.78 * sn, hy: -0.62 * sn - 0.78 * c, t: this.time };
@@ -241,6 +245,49 @@
       }
       if (normal.length) this.mat.batch(ctx, normal, v);
       for (const b of bonus) this.mat.bonus.draw(ctx, b, v);
+    }
+
+    // 房間開口的閘門：倒數時關著，開始後像拉門一樣往兩側收起
+    drawGates(ctx, world) {
+      const mz = this.maze, gs = mz.gates;
+      const a = world.gatesOn ? 1 : this.gateOpen;
+      if (a <= 0 || !gs || !gs.length) return;
+      ctx.save();
+      ctx.lineCap = 'round';
+      const path = () => {
+        ctx.beginPath();
+        for (let k = 0; k < gs.length; k += 4) {
+          const ax = gs[k], ay = gs[k + 1], bx = gs[k + 2], by = gs[k + 3], f = 0.5 * a;
+          ctx.moveTo(ax, ay); ctx.lineTo(ax + (bx - ax) * f, ay + (by - ay) * f);
+          ctx.moveTo(bx, by); ctx.lineTo(bx - (bx - ax) * f, by - (by - ay) * f);
+        }
+      };
+      path();
+      ctx.lineWidth = mz.rw * 2.6;
+      ctx.strokeStyle = U.tint(this.theme.accent, -0.05);
+      ctx.stroke();
+      path();
+      ctx.setLineDash([mz.S * 0.1, mz.S * 0.1]);
+      ctx.lineWidth = mz.rw * 1.1;
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 冰糖 / 鹽的沾黏：在黏住的兩顆之間畫一小段「膠」
+    drawBonds(ctx, world) {
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = this.mat.bond || 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = world.rMax * 1.2;
+      ctx.beginPath();
+      for (let k = 0; k < world.ba.length; k++) {
+        const a = world.ba[k], b = world.bb[k];
+        ctx.moveTo(world.x[a], world.y[a]);
+        ctx.lineTo(world.x[b], world.y[b]);
+      }
+      ctx.stroke();
+      ctx.restore();
     }
 
     drawFx(ctx, inv) {
@@ -515,7 +562,7 @@
     g.save();
     g.shadowColor = 'rgba(110,80,120,0.25)';
     g.shadowBlur = 20 * k;
-    g.shadowOffsetY = 8 * k;
+    g.shadowOffsetY = -8 * k;
     g.fillStyle = th.shell;
     g.beginPath(); sh.outlinePath(g); g.fill();
     g.beginPath(); U.roundRect(g, tube.x - T, tube.y - T * 0.6, tube.w + 2 * T, tube.h, T); g.fill();
@@ -542,7 +589,7 @@
     g.globalAlpha = 1;
     g.lineCap = 'round';
     g.lineWidth = rw * 2;
-    segPath(g, mz, S * 0.035, S * 0.06);
+    segPath(g, mz, -S * 0.035, -S * 0.06);
     g.strokeStyle = th.shadow;
     g.stroke();
     g.restore();
@@ -561,9 +608,9 @@
     g.strokeStyle = 'rgba(255,255,255,0.5)';
     g.lineCap = 'round';
     g.lineWidth = T * 0.8;
-    g.beginPath(); g.arc(0, 0, R * 0.84, Math.PI * 1.08, Math.PI * 1.36); g.stroke();
+    g.beginPath(); g.arc(0, 0, R * 0.84, Math.PI * 0.08, Math.PI * 0.36); g.stroke();
     g.lineWidth = T * 0.45;
-    g.beginPath(); g.arc(0, 0, R * 0.84, Math.PI * 1.43, Math.PI * 1.51); g.stroke();
+    g.beginPath(); g.arc(0, 0, R * 0.84, Math.PI * 0.43, Math.PI * 0.51); g.stroke();
     g.restore();
 
     const lh = T * 1.15;
@@ -580,6 +627,7 @@
     decoOver(g, sh, mz, th);
   }
 
+  // 裝飾跟著罐子一起畫（罐子座標＝罐子正立時的樣子；遊戲中整個罐子倒立）
   function decoUnder(g, sh, mz, th) {
     const b = sh.bbox;
     if (sh.deco === 'pudding') {
@@ -628,26 +676,32 @@
     g.beginPath(); U.star(g, x, y, s, 4, 0.35); g.fill();
   }
 
+  function gingham(g, x, y, w, h, r, fill, edge) {
+    g.save();
+    g.beginPath(); U.roundRect(g, x, y, w, h, r);
+    g.fillStyle = fill; g.fill();
+    g.save(); g.clip();
+    g.fillStyle = 'rgba(255,255,255,0.45)';
+    for (let xx = x; xx < x + w; xx += 14) g.fillRect(xx, y, 7, h);
+    for (let yy = y; yy < y + h; yy += 14) g.fillRect(x, yy, w, 7);
+    g.restore();
+    g.lineWidth = 3; g.strokeStyle = edge; g.stroke();
+    g.restore();
+  }
+
   function decoOver(g, sh, mz, th) {
     const b = sh.bbox, T = PM.SHELL_T, edge = U.tint(th.shell, -0.18);
     switch (sh.deco) {
-      case 'jar': {
+      case 'jar':
+        // 打開的蓋子放在瓶口旁邊、瓶頸綁蝴蝶結
         g.save();
-        g.translate(b.x1 - 58, b.y0 - 6);
+        g.translate(mz.neckX1 + 92, mz.exitY + 4);
         g.rotate(0.32);
-        g.beginPath(); U.roundRect(g, -50, -14, 100, 28, 11);
-        g.fillStyle = '#FF9FB7'; g.fill();
-        g.save(); g.clip();
-        g.fillStyle = 'rgba(255,255,255,0.45)';
-        for (let x = -50; x < 50; x += 14) g.fillRect(x, -14, 7, 28);
-        for (let y = -14; y < 14; y += 14) g.fillRect(-50, y, 100, 7);
-        g.restore();
-        g.lineWidth = 3; g.strokeStyle = '#E07592'; g.stroke();
+        gingham(g, -50, -14, 100, 28, 11, '#FF9FB7', '#E07592');
         g.restore();
         bow(g, mz.neckX0 - mz.rw - T * 1.2, (mz.exitY + mz.neckBaseY) / 2 + 6, 13, '#FFD36E', '#D9A43A');
         break;
-      }
-      case 'heart': {
+      case 'heart':
         for (const sd of [-1, 1]) {
           g.save();
           g.translate(sd * (b.x1 - 6), b.y0 + sh.h * 0.3);
@@ -662,7 +716,6 @@
         sparkle(g, b.x1 - 20, b.y0 + 4, 9, '#FFD36E');
         sparkle(g, b.x0 + 30, b.y1 - 70, 7, '#fff');
         break;
-      }
       case 'gift':
         bow(g, b.x0 + 46, b.y0 + 8, 26, th.accent, edge);
         break;
@@ -673,6 +726,7 @@
         sparkle(g, b.x1 - 30, b.y0 + 10, 9, '#FFD36E');
         break;
       case 'flask': {
+        // 拔下來的軟木塞與吊牌
         g.save();
         g.translate(mz.neckX1 + 56, mz.exitY - 6);
         g.rotate(0.5);
@@ -704,12 +758,9 @@
       case 'cloud':
         sparkle(g, b.x0 + 18, b.y0 + 40, 10, '#FFD36E');
         sparkle(g, b.x1 - 10, b.y0 + 60, 7, '#fff');
-        g.fillStyle = '#9ED3F5';
-        for (const [x, y] of [[-70, b.y1 + 22], [-20, b.y1 + 34], [40, b.y1 + 20]]) {
-          g.beginPath(); g.moveTo(x, y - 9); g.quadraticCurveTo(x + 6, y, x, y + 4); g.quadraticCurveTo(x - 6, y, x, y - 9); g.fill();
-        }
+        sparkle(g, b.x0 + 60, b.y1 + 10, 6, '#FFD36E');
         break;
-      case 'cat': {
+      case 'cat':
         g.strokeStyle = edge; g.lineWidth = 3; g.lineCap = 'round';
         for (const sd of [-1, 1]) {
           const x = sd * (b.x1 - 4);
@@ -723,7 +774,6 @@
           g.strokeStyle = edge;
         }
         break;
-      }
     }
   }
 

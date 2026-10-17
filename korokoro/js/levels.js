@@ -1,44 +1,48 @@
-/* 關卡：外殼 × 內容物；難度 = 迷宮更大更彎 + 目標倒出比例提高（轉彎數上限 8，避免太難） */
+/* 關卡：外殼 × 內容物。難度 = 迷宮變大、回水彎陷阱變多、目標比例 50% → 95%、時間 30 秒起每關 +1 秒。
+   約第 10 關開始需要策略（搖一搖、重新整理卷），第 20 關之後目標 95%，非常難。 */
 (function () {
   'use strict';
   const PM = window.PM, U = PM.U;
 
-  // cols 格數、room 房間比例、open 房間開口數、turns 最少轉彎數範圍、target 目標比例、time 秒、bonus 加分物數
-  PM.LEVELS = [
-    { shape: 'jar', mat: 'water', cols: 8, room: 0.42, open: 2, turns: [2, 3], target: 0.5, time: 60, bonus: 1 },
-    { shape: 'bottle', mat: 'balls', cols: 8, room: 0.4, open: 2, turns: [2, 4], target: 0.55, time: 60, bonus: 1 },
-    { shape: 'heart', mat: 'candy', cols: 9, room: 0.38, open: 2, turns: [3, 4], target: 0.6, time: 70, bonus: 1 },
-    { shape: 'square', mat: 'pills', cols: 9, room: 0.36, open: 2, turns: [3, 5], target: 0.6, time: 70, bonus: 2 },
-    { shape: 'ellipse', mat: 'salt', cols: 10, room: 0.34, open: 1, turns: [3, 5], target: 0.6, time: 70, bonus: 2 },
-    { shape: 'pudding', mat: 'honey', cols: 9, room: 0.36, open: 2, turns: [3, 5], target: 0.5, time: 90, bonus: 2 },
-    { shape: 'cloud', mat: 'lottery', cols: 10, room: 0.34, open: 1, turns: [4, 6], target: 0.65, time: 70, bonus: 2 },
-    { shape: 'cat', mat: 'sugar', cols: 11, room: 0.3, open: 1, turns: [4, 6], target: 0.62, time: 90, bonus: 2 },
-    { shape: 'heart', mat: 'water', cols: 11, room: 0.3, open: 1, turns: [5, 7], target: 0.7, time: 60, bonus: 2 },
-    { shape: 'jar', mat: 'candy', cols: 12, room: 0.28, open: 1, turns: [5, 7], target: 0.7, time: 95, bonus: 3 },
-    { shape: 'bottle', mat: 'honey', cols: 11, room: 0.28, open: 1, turns: [5, 7], target: 0.62, time: 110, bonus: 3 },
-    { shape: 'square', mat: 'lottery', cols: 11, room: 0.3, open: 1, turns: [5, 7], target: 0.7, time: 100, bonus: 3 },
-    { shape: 'cat', mat: 'salt', cols: 11, room: 0.3, open: 1, turns: [5, 7], target: 0.65, time: 120, bonus: 3 },
-    { shape: 'cloud', mat: 'pills', cols: 12, room: 0.26, open: 1, turns: [6, 8], target: 0.8, time: 75, bonus: 3 },
+  // 前 8 關依序介紹每一種外殼與內容物
+  const ORDER = [
+    ['jar', 'water'], ['bottle', 'balls'], ['heart', 'candy'], ['square', 'pills'],
+    ['ellipse', 'salt'], ['pudding', 'honey'], ['cloud', 'lottery'], ['cat', 'sugar'],
   ];
+  // 每種外殼至少要幾格寬，才放得下回水彎陷阱
+  const MIN_COLS = { jar: 8, bottle: 9, heart: 10, square: 8, ellipse: 10, pudding: 9, cloud: 12, cat: 9 };
 
-  // 第 15 關之後：無盡模式，隨機組合，難度緩慢上升到上限
-  PM.getLevel = function (index) {
-    if (index < PM.LEVELS.length) return Object.assign({ n: index + 1 }, PM.LEVELS[index]);
-    const k = index - PM.LEVELS.length;
+  function pickCombo(index) {
+    if (index < ORDER.length) return ORDER[index];
     const rng = U.makeRng(9173 + index * 131);
-    const prev = PM.getLevel(index - 1);
+    const prev = pickCombo(index - 1);
     let shape, mat;
-    do { shape = U.pick(PM.SHAPE_IDS, rng); } while (shape === prev.shape);
-    do { mat = U.pick(PM.MATERIAL_IDS, rng); } while (mat === prev.mat);
+    do { shape = U.pick(PM.SHAPE_IDS, rng); } while (shape === prev[0]);
+    do { mat = U.pick(PM.MATERIAL_IDS, rng); } while (mat === prev[1]);
+    return [shape, mat];
+  }
+
+  PM.getLevel = function (index) {
+    const n = index + 1;
+    const [shape, mat] = pickCombo(index);
     return {
-      n: index + 1, shape, mat,
-      cols: Math.min(13, 12 + (k >> 2)), room: 0.27, open: 1,
-      turns: [6, 8],
-      target: Math.min(0.85, 0.72 + k * 0.01),
-      time: mat === 'honey' || mat === 'salt' ? 120 : 105, bonus: 3,
+      n, shape, mat,
+      cols: Math.min(14, Math.max(MIN_COLS[shape], 8 + Math.floor((n - 1) / 3))),
+      wallK: PM.MATERIALS[mat].wallK,
+      room: Math.max(0.17, 0.26 - (n - 1) * 0.005),
+      open: n <= 6 ? 2 : 1,
+      traps: n <= 6 ? 1 : n <= 14 ? 2 : 3,
+      // 口袋：迷宮裡會困住部分內容物的小凹處，越後面越多（加分物會優先放在口袋裡）
+      pockets: n <= 5 ? [0, 0] : n <= 10 ? [0, 3] : n <= 15 ? [2, 6] : n <= 19 ? [3, 9] : [5, 14],
+      hbias: n <= 10 ? 0.75 : 0.55,
+      turns: [1, 99],
+      target: Math.min(0.95, 0.5 + ((n - 1) * 0.45) / 19),
+      time: 30 + (n - 1),
+      bonus: n <= 3 ? 1 : n <= 9 ? 2 : 3,
+      bonusHard: n > 3,
     };
   };
 
   // 示範用（標題畫面背景）
-  PM.DEMO_LEVEL = { n: 0, shape: 'jar', mat: 'candy', cols: 7, room: 0.5, open: 3, turns: [1, 3], target: 1, time: 999, bonus: 1 };
+  PM.DEMO_LEVEL = { n: 0, shape: 'jar', mat: 'candy', cols: 8, room: 0.32, open: 2, traps: 1, turns: [1, 99], target: 1, time: 999, bonus: 1 };
 })();

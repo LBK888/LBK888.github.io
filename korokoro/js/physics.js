@@ -32,6 +32,16 @@
       this.cohesion = 0; this.cohRange = 0.5; this.visc = 0;
       this.impacts = 0; this.impactMax = 0;
       this.speedSum = 0; this.activeCount = 0;
+      // 特殊行為：固定（開場前）、浮力（冰塊）、沾黏（冰糖滾動時、鹽靜止時）
+      this.pin = new Uint8Array(capacity);
+      this.flt = new Uint8Array(capacity);
+      this.sub = new Float32Array(capacity);
+      this.stk = new Uint8Array(capacity);
+      this.rest = new Float32Array(capacity);
+      this.nbond = new Uint8Array(capacity);
+      this.ba = []; this.bb = []; this.bL = []; this.bondKeys = new Set();
+      this.adhesion = 0;           // 黏液（蜂蜜）黏在牆上的程度
+      this.gates = null; this.gatesOn = false;
     }
 
     // geom: single | pill | tri | quad；size 皆為設計單位
@@ -59,6 +69,9 @@
         this.w[i] = 1 / mass;
         this.e[i] = spec.e; this.mu[i] = spec.mu; this.drag[i] = spec.drag;
         this.coh[i] = spec.cohesive ? 1 : 0;
+        this.flt[i] = spec.float ? 1 : 0;
+        this.pin[i] = spec.pinned ? 1 : 0;
+        this.stk[i] = spec.stickyMode || 0;
         this.active[i] = 1;
         this.bodyOf[i] = id;
         this.rMin = Math.min(this.rMin, r);
@@ -108,9 +121,18 @@
       const vmax = (0.8 * (this.maze.rw + this.rMin)) / h;
       const vmax2 = vmax * vmax;
       const lim = this.G * 2.5;
+      const { pin, flt, sub, stk, rest } = this;
       for (let i = 0; i < this.n; i++) {
         if (!active[i]) continue;
+        if (pin[i]) { vx[i] = vy[i] = 0; continue; }
         let ax = gx, ay = gy;
+        if (flt[i]) {
+          // 浮力：周圍被液體粒子包住的程度越高，往重力反方向的力越大（淨力約 1g 向上）
+          const f = Math.min(1, sub[i] / 3) * 2.1;
+          ax -= gx * f; ay -= gy * f;
+          sub[i] = 0;
+        }
+        if (stk[i] === 2) rest[i] = vx[i] * vx[i] + vy[i] * vy[i] < 900 ? rest[i] + h : 0;
         if (rot) {
           // 旋轉座標系的假想力：離心力 + 歐拉力 + 科氏力（觸控旋轉模式用）
           const w = rot.w, al = rot.alpha;
@@ -130,10 +152,65 @@
       this.buildHash();
       this.solvePairs(h);
       this.solveLinks();
+      if (this.ba.length) this.solveBonds();
       this.solveWalls();
       this.solveLinks();
       this.solveWalls();
     }
+
+    addBond(i, j) {
+      const key = i < j ? i * 65536 + j : j * 65536 + i;
+      if (this.bondKeys.has(key) || this.ba.length >= 160) return;
+      this.bondKeys.add(key);
+      this.ba.push(i); this.bb.push(j);
+      this.bL.push(Math.hypot(this.x[j] - this.x[i], this.y[j] - this.y[i]));
+      this.nbond[i]++; this.nbond[j]++;
+    }
+
+    removeBond(k) {
+      const i = this.ba[k], j = this.bb[k];
+      this.bondKeys.delete(i < j ? i * 65536 + j : j * 65536 + i);
+      this.nbond[i]--; this.nbond[j]--;
+      const last = this.ba.length - 1;
+      this.ba[k] = this.ba[last]; this.bb[k] = this.bb[last]; this.bL[k] = this.bL[last];
+      this.ba.pop(); this.bb.pop(); this.bL.pop();
+    }
+
+    // 沾黏：軟性的距離約束；拉得太開就斷
+    solveBonds() {
+      const { x, y, vx, vy, w, active, ba, bb, bL } = this;
+      for (let k = ba.length - 1; k >= 0; k--) {
+        const a = ba[k], b = bb[k];
+        if (!active[a] || !active[b]) { this.removeBond(k); continue; }
+        const dx = x[b] - x[a], dy = y[b] - y[a], d = Math.sqrt(dx * dx + dy * dy) || 1e-6;
+        const diff = d - bL[k];
+        if (Math.abs(diff) > bL[k] * 0.55) { this.removeBond(k); continue; }
+        const nx = dx / d, ny = dy / d, wa = w[a], wb = w[b], ws = wa + wb;
+        const c = diff * 0.6 / ws;
+        x[a] += nx * c * wa; y[a] += ny * c * wa;
+        x[b] -= nx * c * wb; y[b] -= ny * c * wb;
+        const rv = ((vx[b] - vx[a]) * nx + (vy[b] - vy[a]) * ny) * 0.5 / ws;
+        vx[a] += nx * rv * wa; vy[a] += ny * rv * wa;
+        vx[b] -= nx * rv * wb; vy[b] -= ny * rv * wb;
+      }
+    }
+
+    // 大力搖晃 / 輕拍：沾黏有機率被甩開
+    shakeBonds(prob, rng) {
+      for (let k = this.ba.length - 1; k >= 0; k--) if (rng() < prob) this.removeBond(k);
+    }
+
+    // 搖晃時的攪動：給每顆一點隨機速度，讓卡住的東西動起來
+    agitate(level, rng) {
+      const v = 160 * level, { vx, vy, active, pin } = this;
+      for (let i = 0; i < this.n; i++) {
+        if (!active[i] || pin[i]) continue;
+        vx[i] += (rng() - 0.5) * v;
+        vy[i] += (rng() - 0.5) * v;
+      }
+    }
+
+    unpinAll() { this.pin.fill(0); }
 
     buildHash() {
       const { x, y, active, n, pc } = this;
@@ -157,7 +234,7 @@
     }
 
     solvePairs(h) {
-      const { x, y, vx, vy, r, w, e, mu, coh, bodyOf, active, pc, sorted, cellStart } = this;
+      const { x, y, vx, vy, r, w, e, mu, coh, bodyOf, active, pc, sorted, cellStart, pin, flt, sub, stk, rest, nbond } = this;
       const gw = this.gw, gh = this.gh;
       const cohOn = this.cohesion > 0 || this.visc > 0;
       const cohK = this.cohesion * this.G * h, visc = this.visc, cohR = this.cohRange;
@@ -175,11 +252,16 @@
               let dx = x[j] - x[i], dy = y[j] - y[i];
               const R = r[i] + r[j];
               const d2 = dx * dx + dy * dy;
+              if (flt[i] !== flt[j] && d2 < R * R * 2) {
+                if (flt[i] && coh[j]) sub[i]++;
+                else if (flt[j] && coh[i]) sub[j]++;
+              }
               if (d2 < R * R) {
                 let d = Math.sqrt(d2);
                 if (d < 1e-5) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d = Math.hypot(dx, dy); }
                 const nx = dx / d, ny = dy / d;
-                const wi = w[i], wj = w[j], ws = wi + wj;
+                const wi = pin[i] ? 0 : w[i], wj = pin[j] ? 0 : w[j], ws = wi + wj;
+                if (ws === 0) continue;
                 const corr = (R - d) / ws;
                 x[i] -= nx * corr * wi; y[i] -= ny * corr * wi;
                 x[j] += nx * corr * wj; y[j] += ny * corr * wj;
@@ -197,6 +279,11 @@
                   vx[i] -= ix * wi; vy[i] -= iy * wi;
                   vx[j] += ix * wj; vy[j] += iy * wj;
                   if (-vn > IMPACT_V) { this.impacts++; if (-vn > this.impactMax) this.impactMax = -vn; }
+                }
+                // 沾黏：冰糖在滾動中碰到就黏上；鹽則是靜止一陣子後結塊
+                if ((stk[i] || stk[j]) && nbond[i] < 2 && nbond[j] < 2) {
+                  const s = stk[i] ? i : j;
+                  if (stk[s] === 1 ? vx[s] * vx[s] + vy[s] * vy[s] > 4900 : rest[s] > 0.6) this.addBond(i, j);
                 }
                 if (cohOn && coh[i] && coh[j] && visc > 0) {
                   const kx = rvx * visc * 0.5, ky = rvy * visc * 0.5;
@@ -226,7 +313,7 @@
       const { x, y, vx, vy, w, active, la, lb, lL } = this;
       for (let k = 0; k < la.length; k++) {
         const a = la[k], b = lb[k];
-        if (!active[a]) continue;
+        if (!active[a] || this.pin[a]) continue;
         const dx = x[b] - x[a], dy = y[b] - y[a];
         const d = Math.sqrt(dx * dx + dy * dy);
         if (d < 1e-6) continue;
@@ -244,21 +331,35 @@
     solveWalls() {
       const { x, y, vx, vy, r, e, mu, active } = this;
       const m = this.maze, segs = m.segs, idx = m.wallIdx, S = m.S, gx0 = m.x0, gy0 = m.y0, C = m.C, R = m.R, rw = m.rw;
+      const gates = this.gatesOn && this.gates ? this.gates : null, ng = gates ? gates.length / 4 : 0;
+      const adh = this.adhesion * this.G * (1 / SUB_HZ), coh = this.coh, pin = this.pin;
       for (let i = 0; i < this.n; i++) {
-        if (!active[i]) continue;
+        if (!active[i] || pin[i]) continue;
         const ci = Math.floor((x[i] - gx0) / S), cj = Math.floor((y[i] - gy0) / S);
         if (ci < 0 || cj < 0 || ci >= C || cj >= R) continue;
         const list = idx[cj * C + ci];
-        if (!list) continue;
+        const nl = list ? list.length : 0;
+        if (!nl && !ng) continue;
         const Rr = r[i] + rw;
-        for (let q = 0; q < list.length; q++) {
-          const o = list[q] * 4;
-          const ax = segs[o], ay = segs[o + 1], abx = segs[o + 2] - ax, aby = segs[o + 3] - ay;
+        for (let q = 0; q < nl + ng; q++) {
+          const src = q < nl ? segs : gates, o = (q < nl ? list[q] : q - nl) * 4;
+          const ax = src[o], ay = src[o + 1], abx = src[o + 2] - ax, aby = src[o + 3] - ay;
           let t = ((x[i] - ax) * abx + (y[i] - ay) * aby) / (abx * abx + aby * aby);
           t = t < 0 ? 0 : t > 1 ? 1 : t;
           const dx = x[i] - (ax + abx * t), dy = y[i] - (ay + aby * t);
           const d2 = dx * dx + dy * dy;
-          if (d2 >= Rr * Rr) continue;
+          if (d2 >= Rr * Rr) {
+            // 蜂蜜這類黏液：靠近牆就被吸住一點
+            if (adh > 0 && coh[i]) {
+              const ra = Rr + r[i] * 0.7;
+              if (d2 < ra * ra) {
+                const d = Math.sqrt(d2);
+                vx[i] -= (dx / d) * adh; vy[i] -= (dy / d) * adh;
+                vx[i] *= 0.995; vy[i] *= 0.995;
+              }
+            }
+            continue;
+          }
           let d = Math.sqrt(d2), nx, ny;
           if (d < 1e-6) { const L = Math.hypot(abx, aby); nx = -aby / L; ny = abx / L; d = 0; }
           else { nx = dx / d; ny = dy / d; }
@@ -383,7 +484,8 @@
         if (ok) pts.push([px, py, rng() * 0.6]);
       }
     }
-    pts.sort((a, b) => b[1] + b[2] * sp - (a[1] + a[2] * sp));
+    // 由靠出口那側（罐子座標 y 小，開場時閘門那側）開始填
+    pts.sort((a, b) => a[1] - a[2] * sp - (b[1] - b[2] * sp));
     return pts;
   };
 

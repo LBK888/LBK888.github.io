@@ -21,7 +21,7 @@
   // 固定（不隨機）的部分：格線、遮罩、瓶頸、房間
   function layout(shape, cfg) {
     const S = shape.w / cfg.cols;
-    const rw = S * 0.085;
+    const rw = S * (cfg.wallK || 0.085);   // 大顆內容物用較細的牆，走廊才放得下兩顆並排
     const b = shape.bbox;
     const k = Math.ceil((shape.mouthX - (b.x0 - S)) / S - 0.5);
     const x0 = shape.mouthX - (k + 0.5) * S;
@@ -135,49 +135,125 @@
     for (let i = 0; i < N; i++) if (type[i] === ROOM && !(bestSeen && bestSeen[i])) type[i] = SOLID;
   }
 
-  // 隨機部分：生成樹 → 房間開口 → 消除死路 → 計算轉彎數
+  // 隨機部分：分層迷宮，層與層之間只靠一個「回水彎」陷阱相連。
+  // 罐子座標：瓶口在上（j 小）、房間在下（j 大）。遊戲中罐子倒過來畫（瓶口朝下），
+  // 手機正拿時重力 = 罐子座標往上。陷阱是一個杯子：東西掉進杯底後，必須「逆重力」
+  // 往 j+1 爬一格才能越過杯緣，也就是手機要往杯口那側倒超過水平，再轉回來。
   function attempt(g, cfg, rng) {
     const { C, R, N, start } = g;
     const type = g.baseType.slice();
     const links = new Uint8Array(N);
-    const nbr = (a, d) => {
-      const ni = (a % C) + DX[d], nj = ((a / C) | 0) + DY[d];
-      return ni < 0 || nj < 0 || ni >= C || nj >= R ? -1 : nj * C + ni;
-    };
+    const at = (i, j) => (i < 0 || j < 0 || i >= C || j >= R ? -1 : j * C + i);
+    const nbr = (a, d) => at((a % C) + DX[d], ((a / C) | 0) + DY[d]);
     const link = (a, d) => { links[a] |= BIT[d]; links[nbr(a, d)] |= BIT[OPP[d]]; };
     const unlink = (a, d) => { links[a] &= ~BIT[d]; links[nbr(a, d)] &= ~BIT[OPP[d]]; };
+    const isMaze = (i, j) => { const a = at(i, j); return a >= 0 && type[a] === MAZE; };
 
-    // 1. 偏好直走的深度優先生成樹（走廊長、分岔少）
-    const visited = new Uint8Array(N);
-    const lastDir = new Int8Array(N).fill(-1);
-    const stack = [start];
-    visited[start] = 1;
-    while (stack.length) {
-      const cur = stack[stack.length - 1];
-      const opts = [];
-      for (let d = 0; d < 4; d++) {
-        const nb = nbr(cur, d);
-        if (nb >= 0 && type[nb] === MAZE && !visited[nb]) opts.push(d);
+    // 1. 把迷宮列分成 K+1 層，層與層之間各留兩列給陷阱
+    let jMax = -1, jAll = R;
+    for (let a = 0; a < N; a++) if (type[a] === MAZE) { jMax = Math.max(jMax, (a / C) | 0); jAll = Math.min(jAll, (a / C) | 0); }
+    const jMin = g.jTop, H = jMax - jMin + 1;
+    const K = Math.max(0, Math.min(cfg.traps || 0, Math.floor((H - 1) / 3)));
+    const sizes = new Array(K + 1).fill(1);
+    for (let r = 2 * K + K + 1; r < H; r++) sizes[Math.floor(rng() * (K + 1))]++;
+    const group = new Int16Array(N).fill(-1);
+    const bandOfRow = new Int16Array(R).fill(-1);
+    const traps = [];
+    let row = jMin;
+    for (let b = 0; b <= K; b++) {
+      for (let k = 0; k < sizes[b]; k++, row++) bandOfRow[row] = b;
+      if (b < K) { traps.push({ tB: row, tA: row + 1 }); row += 2; }
+    }
+    for (let j = jAll; j < jMin; j++) bandOfRow[j] = 0;   // 瓶頸兩側比瓶頸底還高的格子（例如貓耳旁）併入最下層
+    for (let a = 0; a < N; a++) if (type[a] === MAZE && bandOfRow[(a / C) | 0] >= 0) group[a] = bandOfRow[(a / C) | 0];
+
+    // 2. 陷阱：入口 c1（從上一層掉下）→ 杯底 tB 列走到 c2 → 爬一格到 tA → 走到 c3 → 往下一層
+    for (let t = 0; t < K; t++) {
+      const { tA, tB } = traps[t];
+      const cands = [];
+      for (let c1 = 0; c1 < C; c1++) {
+        for (let c3 = 0; c3 < C; c3++) {
+          const dir = Math.sign(c3 - c1);
+          if (Math.abs(c3 - c1) < 2) continue;
+          if (!isMaze(c1, tA + 1) || group[at(c1, tA + 1)] !== t + 1) continue;
+          if (!isMaze(c3, tB - 1) || group[at(c3, tB - 1)] !== t) continue;
+          if (!isMaze(c1, tA) || !isMaze(c3, tB)) continue;
+          for (let c2 = c1 + dir; c2 !== c3; c2 += dir) {
+            let ok = true;
+            for (let i = c1; ok && i !== c2 + dir; i += dir) ok = isMaze(i, tB);
+            for (let i = c2; ok && i !== c3 + dir; i += dir) ok = isMaze(i, tA);
+            // 杯底 2~4 格、上緣 1~3 格：每個陷阱是一次俐落的「倒過去再轉回來」
+            if (ok) cands.push([c1, c2, c3, -Math.pow(Math.abs(c2 - c1) - 3, 2) - Math.pow(Math.abs(c3 - c2) - 2, 2) + rng() * 2]);
+          }
+        }
       }
-      if (!opts.length) { stack.pop(); continue; }
-      let d;
-      if (lastDir[cur] >= 0 && opts.indexOf(lastDir[cur]) >= 0 && rng() < cfg.straight) d = lastDir[cur];
-      else d = opts[Math.floor(rng() * opts.length)];
-      const nb = nbr(cur, d);
-      link(cur, d);
-      visited[nb] = 1;
-      lastDir[nb] = d;
-      stack.push(nb);
+      if (!cands.length) return null;
+      cands.sort((p, q) => q[3] - p[3]);
+      traps[t].c = cands[Math.floor(rng() * Math.min(cands.length, 5))];
+    }
+    for (let t = 0; t < traps.length; t++) {
+      const tr = traps[t];
+      const [c1, c2, c3] = tr.c, dir = Math.sign(c3 - c1), hd = dir > 0 ? 1 : 3;
+      const keep = new Set([at(c1, tr.tA), at(c3, tr.tB)]);
+      for (let i = c1; i !== c2 + dir; i += dir) keep.add(at(i, tr.tB));
+      for (let i = c2; i !== c3 + dir; i += dir) keep.add(at(i, tr.tA));
+      for (let i = 0; i < C; i++) {
+        for (const jj of [tr.tA, tr.tB]) {
+          const a = at(i, jj);
+          if (type[a] !== MAZE) continue;
+          // 陷阱以外的格子併入上下兩層，保留給隨機迷宮（不再整列填實）
+          if (keep.has(a)) group[a] = -2; else group[a] = jj === tr.tA ? t + 1 : t;
+        }
+      }
+      link(at(c1, tr.tA), 2);
+      link(at(c1, tr.tA), 0);
+      for (let i = c1; i !== c2; i += dir) link(at(i, tr.tB), hd);
+      link(at(c2, tr.tB), 2);
+      for (let i = c2; i !== c3; i += dir) link(at(i, tr.tA), hd);
+      link(at(c3, tr.tA), 0);
+      link(at(c3, tr.tB), 0);
+      tr.entry = at(c1, tr.tA + 1);
+      tr.exit = at(c3, tr.tB - 1);
     }
 
-    // 2. 瓶頸：垂直連通
+    // 3. 每一層只保留含出入口的連通區塊，再各自生成偏好直走的生成樹
+    for (let b = 0; b <= K; b++) {
+      const out = b === 0 ? start : traps[b - 1].entry;
+      if (group[out] !== b) return null;
+      const comp = flood(group, C, R, out, (v) => v === b);
+      if (b < K && !comp[traps[b].exit]) return null;
+      for (let a = 0; a < N; a++) if (group[a] === b && !comp[a]) { type[a] = SOLID; group[a] = -1; }
+      const visited = new Uint8Array(N), lastDir = new Int8Array(N).fill(-1), stack = [out];
+      visited[out] = 1;
+      while (stack.length) {
+        const cur = stack[stack.length - 1];
+        const opts = [];
+        for (let d = 0; d < 4; d++) {
+          const nb = nbr(cur, d);
+          if (nb >= 0 && group[nb] === b && !visited[nb]) opts.push(d);
+        }
+        if (!opts.length) { stack.pop(); continue; }
+        let d;
+        const hz = opts.filter((o) => o === 1 || o === 3);
+        if (lastDir[cur] >= 0 && opts.indexOf(lastDir[cur]) >= 0 && rng() < cfg.straight) d = lastDir[cur];
+        else if (hz.length && rng() < cfg.hbias) d = hz[Math.floor(rng() * hz.length)];
+        else d = opts[Math.floor(rng() * opts.length)];
+        const nb = nbr(cur, d);
+        link(cur, d);
+        visited[nb] = 1;
+        lastDir[nb] = d;
+        stack.push(nb);
+      }
+    }
+
+    // 4. 瓶頸
     let prev = start;
     for (const idx of g.neck) { link(prev, 0); prev = idx; }
 
-    // 3. 房間與迷宮的開口（彼此錯開）
+    // 5. 房間 → 最上層（靠房間那層）的開口，彼此錯開
     const cands = [];
     for (let a = 0; a < N; a++) {
-      if (type[a] !== MAZE) continue;
+      if (group[a] !== K) continue;
       for (let d = 0; d < 4; d++) {
         const nb = nbr(a, d);
         if (nb >= 0 && type[nb] === ROOM) cands.push([a, d]);
@@ -188,26 +264,22 @@
     const chosen = [];
     for (const c of cands) {
       if (chosen.length >= cfg.open) break;
-      const ci = c[0] % C;
-      if (chosen.every((o) => Math.abs((o[0] % C) - ci) >= 2)) chosen.push(c);
+      if (chosen.every((o) => Math.abs((o[0] % C) - (c[0] % C)) >= 2)) chosen.push(c);
     }
     for (const c of chosen) link(c[0], c[1]);
 
-    // 4. 消除死路：打通到鄰格（偏好直線延伸、偏好另一個死路），不行就填實
-    const mazeCells = [];
-    for (let a = 0; a < N; a++) if (type[a] === MAZE) mazeCells.push(a);
+    // 6. 消除死路（只在同一層內打通；打不通就填實）
+    const cells = [];
+    for (let a = 0; a < N; a++) if (group[a] >= 0) cells.push(a);
     let changed = true, guard = 0;
     while (changed && guard++ < 50) {
       changed = false;
-      U.shuffle(mazeCells, rng);
-      for (const a of mazeCells) {
-        if (type[a] !== MAZE) continue;
+      U.shuffle(cells, rng);
+      for (const a of cells) {
+        if (type[a] !== MAZE || group[a] < 0) continue;
         const dg = popcount(links[a]);
         if (dg >= 2) continue;
-        if (dg === 0) {
-          if (a !== start) { type[a] = SOLID; changed = true; }
-          continue;
-        }
+        if (dg === 0) { if (a !== start) { type[a] = SOLID; group[a] = -1; changed = true; } continue; }
         let d0 = 0;
         while (!(links[a] & BIT[d0])) d0++;
         const opts = [];
@@ -215,16 +287,16 @@
         for (let d = 0; d < 4; d++) {
           if (links[a] & BIT[d]) continue;
           const nb = nbr(a, d);
-          if (nb < 0) continue;
-          let w = 0;
-          if (type[nb] === MAZE) w = (d === OPP[d0] ? 3 : 1) * (popcount(links[nb]) === 1 ? 2 : 1);
-          else if (type[nb] === ROOM) w = 0.35;
-          if (w > 0) { opts.push([d, w]); wsum += w; }
+          if (nb < 0 || group[nb] !== group[a]) continue;
+          const w = (d === OPP[d0] ? 3 : 1) * (popcount(links[nb]) === 1 ? 2 : 1);
+          opts.push([d, w]);
+          wsum += w;
         }
         if (!opts.length) {
           if (a === start) continue;
           unlink(a, d0);
           type[a] = SOLID;
+          group[a] = -1;
           changed = true;
           continue;
         }
@@ -237,7 +309,87 @@
 
     const turns = minTurns(g, type, links);
     if (turns >= 1e9) return null;
-    return { type, links, turns };
+    const field = climbField(g, type, links);
+    return { type, links, group, turns, traps: K, climbs: climbsFrom(g, type, links, -1), field, pockets: countPockets(type, group, field) };
+  }
+
+  // 反向 0-1 BFS：每一格到出口最少要「逆重力爬升」幾段（一次算完全部格子）
+  function climbField(g, type, links) {
+    const { C, R, N } = g;
+    const f = new Int32Array(N * 4).fill(1e9), buckets = [[]];
+    const push = (st, c) => { if (c < f[st]) { f[st] = c; (buckets[c] || (buckets[c] = [])).push(st); } };
+    for (let dp = 0; dp < 4; dp++) push(g.neckTop * 4 + dp, 0);
+    for (let c = 0; c < buckets.length; c++) {
+      const b = buckets[c];
+      if (!b) continue;
+      for (let q = 0; q < b.length; q++) {
+        const st = b[q];
+        if (f[st] !== c) continue;
+        const cell = st >> 2, dIn = st & 3;
+        const ai = (cell % C) - DX[dIn], aj = ((cell / C) | 0) - DY[dIn];
+        if (ai < 0 || aj < 0 || ai >= C || aj >= R) continue;
+        const a = aj * C + ai;
+        if ((type[a] !== MAZE && type[a] !== NECK) || !(links[a] & BIT[dIn])) continue;
+        for (let dp = 0; dp < 4; dp++) push(a * 4 + dp, c + (dIn === 2 && dp !== 2 ? 1 : 0));
+      }
+    }
+    const out = new Int32Array(N);
+    for (let a = 0; a < N; a++) out[a] = f[a * 4];
+    return out;
+  }
+
+  // 口袋格：比同一層其他地方多需要爬升（東西掉進去會被困住的地方）
+  function countPockets(type, group, field) {
+    const base = {};
+    for (let a = 0; a < type.length; a++) {
+      if (type[a] !== MAZE || group[a] < 0 || field[a] >= 1e9) continue;
+      base[group[a]] = Math.min(base[group[a]] === undefined ? 1e9 : base[group[a]], field[a]);
+    }
+    let n = 0;
+    for (let a = 0; a < type.length; a++) if (type[a] === MAZE && group[a] >= 0 && field[a] > base[group[a]]) n++;
+    return n;
+  }
+
+  // 0-1 BFS：從房間開口（from = -1）或指定格子出發，到出口最少要「逆重力爬升」幾段
+  function climbsFrom(g, type, links, from) {
+    const { C, R, N } = g;
+    const dist = new Int32Array(N * 4 + 4).fill(1e9), buckets = [[]];
+    const push = (s, c) => { if (c < dist[s]) { dist[s] = c; (buckets[c] || (buckets[c] = [])).push(s); } };
+    if (from >= 0) {
+      for (let d = 0; d < 4; d++) {
+        if (!(links[from] & BIT[d])) continue;
+        const nb = from + DX[d] + DY[d] * C;
+        if (type[nb] === MAZE || type[nb] === NECK) push(nb * 4 + d, d === 2 ? 1 : 0);
+      }
+      if (from === g.neckTop) return 0;
+    } else {
+      for (let a = 0; a < N; a++) {
+        if (type[a] !== MAZE) continue;
+        for (let d = 0; d < 4; d++) {
+          if (!(links[a] & BIT[d])) continue;
+          if (type[a + DX[d] + DY[d] * C] === ROOM) push(a * 4 + OPP[d], 0);
+        }
+      }
+    }
+    for (let c = 0; c < buckets.length; c++) {
+      const b = buckets[c];
+      if (!b) continue;
+      for (let q = 0; q < b.length; q++) {
+        const s = b[q];
+        if (dist[s] !== c) continue;
+        const a = s >> 2, d = s & 3;
+        if (a === g.neckTop && d === 0) return c;
+        for (let d2 = 0; d2 < 4; d2++) {
+          if (!(links[a] & BIT[d2]) || d2 === OPP[d]) continue;
+          const ni = (a % C) + DX[d2], nj = ((a / C) | 0) + DY[d2];
+          if (ni < 0 || nj < 0 || ni >= C || nj >= R) continue;
+          const nb = nj * C + ni;
+          if (type[nb] !== MAZE && type[nb] !== NECK) continue;
+          push(nb * 4 + d2, c + (d2 === 2 && d !== 2 ? 1 : 0));
+        }
+      }
+    }
+    return 1e9;
   }
 
   // 0-1 BFS：從任一房間開口出發，到瓶頸頂端往上離開，最少轉幾次彎
@@ -343,15 +495,58 @@
         }
       }
     }
+    // 閘門：房間通往迷宮的開口（開場倒數時關著，內容物先在房間裡站穩）
+    const gates = [];
+    for (const r of roomCells) {
+      const i = r % C, j = (r / C) | 0;
+      for (let d = 0; d < 4; d++) {
+        const ni = i + DX[d], nj = j + DY[d];
+        if (ni < 0 || nj < 0 || ni >= C || nj >= R) continue;
+        if (type[nj * C + ni] !== MAZE || !(links[r] & BIT[d])) continue;
+        const xa = x0 + i * S, ya = y0 + j * S;
+        if (d === 0) gates.push(xa, ya, xa + S, ya);
+        else if (d === 2) gates.push(xa, ya + S, xa + S, ya + S);
+        else if (d === 1) gates.push(xa + S, ya, xa + S, ya + S);
+        else gates.push(xa, ya, xa, ya + S);
+      }
+    }
+    // 加分物的「難拿」位置：比同一層多需要逆重力爬升的口袋優先，其次離出口遠
+    const steps = new Int32Array(C * R).fill(1e9);
+    steps[g.neckTop] = 0;
+    const q = [g.neckTop];
+    for (let k = 0; k < q.length; k++) {
+      const c = q[k];
+      for (let d = 0; d < 4; d++) {
+        if (!open(c, d) || (c === g.neckTop && d === 0)) continue;
+        const nb = c + DX[d] + DY[d] * C;
+        if (type[nb] === ROOM || steps[nb] <= steps[c] + 1) continue;
+        steps[nb] = steps[c] + 1;
+        q.push(nb);
+      }
+    }
+    const cl = new Map(), baseCl = {};
+    for (const c of mazeCells) {
+      const grp = a.group ? a.group[c] : 0;
+      if (grp < 0) continue;
+      const v = a.field[c];
+      cl.set(c, v);
+      baseCl[grp] = Math.min(baseCl[grp] === undefined ? 1e9 : baseCl[grp], v);
+    }
+    const hardCells = [...cl.keys()]
+      .map((c) => [c, (cl.get(c) - baseCl[a.group ? a.group[c] : 0]) * 100 + Math.min(steps[c], 99)])
+      .sort((p, q2) => q2[1] - p[1])
+      .map((h) => h[0]);
+
     const neckTopRow = (g.neckTop / C) | 0;
     return {
+      gates: new Float32Array(gates), hardCells, traps: a.traps || 0, climbs: a.climbs || 0,
       shape: g.shape, S, rw, x0, y0, C, R, type, links,
       segs: new Float32Array(segs), nSeg, wallIdx,
       neckCol: g.mc, neckTop: g.neckTop, start: g.start,
       neckX0: x0 + g.mc * S, neckX1: x0 + (g.mc + 1) * S,
       neckBaseY: y0 + g.jTop * S,
       exitX: x0 + (g.mc + 0.5) * S, exitY: y0 + neckTopRow * S,
-      roomCells, mazeCells, neckCells, turns: a.turns,
+      roomCells, mazeCells, neckCells, turns: a.turns, pockets: a.pockets,
       cellAt(x, y) {
         const i = Math.floor((x - x0) / S), j = Math.floor((y - y0) / S);
         return i < 0 || j < 0 || i >= C || j >= R ? -1 : j * C + i;
@@ -398,15 +593,21 @@
   PM.CELL = { SOLID, MAZE, ROOM, NECK };
 
   PM.buildMaze = function (shape, cfg, rng) {
-    const c = Object.assign({ straight: 0.55, open: 2, room: 0.4, turns: [1, 4] }, cfg);
+    const c = Object.assign({ straight: 0.55, hbias: 0.5, open: 2, room: 0.4, turns: [1, 99], traps: 0 }, cfg);
     const g = layout(shape, c);
+    // 陷阱放不下（形狀太窄或太矮）就逐步減少陷阱數
     let best = null, bestScore = 1e9;
-    for (let n = 0; n < 60; n++) {
-      const a = attempt(g, c, rng);
-      if (!a) continue;
-      const score = a.turns < c.turns[0] ? c.turns[0] - a.turns : a.turns > c.turns[1] ? (a.turns - c.turns[1]) * 1.5 : 0;
-      if (score < bestScore) { best = a; bestScore = score; }
-      if (score === 0) break;
+    for (let k = c.traps; k >= 0 && !best; k--) {
+      const ck = Object.assign({}, c, { traps: k });
+      for (let n = 0; n < 40; n++) {
+        const a = attempt(g, ck, rng);
+        if (!a || a.traps < k) continue;
+        const pk = c.pockets || [0, 99];
+        const score = (a.pockets < pk[0] ? pk[0] - a.pockets : a.pockets > pk[1] ? a.pockets - pk[1] : 0) +
+          (a.turns < c.turns[0] ? c.turns[0] - a.turns : a.turns > c.turns[1] ? (a.turns - c.turns[1]) * 1.5 : 0);
+        if (score < bestScore) { best = a; bestScore = score; }
+        if (score === 0) break;
+      }
     }
     if (!best) throw new Error('maze generation failed: ' + shape.id);
     return finalize(g, best);

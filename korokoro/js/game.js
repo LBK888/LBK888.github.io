@@ -4,6 +4,14 @@
   'use strict';
   const PM = window.PM, U = PM.U;
   const G = 1800;               // 滿重力（設計單位/秒²）
+  const BASE = Math.PI;         // 罐子固定倒過來畫：出口朝下、內容物在上
+  const SHAKE_GAIN = 2.2;       // 手機搖晃加速度放大倍數（真實搖晃的力道偏小）
+
+  // 螢幕座標的向量換算成罐子座標（罐子在螢幕上轉了 ang）
+  function toJar(x, y, ang) {
+    const c = Math.cos(ang), s = Math.sin(ang);
+    return [x * c + y * s, -x * s + y * c];
+  }
   const $ = (id) => document.getElementById(id);
 
   function screenAngle() {
@@ -32,7 +40,9 @@
       this.touchDevice = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
       this.state = 'title';
       this.paused = false;
-      this.best = U.store.get('best', 0);
+      this.ranking = [];            // 排行榜只存在記憶體，重新整理頁面就清空
+      this.best = 0;
+      this.gdx = 0; this.gdy = 1; this.gateT = 0;
       this.score = 0; this.tickets = 1; this.levelIndex = 0;
       this.world = null; this.total = 0; this.poured = 0; this.need = 1; this.target = 1;
       this.cleared = false; this.combo = 0; this.lastPourT = -9; this.clock = 0; this.lastKnockT = 0;
@@ -80,7 +90,7 @@
       click('btnFinish', () => { this.sound.click(); this.finishLevel(); });
       click('btnShake', () => this.input.shake());
       click('btnNext', () => { this.sound.click(); this.hideModal('resultModal'); this.levelIndex++; this.startLevel(); });
-      click('btnRetry', () => { this.sound.click(); this.hideModal('overModal'); this.retryLevel(); });
+      click('btnRestartRun', () => { this.sound.click(); this.hideModal('overModal'); this.startRun(); });
       click('btnTitle', () => { this.sound.click(); this.hideModal('overModal'); this.toTitle(); });
       click('pMode', () => this.toggleMode());
       for (const id of ['tBgm', 'pBgm']) click(id, () => { this.sound.init(); this.sound.setBgm(!this.sound.bgmOn); this.syncToggles(); });
@@ -247,63 +257,78 @@
     // 生成迷宮與物理世界；keep = 重新整理卷時保留的尚未倒出物件
     setupLevel(cfg, rng, keep) {
       const shape = PM.SHAPES[cfg.shape], mat = PM.MATERIALS[cfg.mat];
-      const maze = PM.buildMaze(shape, cfg, rng);
+      let maze = PM.buildMaze(shape, cfg, rng);
+      // 至少要有一個回水彎，否則正拿手機內容物就會自己流光
+      for (let c = cfg.cols + 1; maze.traps < Math.min(1, cfg.traps || 0) && c <= 14; c++) {
+        maze = PM.buildMaze(shape, Object.assign({}, cfg, { cols: c }), rng);
+      }
       const S = maze.S;
-      const spec = (def, bonus) => ({
+      const spec = (def, bonus, extra) => Object.assign({
         geom: def.geom, r: def.r * S, d: (def.d || 0) * S,
         e: def.phys.e, mu: def.phys.mu, drag: def.phys.drag, density: def.phys.density || 1,
-        cohesive: bonus ? !!def.cohesive : !!mat.cohesion, bonus,
-      });
+        cohesive: bonus ? !!def.cohesive : !!mat.cohesion, float: !!def.float, bonus,
+      }, extra);
       const base = spec(mat, false), bon = spec(mat.bonus, true);
+      const sticky = mat.sticky ? spec(mat, false, { stickyMode: mat.sticky.mode }) : base;
+      const bonPinned = spec(mat.bonus, true, { pinned: true });
       const brOf = (s) => (s.geom === 'single' ? s.r : s.geom === 'pill' ? s.d / 2 + s.r : s.geom === 'tri' ? s.d / Math.sqrt(3) + s.r : s.d * 0.71 + s.r);
       const brA = brOf(base), brB = brOf(bon);
       const ext = (s) => (s.geom === 'single' ? 2 * s.r * 1.25 : s.geom === 'pill' ? (s.d + 2 * s.r) * 1.1 : s.geom === 'tri' ? (s.d * 1.15 + 2 * s.r) * 1.15 : (s.d * 1.41 + 2 * s.r) * 1.15);
       if (mat.nozzle) PM.addNozzle(maze, U.clamp(Math.max(ext(base), ext(bon)), S * 0.4, S * 0.7));
       let roomPts = PM.World.spawnPoints(maze, maze.roomCells, brA, rng);
       const bonusRoomPts = PM.World.spawnPoints(maze, maze.roomCells, Math.max(brA, brB), rng);
-      const mazePts = U.shuffle(
-        PM.World.spawnPoints(maze, maze.mazeCells, Math.max(brA, brB), rng).filter((p) => Math.hypot(p[0] - maze.exitX, p[1] - maze.exitY) > S * 2.5),
-        rng
-      );
+      // 難拿的口袋（比同層多要爬升、離出口遠），彼此至少隔兩格
+      const hardPts = [];
+      for (const c of maze.hardCells) {
+        if (hardPts.length >= 6) break;
+        const [x, y] = maze.cellCenter(c);
+        if (hardPts.every((q) => Math.hypot(q[0] - x, q[1] - y) > S * 2.2)) hardPts.push([x, y]);
+      }
       let items = keep;
       if (!items) {
         const n = Math.max(6, Math.min(mat.max, Math.floor(roomPts.length * mat.fill)));
         items = [];
-        for (let i = 0; i < n; i++) items.push({ bonus: false, color: Math.floor(rng() * 6), num: i + 1, where: 'room' });
+        for (let i = 0; i < n; i++) {
+          items.push({ bonus: false, color: Math.floor(rng() * 6), num: i + 1, where: 'room', sticky: !!mat.sticky && rng() < mat.sticky.frac });
+        }
         for (let k = 0; k < (cfg.bonus || 0); k++) {
-          const it = { bonus: true, color: 0, num: 0, where: k === 0 ? 'room' : 'maze' };
-          if (k === 0) items.splice(Math.floor(rng() * Math.min(items.length, roomPts.length * 0.8)), 0, it);
+          const it = { bonus: true, color: 0, num: 0, where: !cfg.bonusHard && k === 0 ? 'room' : 'hard' };
+          if (it.where === 'room') items.splice(Math.floor(rng() * Math.min(items.length, roomPts.length * 0.5)), 0, it);
           else items.push(it);
         }
+      }
+      // 加分物先挑位置；房間裡的會把重疊的一般格點移除
+      const placed = new Map();
+      let bi = 0, hi = 0;
+      for (const it of items) {
+        if (!it.bonus) continue;
+        if (it.where === 'hard' && hi < hardPts.length) { placed.set(it, { p: hardPts[hi++], pin: true }); continue; }
+        if (!bonusRoomPts.length) continue;
+        const p = bonusRoomPts[Math.min(bonusRoomPts.length - 1, Math.floor(bonusRoomPts.length * (0.1 + 0.4 * rng())) + bi++)];
+        placed.set(it, { p, pin: false });
+        roomPts = roomPts.filter((q) => Math.hypot(q[0] - p[0], q[1] - p[1]) > (brA + brB) * 1.04);
       }
       const world = new PM.World(maze, items.length * 4);
       world.G = G;
       world.cohesion = mat.cohesion || 0;
       world.cohRange = mat.cohRange || 0.5;
       world.visc = mat.visc || 0;
-      // 房間裡的加分物先挑位置，再把與它重疊的一般格點移除
-      const placed = new Map();
-      let bi = 0;
+      world.adhesion = mat.adhesion || 0;
+      world.gates = maze.gates;
+      world.gatesOn = true;
+      let ri = 0;
       for (const it of items) {
-        if (!it.bonus || it.where === 'maze' || !bonusRoomPts.length) continue;
-        const p = bonusRoomPts[Math.min(bonusRoomPts.length - 1, Math.floor(bonusRoomPts.length * (0.15 + 0.5 * rng())) + bi++)];
-        placed.set(it, p);
-        roomPts = roomPts.filter((q) => Math.hypot(q[0] - p[0], q[1] - p[1]) > (brA + brB) * 1.04);
-      }
-      let ri = 0, mi = 0;
-      for (const it of items) {
-        let p = placed.get(it) || null;
-        if (p) { /* 已決定 */ }
-        else if (it.bonus && it.where === 'maze' && mi < mazePts.length) p = mazePts[mi++];
-        else if (ri < roomPts.length) p = roomPts[ri++];
-        else if (mi < mazePts.length) p = mazePts[mi++];
+        const pl = placed.get(it);
+        const p = pl ? pl.p : ri < roomPts.length ? roomPts[ri++] : null;
         if (!p) continue;
-        const b = world.addBody(it.bonus ? bon : base, p[0], p[1], rng() * U.TAU);
+        const sp = it.bonus ? (pl && pl.pin ? bonPinned : bon) : it.sticky ? sticky : base;
+        const b = world.addBody(sp, p[0], p[1], rng() * U.TAU);
         b.color = it.color; b.num = it.num; b.item = it;
       }
       world.prepare();
       this.cfg = cfg; this.shape = shape; this.mat = mat; this.maze = maze; this.world = world;
       this.renderer.setLevel(shape, maze, mat);
+      this.renderer.gateOpen = 0;
     }
 
     showLevelCard(cfg) {
@@ -315,7 +340,7 @@
       $('lcBonus').textContent = mat.bonus.name;
       $('lcBonusN').textContent = this.bonusTotal;
       $('lcHint').textContent = this.input.mode === 'tilt'
-        ? '轉動手機，從瓶口倒出來！卡住時搖一搖、輕拍手機'
+        ? '直拿手機，東西往下流；卡在杯底就往杯口那側倒過水平再轉回來！'
         : (this.touchDevice ? '拖曳旋轉罐子・雙擊或按「搖一搖」鬆動卡住的東西' : '拖曳 / ← → 旋轉・空白鍵搖晃・↑ 輕拍');
       this.drawPreview($('lcPreview'), mat, false);
       this.drawPreview($('lcBonusPreview'), mat, true);
@@ -371,20 +396,31 @@
       inp.update(dt);
       if (this.state === 'title') {
         this.demoT += dt;
-        const a = Math.sin(this.demoT * 0.55) * 0.8;
+        const a = BASE + Math.sin(this.demoT * 0.55) * 0.8;
         this.renderer.view = a;
-        this.stepWorld(dt, Math.sin(a), Math.cos(a), 0, 0, null, false);
+        const [gx, gy] = toJar(0, 1, a);
+        this.stepWorld(dt, gx, gy, 0, 0, null, false);
         return;
       }
       if (this.paused || !this.world) return;
+      const view = BASE + (inp.mode === 'touch' && this.state === 'play' ? inp.view : 0);
+      this.renderer.view = view;
+      const [gx, gy] = toJar(inp.sgx, inp.sgy, view);
       if (this.state === 'intro') {
         this.updateIntro(dt);
-        this.renderer.view = 0;
-        this.stepWorld(dt, 0, 1, 0, 0, null, false);
+        this.stepWorld(dt, gx, gy, 0, 0, null, false);
       } else if (this.state === 'play') {
-        this.renderer.view = inp.mode === 'touch' ? inp.view : 0;
+        const [sx, sy] = toJar(inp.ssx * SHAKE_GAIN, inp.ssy * SHAKE_GAIN, view);
         const rot = inp.mode === 'touch' ? { w: inp.omega, alpha: inp.alpha, k: 0.45 } : null;
-        this.stepWorld(dt, inp.gx, inp.gy, inp.sx, inp.sy, rot, true);
+        // 大力搖晃：攪動內容物、甩開沾黏
+        const lvl = inp.shakeLevel;
+        if (lvl > 0.35) this.world.agitate(Math.min(1.2, lvl - 0.3) * 0.5, Math.random);
+        if (lvl > 0.8) this.world.shakeBonds(Math.min(0.5, (lvl - 0.6) * 0.35), Math.random);
+        if (this.gateT > 0) {
+          this.gateT -= dt;
+          if (this.gateT <= 0) this.openGates();
+        }
+        this.stepWorld(dt, gx, gy, sx, sy, rot, true);
         if (this.state !== 'play') return;
         const prev = Math.ceil(this.timeLeft);
         this.timeLeft = Math.max(0, this.timeLeft - dt);
@@ -415,18 +451,30 @@
         $('countdown').classList.add('hidden');
         this.state = 'play';
         this.input.enabled = true;
+        this.openGates();
       }
     }
 
+    // gx, gy：罐子座標的重力（長度 0..1）；sx, sy：搖晃（罐子座標，g 為單位）
     stepWorld(dt, gx, gy, sx, sy, rot, scoring) {
       const w = this.world;
-      w.step(dt, (gx + sx) * G, (gy + sy) * G, rot);
       const m = Math.hypot(gx, gy);
-      const exits = w.postStep(dt, m > 0.05 ? gx / m : this.input.dx, m > 0.05 ? gy / m : this.input.dy);
+      if (m > 0.05) { this.gdx = gx / m; this.gdy = gy / m; }
+      w.step(dt, (gx + sx) * G, (gy + sy) * G, rot);
+      const exits = w.postStep(dt, this.gdx, this.gdy);
       for (const b of exits) this.onPoured(b, scoring);
       if (w.impacts) this.sound.impact(this.mat.id, w.impacts, w.impactMax);
       const avg = w.activeCount ? w.speedSum / w.activeCount : 0;
       this.sound.flow(this.mat.id, this.state === 'title' ? 0 : U.clamp((avg - 25) / 380, 0, 1) * Math.min(1, w.activeCount / 40 + 0.3));
+    }
+
+    // 開場倒數結束（或重新整理後）：打開房間的閘門、放開固定在口袋裡的加分物
+    openGates() {
+      if (!this.world) return;
+      this.world.gatesOn = false;
+      this.world.unpinAll();
+      this.renderer.gateOpen = 1;
+      this.gateT = 0;
     }
 
     onPoured(b, scoring) {
@@ -466,6 +514,12 @@
 
     onTargetReached() {
       this.cleared = true;
+      // 達標後最多只剩 10 秒：加快節奏，也讓加分物更難拿
+      if (this.timeLeft > 10) {
+        this.timeLeft = 10;
+        const r = $('hTimeBox').getBoundingClientRect(), ar = this.canvas.getBoundingClientRect();
+        this.renderer.popup('剩 10 秒！', r.left - ar.left + r.width / 2, r.bottom - ar.top + 26, '#E8486F', 18, 1.6);
+      }
       this.sound.clearTarget();
       this.renderer.setCat('star', 1.6);
       this.renderer.flash = 0.5;
@@ -488,7 +542,7 @@
       this.state = 'result';
       this.input.enabled = false;
       this.hideAllFloating();
-      const timeBonus = Math.ceil(this.timeLeft) * 15;
+      const timeBonus = Math.ceil(this.timeLeft) * 30;
       const perfect = this.poured >= this.total ? 500 : 0;
       const itemPts = this.levelPoints;
       this.score += timeBonus + perfect;
@@ -512,12 +566,29 @@
       this.state = 'over';
       this.input.enabled = false;
       this.hideAllFloating();
+      const entry = { score: this.score, stage: this.cfg.n, id: this.clock };
+      this.ranking.push(entry);
+      this.ranking.sort((a, b) => b.score - a.score || b.stage - a.stage);
+      this.ranking = this.ranking.slice(0, 10);
       this.saveBest();
+      const rank = this.ranking.indexOf(entry);
       $('ovTarget').textContent = Math.round(this.target * 100) + '%';
       $('ovPct').textContent = Math.round((this.poured / this.total) * 100) + '%';
       $('ovStage').textContent = this.cfg.n;
       $('ovScore').textContent = this.score;
-      $('ovBest').textContent = this.best;
+      $('ovRankTag').textContent = rank === 0 ? '第 1 名！' : rank > 0 ? '第 ' + (rank + 1) + ' 名' : '未進榜';
+      $('ovRankTag').classList.toggle('top', rank === 0);
+      const list = $('ovRanking');
+      list.textContent = '';
+      this.ranking.forEach((r, k) => {
+        const li = document.createElement('li');
+        if (r === entry) li.className = 'me';
+        const no = document.createElement('span'); no.className = 'no'; no.textContent = k + 1;
+        const st = document.createElement('span'); st.className = 'st'; st.textContent = '第 ' + r.stage + ' 關';
+        const sc = document.createElement('b'); sc.textContent = r.score;
+        li.append(no, st, sc);
+        list.appendChild(li);
+      });
       this.sound.flow(this.mat.id, 0);
       this.sound.stopBgm();
       this.sound.fail();
@@ -526,10 +597,7 @@
     }
 
     saveBest() {
-      if (this.score > this.best) {
-        this.best = this.score;
-        U.store.set('best', this.best);
-      }
+      this.best = Math.max(this.best, this.score);
     }
 
     // 重新整理卷：重新生成迷宮；計時不重來、已倒出的不會回來，剩下的內容物重新放回罐底
@@ -552,8 +620,9 @@
       this.ticketArmed = false;
       btn.classList.remove('armed');
       this.tickets--;
-      const remaining = this.world.bodies.filter((b) => !b.poured).map((b) => Object.assign(b.item, { where: 'room' }));
+      const remaining = this.world.bodies.filter((b) => !b.poured).map((b) => b.item);
       this.setupLevel(this.cfg, this.rng, remaining);
+      this.gateT = 0.9;
       this.renderer.plate.pct = this.renderer.plate.shown = this.poured / this.total;
       this.renderer.flash = 1;
       this.renderer.pop = 1;
@@ -568,8 +637,8 @@
       if (this.state !== 'play' || this.paused || !this.world) return;
       if (this.clock - this.lastKnockT < 0.18) return;
       this.lastKnockT = this.clock;
-      const inp = this.input;
-      this.world.jolt(inp.dx, inp.dy, strength, Math.random);
+      this.world.jolt(this.gdx, this.gdy, strength, Math.random);
+      this.world.shakeBonds(strength * 0.7, Math.random);
       this.renderer.jig.a = Math.min(1, 0.35 + strength * 0.6);
       this.sound.knock(strength);
     }

@@ -122,9 +122,10 @@ body { background: linear-gradient(180deg, #ffe9f1, #eaf4ff); }
 .stamp {
   position: absolute; left: 50%; top: 40%; z-index: 7;
   transform: translate(-50%, -50%) rotate(-12deg);
-  font: 800 42px var(--font); color: #fff;
+  font: 800 30px/1.2 var(--font); color: #fff;
+  white-space: nowrap;
   background: #ff7fa6;
-  padding: 6px 26px; border-radius: 18px; border: 4px solid #fff;
+  padding: 6px 20px; border-radius: 16px; border: 4px solid #fff;
   box-shadow: 0 8px 0 #e0577f, 0 14px 30px rgba(224, 87, 127, 0.35);
   pointer-events: none;
 }
@@ -305,3 +306,21 @@ body { background: linear-gradient(180deg, #ffe9f1, #eaf4ff); }
   .title-bottom { gap: 8px; padding: 12px; }
   .btn.big { font-size: 20px; padding: 11px; }
 }
+
+/* ---------- 結算與排行榜 ---------- */
+.final-score { display: flex; flex-direction: column; align-items: center; gap: 2px; background: #fff7fa; border-radius: 18px; padding: 10px; }
+.final-score small { font: 700 12px var(--font); color: var(--ink-soft); }
+.final-score b { font: 800 40px/1.1 var(--font); color: var(--pink-d); font-variant-numeric: tabular-nums; }
+.rank-tag { font: 800 13px var(--font); color: #fff; background: #b8a9c9; border-radius: 10px; padding: 2px 10px; }
+.rank-tag.top { background: #ffc93c; box-shadow: 0 3px 0 #e0a21b; }
+.rank-title { font: 800 16px var(--font); color: var(--ink); margin-top: 2px; }
+.ranking { list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 34vh; overflow: auto; }
+.ranking li { display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: #fff7fa; border-radius: 12px; font: 700 14px var(--font); }
+.ranking li .no { width: 24px; height: 24px; border-radius: 50%; background: #ffe1ec; color: var(--pink-d); display: flex; align-items: center; justify-content: center; font-size: 13px; flex: none; }
+.ranking li:nth-child(1) .no { background: #ffc93c; color: #fff; }
+.ranking li:nth-child(2) .no { background: #c9d3e0; color: #fff; }
+.ranking li:nth-child(3) .no { background: #e9b48a; color: #fff; }
+.ranking li .st { flex: 1; text-align: left; color: var(--ink-soft); }
+.ranking li b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.ranking li.me { background: #ffe9f1; outline: 2px solid var(--pink); }
+.ranking li.me b { color: var(--pink-d); }

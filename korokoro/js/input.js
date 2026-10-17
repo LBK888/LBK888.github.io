@@ -8,9 +8,9 @@
   class Input {
     constructor() {
       this.mode = 'touch';          // 'tilt' | 'touch'
-      this.gx = 0; this.gy = 1;     // 罐子座標中的重力（長度 0..1）
-      this.dx = 0; this.dy = 1;     // 重力單位方向
-      this.sx = 0; this.sy = 0;     // 搖晃造成的額外加速度（以 g 為單位）
+      this.sgx = 0; this.sgy = 1;   // 螢幕座標中的重力（長度 0..1）；換算成罐子座標由 Game 處理
+      this.ssx = 0; this.ssy = 0;   // 搖晃造成的額外加速度（螢幕座標，以 g 為單位）
+      this.shakeLevel = 0;
       this.view = 0; this.target = 0;
       this.omega = 0; this.alpha = 0;
       this.ori = null; this.oriT = 0; this.dev = null;
@@ -87,11 +87,11 @@
       const L = e.acceleration;
       if (L && L.x != null) { lx = (s * L.x) / 9.81; ly = (s * L.y) / 9.81; lz = (s * (L.z || 0)) / 9.81; }
       else { lx = cx - this.lp[0]; ly = cy - this.lp[1]; lz = cz - this.lp[2]; }
-      let sx = lx, sy = -ly;
+      const sx = lx, sy = -ly;
       const m = Math.hypot(sx, sy);
-      const scale = m > 0.1 ? (Math.min(m, 3) - 0.1) / m : 0;
-      this.sx += (sx * scale - this.sx) * 0.6;
-      this.sy += (sy * scale - this.sy) * 0.6;
+      const scale = m > 0.06 ? (Math.min(m, 4) - 0.06) / m : 0;
+      this.ssx += (sx * scale - this.ssx) * 0.7;
+      this.ssy += (sy * scale - this.ssy) * 0.7;
       this.shakeStamp = now;
       // 輕拍：z 軸（敲背面/螢幕）或很強的平面方向短促尖峰
       const spike = Math.max(Math.abs(lz), m * 0.55);
@@ -104,7 +104,7 @@
     reset() {
       this.view = this.target = 0;
       this.omega = this.alpha = 0;
-      this.sx = this.sy = 0;
+      this.ssx = this.ssy = 0;
       this.shakeT = 0;
     }
 
@@ -129,9 +129,9 @@
         const m = Math.hypot(this.f.x, this.f.y);
         // 手機平放時幾乎沒有平面重力：內容物會停下來
         const s = U.smoothstep(0.05, 0.4, m);
-        if (m > 1e-4) { this.dx = this.f.x / m; this.dy = this.f.y / m; }
-        this.gx = this.dx * s; this.gy = this.dy * s;
-        if (performance.now() - this.shakeStamp > 150) { this.sx *= 0.8; this.sy *= 0.8; }
+        this.sgx = m > 1e-4 ? (this.f.x / m) * s : 0;
+        this.sgy = m > 1e-4 ? (this.f.y / m) * s : 1;
+        if (performance.now() - this.shakeStamp > 150) { this.ssx *= 0.8; this.ssy *= 0.8; }
         this.view = this.target = 0;
         this.omega = this.alpha = 0;
       } else {
@@ -143,15 +143,14 @@
         const pw = this.omega;
         this.omega += (w - this.omega) * 0.5;
         this.alpha += ((this.omega - pw) / Math.max(dt, 1e-3) - this.alpha) * 0.3;
-        this.dx = this.gx = Math.sin(this.view);
-        this.dy = this.gy = Math.cos(this.view);
+        this.sgx = 0; this.sgy = 1;
         if (this.shakeT > 0) {
           this.shakeT = Math.max(0, this.shakeT - dt);
-          const amp = Math.sin((0.55 - this.shakeT) * Math.PI * 2 * 7.5) * 1.7 * (this.shakeT / 0.55);
-          this.sx = -this.dy * amp + this.dx * amp * 0.25;
-          this.sy = this.dx * amp + this.dy * amp * 0.25;
-        } else { this.sx = this.sy = 0; }
+          const amp = Math.sin((0.55 - this.shakeT) * Math.PI * 2 * 7.5) * 1.8 * (this.shakeT / 0.55);
+          this.ssx = amp; this.ssy = Math.abs(amp) * 0.3;
+        } else { this.ssx = this.ssy = 0; }
       }
+      this.shakeLevel = Math.hypot(this.ssx, this.ssy);
     }
 
     // 觸控/滑鼠：繞罐子中心拖曳旋轉；雙擊 = 輕拍
