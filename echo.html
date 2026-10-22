@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10192b">
+<title>AcousticVote Lab｜近超音波收發與同機 Echo 測試</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#151f32;--edge:#324057;--ink:#e8f1ff;--muted:#a7b7cd;--accent:#67d7fa;--green:#74e5ba;--pink:#ffa1d2;--gold:#ffdb86}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,'Segoe UI','Microsoft JhengHei',sans-serif;background:radial-gradient(ellipse at 80% -10%,#263a58 0%,var(--bg) 55%);color:var(--ink);line-height:1.5}
+header,main,footer{max-width:1200px;margin:auto;padding:16px}header{padding-top:28px}h1{font-size:clamp(25px,5vw,37px);line-height:1.12;margin:0 0 8px}h2{font-size:19px;margin:0 0 12px}h3{margin:0 0 6px;font-size:14px;color:var(--muted)}p{margin:6px 0}.sub{color:var(--muted);font-size:14px;max-width:900px}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.panel{background:#151f32ee;border:1px solid var(--edge);border-radius:16px;padding:17px;min-width:0}.wide{grid-column:1/-1}.stack{display:flex;gap:9px;flex-wrap:wrap;align-items:center}button,select,input{font:inherit}button{border:1px solid #477c9c;background:#22374c;color:var(--ink);border-radius:9px;padding:10px 14px;cursor:pointer;font-weight:650;min-height:43px}button:hover{filter:brightness(1.16)}button:disabled{opacity:.45;cursor:not-allowed}.primary{background:#146783;border-color:#1998be}.left{background:#772e65;border-color:#b44b95}.right{background:#17627b;border-color:#2899ba}.good{background:#17654f;border-color:#279a75}.danger{background:#523241;border-color:#976074}.check{display:inline-flex;gap:7px;align-items:center;font-size:13px;cursor:pointer}.check input{width:16px;height:16px}label.control{display:grid;gap:5px;color:var(--muted);font-size:12px;min-width:130px;flex:1}select,input[type=number]{background:#0d1828;color:var(--ink);border:1px solid #42566f;border-radius:8px;padding:8px;width:100%;min-height:40px}input[type=range]{width:100%;accent-color:var(--accent)}.controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.hint{color:var(--muted);font-size:12px}.status{background:#101a2b;border:1px solid #41516a;padding:10px 12px;border-radius:9px;white-space:pre-wrap;font-size:13px;min-height:44px}.warning{background:#46392155;border:1px solid #a08045;border-radius:10px;padding:10px 12px;font-size:12px;color:#ffe8b2}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.stat{padding:10px;border:1px solid #33455e;border-radius:10px;background:#101a2c}.stat strong{display:block;font-size:26px;font-variant-numeric:tabular-nums}.stat small{color:var(--muted)}.num{font-variant-numeric:tabular-nums}.bars{display:grid;grid-template-columns:78px 1fr 72px;gap:8px;align-items:center;font-size:12px;margin:8px 0}.track{height:13px;background:#0b1423;border-radius:20px;overflow:hidden}.fill{height:100%;width:0%;transition:width .14s linear;background:var(--accent)}#spectrum{width:100%;height:180px;border:1px solid #2b3b55;background:#0a1423;border-radius:8px;display:block}.log{font:12px/1.65 ui-monospace,Consolas,monospace;max-height:260px;min-height:140px;overflow:auto;white-space:pre-wrap;word-break:break-word;padding:10px;background:#091321;border:1px solid #2a3c56;border-radius:8px}.pill{border-radius:20px;border:1px solid #557087;padding:2px 8px;font-size:12px;color:var(--muted)}#echoResult{border-radius:10px;background:#1d3140;border:1px solid #416174;padding:12px;margin-top:12px;font-weight:650}footer{color:var(--muted);font-size:12px;padding-bottom:32px}code{color:#86d9f0}a{color:var(--accent)}details{border-top:1px solid #2f4056;margin-top:12px;padding-top:12px}summary{cursor:pointer;font-weight:650}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #74d9ff;outline-offset:2px}
+@media(max-width:840px){.cards{grid-template-columns:1fr}.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:430px){.controls{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(2,1fr)}header,main,footer{padding:12px}.panel{padding:13px}}
+</style>
+</head>
+<body>
+<header><div class="stack"><span class="pill">純前端 · 單一 HTML</span><span class="pill">4-FSK · CRC-8</span><span class="pill">手機 / 電腦</span></div><h1>AcousticVote <span style="color:var(--accent)">Lab</span></h1><p class="sub">近超音波聲學資料傳輸實驗室：一份 HTML 同時提供發送、接收、同機空氣 Echo 與純數位 Loopback 測試。無後端、無 CDN、無第三方函式庫。</p></header>
+<main class="cards">
+<section class="panel wide"><h2>① 傳輸設定</h2><div class="controls">
+<label class="control">頻帶<select id="band"><option value="high">18.15–19.65 kHz｜近超音波</option><option value="mid">16.5–18.3 kHz｜高頻對照（可能可聽）</option><option value="low">5.5–8.5 kHz｜可聽診斷頻帶</option></select></label>
+<label class="control">單一符號時間<select id="symbol"><option value="85">85 ms｜穩定優先</option><option value="65" selected>65 ms｜平衡</option><option value="45">45 ms｜速度優先</option></select></label>
+<label class="control">重複發送<select id="reps"><option value="1" selected>1 次</option><option value="2">2 次（隨機分散）</option><option value="3">3 次（隨機分散）</option></select></label>
+<label class="control">接收門檻<select id="threshold"><option value="-75">-75 dBFS（非常敏感）</option><option value="-65" selected>-65 dBFS（建議起點）</option><option value="-55">-55 dBFS（較保守）</option><option value="-45">-45 dBFS（強訊號）</option></select></label>
+</div><div class="stack"><label class="control" style="flex:0 1 300px">發送音量 <b id="volLabel">12%</b><input id="volume" type="range" min="2" max="35" value="12"></label><label class="check"><input id="randomStart" type="checkbox"> 隨機延遲 0–1.5 秒（分時模擬）</label><label class="check"><input id="processing" type="checkbox"> 啟用麥克風降噪／回音消除（比較用）</label></div><div class="warning">⚠ 請從低音量開始測試，勿把喇叭貼近耳朵或對準聽眾高音量播放。18–20 kHz 不保證完全聽不見；16.5–18.3 kHz 與診斷頻帶更可能被聽見。若有人感到不適，立即停止播放。</div><p class="hint">此原型一次傳送固定 5 bytes：版本／左右／序號 1 byte、隨機發送端 ID 3 bytes、CRC-8 1 byte。8 個前導符號 + 20 個 4-FSK 資料符號。不能視為已驗證的百人同時通訊方案。</p></section>
+<section class="panel"><h2>② 發送端 TX</h2><div class="stack"><button id="txLeft" class="left">← 發送「左」</button><button id="txRight" class="right">發送「右」→</button><button id="stopTx" class="danger">停止發送</button></div><p class="hint" id="txInfo">發送端識別碼：—</p><div id="txStatus" class="status" aria-live="polite">尚未發送</div><p class="hint">按任一發送按鈕後，本機喇叭會輸出短高頻封包；另一台手機／電腦只要開啟接收即可解碼。</p></section>
+<section class="panel"><h2>③ 接收端 RX</h2><div class="stack"><button id="rxStart" class="primary">🎙 開始接收</button><button id="rxStop">停止接收</button><button id="refreshMics">刷新麥克風</button></div><div class="controls" style="grid-template-columns:1fr"><label class="control">麥克風裝置<select id="micDevice"><option value="">系統預設</option></select></label></div><div class="status" id="rxStatus" aria-live="polite">麥克風未啟動；首次使用需允許權限。</div><p class="hint" id="micSettings">裝置設定：—</p></section>
+<section class="panel wide"><h2>④ Echo／Loopback 實驗</h2><div class="stack"><button id="airEcho" class="good">同機空氣 Echo 測試</button><button id="digitalTest" class="primary">純數位 Loopback 自我測試</button><button id="reset">清除計數與紀錄</button></div><div id="echoResult">尚未測試。建議先執行純數位測試，再執行同機空氣 Echo。</div><p class="hint">同機空氣 Echo：先取得這台裝置的麥克風，然後由同一台裝置的喇叭發聲，麥克風真的收到聲音才算成功；它不是遠端收到訊號後再回傳的雙向 ACK。純數位 Loopback：直接把合成 PCM 提供給另一個解碼器，<b>不經過任何喇叭或麥克風</b>。</p></section>
+<section class="panel"><h2>⑤ 收音診斷</h2><div class="stats"><div class="stat"><small>RX 封包（含重複）</small><strong id="rawCount">0</strong></div><div class="stat"><small>有效不同 ID</small><strong id="uniqueCount">0</strong></div><div class="stat"><small>左</small><strong id="leftCount">0</strong></div><div class="stat"><small>右</small><strong id="rightCount">0</strong></div></div><div id="toneBars" style="margin-top:14px"></div><canvas id="spectrum" width="660" height="200" aria-label="四個頻道的即時訊號強度圖"></canvas><p class="hint">每個色條是 Goertzel 檢測到的高頻音調幅度（dBFS）。有訊號不代表能解碼完整封包；CRC 通過才會加票。當下無法獲得麥克風原始訊號時，各頻道可能顯示為零。</p></section>
+<section class="panel"><h2>⑥ 傳輸日誌</h2><div class="stack"><button id="exportCsv">匯出 CSV</button><button id="exportWav">匯出最近 8 秒麥克風 WAV</button></div><div class="log" id="log" role="log" aria-live="polite"></div><details><summary>如何測試？</summary><p class="hint">① 用瀏覽器開同一個檔案或 HTTPS 靜態網頁。② 接收端先按「開始接收」，允許麥克風。③ 另一裝置按「發送左／右」，觀察解碼票數。④ 同機測試請用同一台裝置按「同機空氣 Echo」。⑤ 若同機回收失敗，先執行純數位測試，再試另一個頻帶與關閉音訊處理。</p><p class="hint">行動裝置的 <code>file://</code> 頁面可能可以播放聲音，但麥克風是否能授權取決於瀏覽器。建議用 <b>HTTPS 靜態網站</b> 開啟，或電腦上使用 <code>http://localhost</code>。勿在即時通訊軟體內建瀏覽器或無麥克風權限的 iframe 裡測試。</p></details></section>
+</main><footer><p>AcousticVote Lab v0.1 · 所有音訊運算均在本機瀏覽器完成。無任何音訊上傳、遠端 API 或資料收集。音效處理、裝置輸出路由與高頻響應可能因 iOS／Android／Windows／macOS 瀏覽器及硬體而不同。</p></footer>
+<script>
+'use strict';
+(() => {
+  const $ = id => document.getElementById(id);
+  const PRE = [3,0,3,0,1,2,1,2];
+  const BANDS = {
+    high:[18150,18650,19150,19650],
+    mid:[16500,17100,17700,18300],
+    low:[5500,6500,7500,8500]
+  };
+  const COLORS=['#71bff6','#75e4b1','#ffe18a','#f6a6d7'];
+  const CRC_POLY=0x07;
+  const HOP_SECONDS=0.010;
+  let ctx=null, micStream=null, micSource=null, captureNode=null, sinkNode=null, workletUrl=null;
+  let decoder=null, recorder=null, lastFrameLevels=[-100,-100,-100,-100], plotHistory=[];
+  let records=[], uidVotes=new Map(), packetKeys=new Set(), rxRaw=0, txSeq=0;
+  let txSources=[], txBusyUntil=0, pendingEcho=null, echoTimer=null;
+  let deviceId=(Math.floor(Math.random()*0x1000000) & 0xffffff);
+  if (globalThis.crypto && crypto.getRandomValues) {const a=new Uint32Array(1);crypto.getRandomValues(a);deviceId=a[0]&0xffffff;}
+  let operatingBand='high', operatingSymbol=65;
+  const HEX = x => x.toString(16).padStart(6,'0').toUpperCase();
+  const when=()=>new Date().toLocaleTimeString('zh-TW',{hour12:false});
+  function log(s){const line=`[${when()}] ${s}`;const d=$('log');d.textContent+=line+'\n';d.scrollTop=d.scrollHeight;if(d.textContent.length>40000)d.textContent=d.textContent.slice(-28000);}
+  function tell(id,s){$(id).textContent=s;}
+  function setEcho(s,good=null){const el=$('echoResult');el.textContent=s;el.style.borderColor=good===null?'#416174':good?'#279a75':'#ac7856';}
+  const packetBitsCount=40;
+  function crc8(a){let crc=0;for(const v of a){crc ^= v;for(let i=0;i<8;i++)crc=(crc&0x80)?((crc<<1)^CRC_POLY)&255:(crc<<1)&255;}return crc;}
+  function buildPacket(vote,seq,token){const b=new Uint8Array(5);b[0]=(0xA<<4)|((vote&1)<<3)|(seq&7);b[1]=(token>>>16)&255;b[2]=(token>>>8)&255;b[3]=token&255;b[4]=crc8(b.slice(0,4));return b;}
+  function packetSymbols(b){const syms=PRE.slice();for(const x of b){syms.push((x>>>6)&3,(x>>>4)&3,(x>>>2)&3,x&3);}return syms;}
+  function fromSymbols(syms){const out=new Uint8Array(5);for(let i=0;i<20;i+=4)out[i/4]=(syms[i]<<6)|(syms[i+1]<<4)|(syms[i+2]<<2)|syms[i+3];if((out[0]>>>4)!==10||crc8(out.slice(0,4))!==out[4])return null;return {vote:(out[0]>>>3)&1,seq:out[0]&7,token:((out[1]<<16)|(out[2]<<8)|out[3])>>>0,bytes:out};}
+  function encodePCM(symbols,sampleRate,freqs,symMs,amp){const samplesPerSym=Math.round(sampleRate*symMs/1000);const length=samplesPerSym*symbols.length;const data=new Float32Array(length);let phase=0;const fade=Math.max(1,Math.round(sampleRate*0.004));let p=0;for(let i=0;i<symbols.length;i++){const w=2*Math.PI*freqs[symbols[i]]/sampleRate;for(let j=0;j<samplesPerSym;j++){phase+=w;if(phase>Math.PI*2)phase-=Math.PI*2;const env=Math.min(1,(j+1)/fade,(samplesPerSym-j)/fade);data[p++]=amp*env*Math.sin(phase);}}return data;}
+  function notePacket(pkt,mode='mic'){
+    const key=`${pkt.token}:${pkt.seq}:${pkt.vote}`;
+    let duplicate=packetKeys.has(key);packetKeys.add(key);rxRaw++;
+    if(!duplicate)uidVotes.set(pkt.token,pkt.vote);
+    let left=0,right=0;for(const v of uidVotes.values()){if(v===0)left++;else right++;}
+    $('rawCount').textContent=rxRaw;$('uniqueCount').textContent=uidVotes.size;$('leftCount').textContent=left;$('rightCount').textContent=right;
+    const me=pkt.token===deviceId;
+    let lag=null;
+    if(me&&pendingEcho&&pendingEcho.seq===pkt.seq&&pendingEcho.vote===pkt.vote&&mode==='mic'){
+      lag=Math.round(performance.now()-pendingEcho.sentStart);
+      setEcho(`✅ 同機空氣 Echo 成功！${pkt.vote?'右':'左'}票、ID=${HEX(pkt.token)}、CRC 正確。從排程開始到完整解碼：約 ${lag} ms（包含封包長度與系統延遲，不是聲波飛行時間）。`,true);
+      clearTimeout(echoTimer);pendingEcho=null;
+    }
+    records.push({time:new Date().toISOString(),mode,id:HEX(pkt.token),vote:pkt.vote?'R':'L',seq:pkt.seq,duplicate,lag_ms:lag});
+    log(`${mode==='mic'?'🎙':'∿'} RX ${pkt.vote?'右':'左'} ID=${HEX(pkt.token)} seq=${pkt.seq} CRC OK${duplicate?' [重複封包]':''}${me?' [本機發送端]':''}`);
+  }
+  class Demodulator {
+    constructor(rate,freqs,symMs,threshold,onReceive,onLevels){
+      this.rate=rate;this.freqs=freqs;this.symMs=symMs;this.threshold=threshold;
+      this.onReceive=onReceive;this.onLevels=onLevels;
+      this.hop=Math.max(1,Math.round(rate*HOP_SECONDS));
+      this.winN=Math.round(rate*0.030);
+      this.window=new Float32Array(this.winN);this.winSum=0;
+      for(let i=0;i<this.winN;i++){const v=0.5-0.5*Math.cos(2*Math.PI*i/(this.winN-1));this.window[i]=v;this.winSum+=v;}
+      this.coeffs=freqs.map(f=>2*Math.cos(2*Math.PI*f/rate));
+      this.buffer=new Float32Array(this.winN);this.bufPos=0;this.total=0;this.next=this.winN;
+      this.frames=[];this.baseIndex=0;this.lastFoundStart=-99999;this.frameN=0;
+      this.symFrames=(rate*symMs/1000)/this.hop;this.totalSyms=PRE.length+20;
+    }
+    processSamples(samples){
+      for(let i=0;i<samples.length;i++){
+        this.buffer[this.bufPos]=samples[i];this.bufPos=(this.bufPos+1)%this.winN;this.total++;
+        if(this.total>=this.next){this.analyze();this.next+=this.hop;}
+      }
+    }
+    analyze(){
+      const powers=new Float64Array(4);
+      for(let k=0;k<4;k++){
+        const coeff=this.coeffs[k];let q1=0,q2=0,pos=this.bufPos;
+        for(let i=0;i<this.winN;i++){
+          const x=this.buffer[pos]*this.window[i];const q=x+coeff*q1-q2;q2=q1;q1=q;
+          pos++;if(pos===this.winN)pos=0;
+        }
+        const energy=Math.max(0,q1*q1+q2*q2-coeff*q1*q2);
+        powers[k]=2*Math.sqrt(energy)/this.winSum;
+      }
+      const db=Array.from(powers,a=>20*Math.log10(Math.max(1e-10,a)));
+      let winner=0;for(let i=1;i<4;i++)if(db[i]>db[winner])winner=i;
+      const sorted=db.slice().sort((a,b)=>b-a);
+      const margin=sorted[0]-sorted[1];
+      this.frames.push({db,winner,peak:sorted[0],margin});
+      this.frameN++;
+      if(this.frames.length>1500){this.frames.splice(0,300);this.baseIndex+=300;}
+      if(this.onLevels&&this.frameN%4===0)this.onLevels(db,winner,margin);
+      const packetLengthFrames=Math.round((this.totalSyms-0.5)*this.symFrames);
+      if(this.frameN<packetLengthFrames+2)return;
+      const start=this.frameN-1-packetLengthFrames;
+      if(start<=this.lastFoundStart+this.symFrames*(this.totalSyms-1))return;
+      let ok=0,confidence=0;
+      for(let i=0;i<PRE.length;i++){
+        const fr=this.getFrame(start,i);if(!fr)return;
+        if(fr.winner===PRE[i] && fr.peak>this.threshold&&fr.margin>1.25){ok++;confidence+=fr.margin;}
+      }
+      if(ok<7||confidence<24)return;
+      const sym=[];
+      for(let i=0;i<20;i++){
+        const fr=this.getFrame(start,i+PRE.length);if(!fr||fr.peak<this.threshold||fr.margin<1.05)return;
+        sym.push(fr.winner);
+      }
+      const pkt=fromSymbols(sym);
+      if(pkt){this.lastFoundStart=start;this.onReceive({...pkt,confidence:Math.round(confidence)},start);}
+    }
+    getFrame(start,i){const idx=Math.round(start+((i+0.5)*this.symFrames));return this.frames[idx-this.baseIndex]||null;}
+  }
+  class PCMRecorder {
+    constructor(rate,seconds=8){this.rate=rate;this.ring=new Float32Array(Math.round(rate*seconds));this.pos=0;this.count=0;}
+    push(s){for(let i=0;i<s.length;i++){this.ring[this.pos]=s[i];this.pos=(this.pos+1)%this.ring.length;this.count=Math.min(this.count+1,this.ring.length);}}
+    get(){const x=new Float32Array(this.count);const begin=(this.pos-this.count+this.ring.length)%this.ring.length;for(let i=0;i<this.count;i++)x[i]=this.ring[(begin+i)%this.ring.length];return x;}
+  }
+  async function audioContext(){if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw Error('此瀏覽器不支援 Web Audio');ctx=new AC({latencyHint:'interactive'});}if(ctx.state!=='running')await ctx.resume();return ctx;}
+  function snapshotParams(){return {band:$('band').value,symMs:Number($('symbol').value),freqs:BANDS[$('band').value],threshold:Number($('threshold').value)};}
+  function freshDecoder(rate){const p=snapshotParams();decoder=new Demodulator(rate,p.freqs,p.symMs,p.threshold,(pkt)=>notePacket(pkt,'mic'),updateLevels);operatingBand=p.band;operatingSymbol=p.symMs;}
+  function micChunk(data){if(recorder)recorder.push(data);if(decoder)decoder.processSamples(data);}
+  // ScriptProcessor fallback is kept for environments where inline AudioWorklet is unavailable.
+  async function setupCapture(context){
+    if(context.audioWorklet&&typeof AudioWorkletNode!=='undefined'){
+      try{
+        const code=`class AVRecorder extends AudioWorkletProcessor{process(inputs,outputs){const ch=inputs[0];if(ch&&ch.length){const data=new Float32Array(ch[0]);this.port.postMessage(data,[data.buffer]);}return true;}}registerProcessor('acoustic-vote-recorder',AVRecorder);`;
+        workletUrl=URL.createObjectURL(new Blob([code],{type:'application/javascript'}));
+        await context.audioWorklet.addModule(workletUrl);
+        captureNode=new AudioWorkletNode(context,'acoustic-vote-recorder',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1]});
+        captureNode.port.onmessage=e=>micChunk(e.data);
+        return 'AudioWorklet';
+      }catch(e){log(`AudioWorklet 不可用，改用備援：${e.message}`);if(captureNode)captureNode.disconnect();captureNode=null;}
+    }
+    if(typeof context.createScriptProcessor==='function'){
+      captureNode=context.createScriptProcessor(2048,1,1);
+      captureNode.onaudioprocess=e=>{const x=e.inputBuffer.getChannelData(0);micChunk(x);e.outputBuffer.getChannelData(0).fill(0);};
+      return 'ScriptProcessor（備援）';
+    }
+    throw Error('此瀏覽器無法建立音訊接收工作節點');
+  }
+  async function refreshMicrophones(){
+    if(!navigator.mediaDevices?.enumerateDevices)return;
+    const list=await navigator.mediaDevices.enumerateDevices();const el=$('micDevice'),old=el.value;el.innerHTML='';
+    const def=document.createElement('option');def.value='';def.textContent='系統預設';el.appendChild(def);
+    let j=0;for(const d of list.filter(x=>x.kind==='audioinput')){const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||`麥克風 ${++j}`;el.appendChild(o);}
+    if([...el.options].some(o=>o.value===old))el.value=old;
+  }
+  async function startRX(){
+    try{
+      if(micStream)return true;
+      const context=await audioContext();
+      if(!navigator.mediaDevices?.getUserMedia){throw Error('麥克風需要 HTTPS、localhost，或允許 file:// 麥克風權限的瀏覽器；請勿用非安全 HTTP 網址開啟。');}
+      tell('rxStatus','正在請求麥克風權限…');
+      const processed=$('processing').checked;
+      const audio={echoCancellation:processed,noiseSuppression:processed,autoGainControl:processed,channelCount:1};
+      if($('micDevice').value)audio.deviceId={ideal:$('micDevice').value};
+      micStream=await navigator.mediaDevices.getUserMedia({audio,video:false});
+      await context.resume();
+      micSource=context.createMediaStreamSource(micStream);
+      recorder=new PCMRecorder(context.sampleRate);
+      freshDecoder(context.sampleRate);
+      const engine=await setupCapture(context);
+      sinkNode=context.createGain();sinkNode.gain.value=0;
+      micSource.connect(captureNode);captureNode.connect(sinkNode);sinkNode.connect(context.destination);
+      const settings=micStream.getAudioTracks()[0].getSettings();
+      tell('rxStatus',`● 接收中｜${engine}｜${context.sampleRate} Hz｜${BANDS[operatingBand].join(' / ')} Hz`);
+      tell('micSettings',`系統實際設定：${JSON.stringify({sampleRate:settings.sampleRate,channelCount:settings.channelCount,echoCancellation:settings.echoCancellation,noiseSuppression:settings.noiseSuppression,autoGainControl:settings.autoGainControl})}`);
+      log(`🎙 RX ON · ${engine} · ${context.sampleRate} Hz · ${operatingBand} · ${operatingSymbol} ms`);
+      refreshMicrophones().catch(()=>{});
+      $('band').disabled=true;$('symbol').disabled=true;$('processing').disabled=true;
+      return true;
+    }catch(e){tell('rxStatus',`無法啟用接收：${e.name||'Error'} - ${e.message}`);log(`⚠ RX ERROR ${e.name}: ${e.message}`);stopRX();return false;}
+  }
+  function stopRX(){
+    if(micSource){try{micSource.disconnect();}catch{}micSource=null;}
+    if(captureNode){try{captureNode.disconnect();}catch{}if('port' in captureNode)captureNode.port.onmessage=null;if('onaudioprocess' in captureNode)captureNode.onaudioprocess=null;captureNode=null;}
+    if(sinkNode){try{sinkNode.disconnect();}catch{}sinkNode=null;}
+    if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;}
+    if(workletUrl){URL.revokeObjectURL(workletUrl);workletUrl=null;}
+    decoder=null;recorder=null;
+    $('band').disabled=false;$('symbol').disabled=false;$('processing').disabled=false;
+    tell('rxStatus','○ 麥克風已停止');tell('micSettings','裝置設定：—');updateLevels([-100,-100,-100,-100],0,0);
+  }
+  function getTransmission(vote){
+    const seq=(txSeq++)&7,p=snapshotParams();
+    if(ctx&&ctx.sampleRate<=2*Math.max(...p.freqs))throw Error(`取樣率 ${ctx.sampleRate} Hz 太低，不能輸出目前頻帶。`);
+    const bytes=buildPacket(vote,seq,deviceId),symbols=packetSymbols(bytes);
+    const amp=Number($('volume').value)/100;
+    const pcm=encodePCM(symbols,ctx.sampleRate,p.freqs,p.symMs,amp);
+    return {seq,bytes,symbols,pcm,duration:pcm.length/ctx.sampleRate,vote,p};
+  }
+  async function send(vote,echo=false){
+    try{
+      const context=await audioContext();
+      if(echo&&!micStream){setEcho('正在啟動麥克風，準備真實空氣回收測試…');if(!await startRX()){setEcho('❌ 無法啟動麥克風，不能執行空氣 Echo。',false);return;}}
+      if(micStream&&(snapshotParams().band!==operatingBand||snapshotParams().symMs!==operatingSymbol))throw Error('接收期間不能變更頻率或符號時間，請先停止接收。');
+      const tx=getTransmission(vote);
+      const repetitions=echo?1:Number($('reps').value);
+      const now=context.currentTime;
+      const jitter=!echo && $('randomStart').checked?Math.random()*1.5:0;
+      const startAt=Math.max(now+.13,txBusyUntil+.10)+jitter;
+      const sourceBuffer=context.createBuffer(1,tx.pcm.length,context.sampleRate);sourceBuffer.copyToChannel(tx.pcm,0);
+      const ends=[];
+      for(let i=0;i<repetitions;i++){
+        const wait=i===0?0:0.35+Math.random()*0.5;
+        const begin=i===0?startAt:ends[i-1]+wait;
+        const src=context.createBufferSource();src.buffer=sourceBuffer;
+        const gain=context.createGain();gain.gain.value=1;
+        src.connect(gain);gain.connect(context.destination);
+        src.start(begin);src.stop(begin+tx.duration+.02);
+        src.onended=()=>{src.disconnect();gain.disconnect();txSources=txSources.filter(n=>n!==src);};
+        txSources.push(src);ends.push(begin+tx.duration);
+      }
+      txBusyUntil=ends[ends.length-1];
+      const scheduledMs=performance.now()+(startAt-now)*1000;
+      if(echo){pendingEcho={vote,seq:tx.seq,sentStart:scheduledMs};clearTimeout(echoTimer);echoTimer=setTimeout(()=>{
+        if(pendingEcho&&pendingEcho.seq===tx.seq){setEcho('⚠ 未解出同機空氣 Echo。請看四頻道收音指示：完全沒反應表示喇叭／麥克風路徑或高頻被過濾；有訊號但未解碼可能是回音、雜訊、失真或音量問題。',false);log('⚠ 空氣 Echo：未收到可通過 CRC 的本機封包');pendingEcho=null;}
+      },Math.ceil((startAt-now+tx.duration+2)*1000));}
+      tell('txStatus',`已排程 ${repetitions} 次 ${vote?'右':'左'}票，ID=${HEX(deviceId)} seq=${tx.seq} · ${tx.symbols.length} symbols · 單包 ${tx.duration.toFixed(2)} 秒 · ${tx.p.band} 頻帶`);
+      log(`📣 TX ${vote?'右':'左'} ID=${HEX(deviceId)} seq=${tx.seq} ${repetitions} 次 · 單包 ${tx.duration.toFixed(2)}s · 音量 ${$('volume').value}%`);
+      if(echo)setEcho(`⏳ 同機空氣 Echo 進行中：同一台裝置已開麥克風，正在發送 ${vote?'右':'左'}票；等待聲學封包回收…`);
+    }catch(e){log(`⚠ TX ERROR: ${e.message}`);tell('txStatus',`發送失敗：${e.message}`);if(echo)setEcho(`❌ 同機 Echo 失敗：${e.message}`,false);}
+  }
+  function stopTX(){for(const src of txSources){try{src.stop();}catch{}}txSources=[];txBusyUntil=ctx?.currentTime||0;clearTimeout(echoTimer);pendingEcho=null;tell('txStatus','已停止目前發送');log('■ TX STOP');}
+  async function digitalLoopback(){
+    try{
+      const context=await audioContext();
+      const p=snapshotParams(),vote=Math.random()<0.5?0:1,seq=(txSeq++)&7;
+      const bytes=buildPacket(vote,seq,deviceId),pcm=encodePCM(packetSymbols(bytes),context.sampleRate,p.freqs,p.symMs,.18);
+      const d=new Demodulator(context.sampleRate,p.freqs,p.symMs,p.threshold,(pkt)=>found.push(pkt));
+      const found=[];
+      const lead=new Float32Array(Math.round(context.sampleRate*.22)),tail=new Float32Array(Math.round(context.sampleRate*.15));
+      d.processSamples(lead);for(let i=0;i<pcm.length;i+=1024)d.processSamples(pcm.subarray(i,i+1024));d.processSamples(tail);
+      const pass=found.some(q=>q.vote===vote&&q.seq===seq&&q.token===deviceId);
+      setEcho(`${pass?'✅':'❌'} 純數位 Loopback ${pass?'通過':'未通過'}：${vote?'右':'左'}票 · ID=${HEX(deviceId)} · 音訊 ${pcm.length/context.sampleRate|0}.${(pcm.length/context.sampleRate*100%100|0).toString().padStart(2,'0')} 秒 · 共解碼 ${found.length} 個封包。此項沒有測試手機喇叭或麥克風。`,pass);
+      log(`${pass?'✅':'❌'} DIGITAL LOOPBACK ${pass?'PASS':'FAIL'} (${p.band}, ${p.symMs}ms, ${found.length} decoded)`);
+    }catch(e){setEcho(`❌ 純數位 Loopback 失敗：${e.message}`,false);log(`⚠ DIGITAL ERROR: ${e.message}`);}
+  }
+  function updateLevels(levels,winner,margin){lastFrameLevels=levels;const bars=$('toneBars');for(let i=0;i<4;i++){
+    const el=$(`bar${i}`),txt=$(`barLabel${i}`);if(!el)continue;
+    el.style.width=`${Math.min(100,Math.max(0,(levels[i]+95)*1.05))}%`;
+    txt.textContent=Number.isFinite(levels[i])?`${levels[i].toFixed(1)} dB`: '—';}
+    plotHistory.push(levels.slice());if(plotHistory.length>160)plotHistory.shift();
+    if(plotHistory.length%4===0)drawPlot();
+  }
+  function drawPlot(){const canvas=$('spectrum'),g=canvas.getContext('2d');if(!g)return;const W=canvas.width,H=canvas.height;g.clearRect(0,0,W,H);g.fillStyle='#0a1423';g.fillRect(0,0,W,H);
+    g.lineWidth=1;g.font='12px system-ui';for(let db=-90;db<=-10;db+=20){const y=H-12-(db+95)/95*(H-25);g.strokeStyle='#253950';g.beginPath();g.moveTo(44,y);g.lineTo(W-8,y);g.stroke();g.fillStyle='#8ca6c6';g.fillText(`${db}dB`,4,y+4);}
+    for(let k=0;k<4;k++){g.strokeStyle=COLORS[k];g.lineWidth=2;g.beginPath();for(let i=0;i<plotHistory.length;i++){
+      const x=44+i/(159)*(W-53),y=H-12-(Math.max(-95,Math.min(0,plotHistory[i][k]))+95)/95*(H-25);
+      if(i===0)g.moveTo(x,y);else g.lineTo(x,y);}g.stroke();}
+    g.font='11px system-ui';for(let i=0;i<4;i++){g.fillStyle=COLORS[i];g.fillText(`${(BANDS[operatingBand][i]/1000).toFixed(2)}k`,48+i*100,14);}
+  }
+  function setupBars(){const b=$('toneBars');b.innerHTML='';for(let i=0;i<4;i++){
+    const wrap=document.createElement('div');wrap.className='bars';
+    const name=document.createElement('span');name.id=`freqName${i}`;name.textContent=`F${i} ${(BANDS.high[i]/1000).toFixed(2)}k`;
+    const track=document.createElement('div');track.className='track';
+    const fill=document.createElement('div');fill.className='fill';fill.id=`bar${i}`;fill.style.background=COLORS[i];track.append(fill);
+    const val=document.createElement('span');val.id=`barLabel${i}`;val.textContent='—';val.style.textAlign='right';
+    wrap.append(name,track,val);b.append(wrap);
+  }updateFrequencies();}
+  function updateFrequencies(){const band=BANDS[$('band').value];operatingBand=$('band').value;for(let i=0;i<4;i++){if($(`freqName${i}`))$(`freqName${i}`).textContent=`F${i} ${(band[i]/1000).toFixed(2)}k`;}drawPlot();}
+  function reset(){uidVotes.clear();packetKeys.clear();rxRaw=0;records=[];$('rawCount').textContent='0';$('uniqueCount').textContent='0';$('leftCount').textContent='0';$('rightCount').textContent='0';$('log').textContent='';plotHistory=[];drawPlot();setEcho('已清除測試紀錄');log('測試計數已重設');}
+  function download(name,blob){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);}
+  function exportCSV(){const head='time,mode,id,vote,seq,duplicate,lag_ms';const rows=records.map(x=>[x.time,x.mode,x.id,x.vote,x.seq,x.duplicate,x.lag_ms??''].join(','));download(`acousticvote_log_${Date.now()}.csv`,new Blob([[head,...rows].join('\r\n')],{type:'text/csv;charset=utf-8'}));}
+  function exportWAV(){if(!recorder||recorder.count===0){log('⚠ 尚無錄音資料可匯出');return;}
+    const pcm=recorder.get(),sr=recorder.rate,bytes=44+pcm.length*2,b=new ArrayBuffer(bytes),d=new DataView(b);
+    const ascii=(o,s)=>{for(let i=0;i<s.length;i++)d.setUint8(o+i,s.charCodeAt(i));};
+    ascii(0,'RIFF');d.setUint32(4,bytes-8,true);ascii(8,'WAVE');ascii(12,'fmt ');d.setUint32(16,16,true);d.setUint16(20,1,true);d.setUint16(22,1,true);d.setUint32(24,sr,true);d.setUint32(28,sr*2,true);d.setUint16(32,2,true);d.setUint16(34,16,true);ascii(36,'data');d.setUint32(40,pcm.length*2,true);
+    for(let i=0;i<pcm.length;i++){const x=Math.max(-1,Math.min(1,pcm[i]));d.setInt16(44+i*2,x<0?x*32768:x*32767,true);}
+    download(`acousticvote_mic_${Date.now()}.wav`,new Blob([b],{type:'audio/wav'}));log(`已下載最近 ${(pcm.length/sr).toFixed(1)} 秒麥克風錄音`);
+  }
+  $('txInfo').textContent=`隨機發送端識別碼：${HEX(deviceId)}（僅用於本次頁面）`;
+  setupBars();drawPlot();
+  $('volume').addEventListener('input',()=>{$('volLabel').textContent=$('volume').value+'%';});
+  $('band').addEventListener('change',updateFrequencies);
+  $('txLeft').addEventListener('click',()=>send(0));$('txRight').addEventListener('click',()=>send(1));
+  $('stopTx').addEventListener('click',stopTX);
+  $('rxStart').addEventListener('click',startRX);$('rxStop').addEventListener('click',stopRX);
+  $('refreshMics').addEventListener('click',()=>refreshMicrophones().catch(e=>log('裝置列表：'+e.message)));
+  $('airEcho').addEventListener('click',()=>send(0,true));$('digitalTest').addEventListener('click',digitalLoopback);
+  $('reset').addEventListener('click',reset);
+  $('exportCsv').addEventListener('click',exportCSV);$('exportWav').addEventListener('click',exportWAV);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&micStream)log('頁面轉到背景；手機瀏覽器可能暫停收音／傳輸，請保持螢幕亮起。');});
+  if(!window.isSecureContext){log('⚠ 目前非安全來源。若麥克風無法開啟，請使用 HTTPS 或 localhost。');}
+  log('AcousticVote Lab 已啟動，請先試「純數位 Loopback 自我測試」。');
+  // Public debug hook to run deterministic protocol tests in an automated browser.
+  window.AcousticVoteDebug={buildPacket,packetSymbols,encodePCM,Demodulator,fromSymbols,BANDS};
+})();
+</script>
+</body>
+</html>
