@@ -610,5 +610,8 @@
         }
       ]
     }
+  ],
+  "hidden": [
+    "games/quiz-classic"
   ]
 }

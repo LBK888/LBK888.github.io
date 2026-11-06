@@ -58,6 +58,10 @@ function prettySlug(slug) {
   return slug.replace(/\.html?$/i, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// Folders with "hidden": true in meta.json. The homepage needs their names too, so that
+// its live check on GitHub does not mistake them for new tools.
+const hidden = [];
+
 let gitOk = true;
 function git(args) {
   if (!gitOk) return '';
@@ -106,7 +110,7 @@ function buildEntry(cat, name) {
     return null;
   }
 
-  if (meta.hidden) return null;
+  if (meta.hidden) { hidden.push(`${cat.id}/${name.replace(/.html?$/i, "")}`); return null; }
 
   const info = readHtmlInfo(join(ROOT, base, entry));
   const slug = name.replace(/\.html?$/i, '');
@@ -155,6 +159,7 @@ const catalog = {
     };
   }),
 };
+catalog.hidden = hidden.sort();
 
 const out = join(ROOT, 'data/catalog.json');
 const json = JSON.stringify(catalog, null, 2) + '\n';

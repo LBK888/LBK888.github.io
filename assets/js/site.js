@@ -185,6 +185,7 @@
     tree.then(function (paths) {
       var known = {};
       catalog.categories.forEach(function (c) { c.items.forEach(function (i) { known[i.id] = true; }); });
+      (catalog.hidden || []).forEach(function (id) { known[id] = true; });
       var folders = {};
       catalog.categories.forEach(function (c) { folders[c.folder] = c.id; });
       var todo = [];
