@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found · BK Lab</title>
+<meta name="robots" content="noindex">
+<script>
+  // The tools used to live at the root of the site. They were filed into category folders in
+  // November 2026; this map sends old links and printed QR codes to the new address,
+  // keeping any ?query and #hash.
+  (function () {
+    var moved = {
+      '/web_yolo': '/tools/yolo-detect',
+      '/hr': '/tools/heart-rate',
+      '/rain_cal.html': '/tools/rain-buffer/',
+      '/Lottery.html': '/tools/bingo/',
+      '/cellgame.html': '/games/cell-culture/',
+      '/chat-widget.js': '/games/cell-culture/chat-widget.js',
+      '/WaterMaze': '/games/water-maze',
+      '/korokoro': '/games/korokoro',
+      '/TPred': '/games/sequence-duel',
+      '/c': '/games/quiz',
+      '/q': '/games/quiz-demo',
+      '/cg': '/games/quiz-classic',
+      '/nonogramQR.html': '/games/qr-nonogram/',
+      '/NN_demo.html': '/teaching/neural-network/',
+      '/d': '/teaching/cnn-lab',
+      '/t': '/teaching/forecasting',
+      '/RPred': '/teaching/water-lab',
+      '/sentry': '/teaching/face-sentry',
+      '/knight': '/teaching/knights-tour',
+      '/CA': '/teaching/multicell-automata',
+      '/pattern_check.html': '/research/cell-distribution/',
+      '/ocr': '/research/panel-ocr',
+      '/echo.html': '/research/acoustic-vote/',
+      '/nfc': '/research/nfc-tag',
+      '/rhill-voronoi-core.min.js': '/assets/vendor/rhill-voronoi-core.min.js'
+    };
+    var path = location.pathname;
+    for (var from in moved) {
+      if (path === from || path.indexOf(from + '/') === 0) {
+        location.replace(moved[from] + path.slice(from.length) + location.search + location.hash);
+        return;
+      }
+    }
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f7f7f6; --ink: #2a2356; --surface: #ececea; --red: #a81f2e; }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    min-height: 100svh; display: grid; place-items: center; padding: 24px;
+    background: var(--bg); color: var(--ink);
+    font: 400 1.125rem/1.5 "Bricolage Grotesque", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  }
+  main { width: min(100%, 40rem); }
+  h1 { font-weight: 600; font-size: clamp(2.5rem, 7vw, 4.5rem); line-height: 0.95; letter-spacing: -0.04em; margin-bottom: 24px; }
+  p { max-width: 34ch; margin-bottom: 32px; }
+  nav { display: flex; flex-wrap: wrap; gap: 12px; }
+  a {
+    display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px;
+    background: var(--red); color: #fff; text-decoration: none; font-weight: 600;
+    clip-path: polygon(0 28%, 6% 4%, 40% 0, 95% 7%, 100% 36%, 99% 80%, 92% 100%, 33% 96%, 3% 90%);
+    transition: transform .2s ease;
+  }
+  a + a { background: var(--surface); color: var(--ink); }
+  a:hover { transform: translateY(-2px); }
+  a:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>This page is not here</h1>
+  <p>It may have moved when we filed the tools into folders. Every tool is listed on the homepage.</p>
+  <nav>
+    <a href="/">BK Lab homepage</a>
+    <a href="/#tools">All tools</a>
+  </nav>
+</main>
+</body>
+</html>

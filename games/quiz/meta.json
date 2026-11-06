@@ -1,0 +1,11 @@
+{
+  "entry": "list.html",
+  "title": "Quiz Challenge",
+  "title_zh": "QuizGame 實力大挑戰",
+  "description": "Timed quizzes, from functional literacy to cell biology vocabulary, each ending in a score report.",
+  "description_zh": "限時測驗合集：功能性文盲大測驗、細胞生物學詞彙等，作答後產生能力報告。",
+  "needs": "Uses the class server",
+  "needs_zh": "需連線課堂伺服器",
+  "lang": "zh",
+  "order": 6
+}

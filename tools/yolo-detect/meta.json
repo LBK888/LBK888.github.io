@@ -1,0 +1,10 @@
+{
+  "title": "YOLO Detect",
+  "title_zh": "YOLO 即時物件偵測",
+  "description": "Load a YOLOv8 or YOLOv5 ONNX model and run real-time object detection on your phone's camera, with no server.",
+  "description_zh": "載入 YOLOv8／v5 ONNX 模型，直接在手機瀏覽器用相機即時偵測物件，不需後端。",
+  "needs": "Needs a camera",
+  "needs_zh": "需要相機",
+  "lang": "zh,en",
+  "order": 1
+}

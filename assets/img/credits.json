@@ -1,0 +1,65 @@
+[
+  {
+    "file": "assets/img/somite-embryo-dark-field.webp",
+    "title": "Zebrafish-Embryo-dark-field",
+    "creator": "Giudicelli F, Özbudak EM, Wright GJ, Lewis J",
+    "date": "2007",
+    "license": "CC BY 2.5",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.5",
+    "page": "https://commons.wikimedia.org/wiki/File:Zebrafish-Embryo-dark-field.jpg",
+    "via": "Wikimedia Commons",
+    "note": "cropped to panel A, panel labels removed"
+  },
+  {
+    "file": "assets/img/zebrafish-embryo-fluorescent.webp",
+    "title": "Embryo of Zebrafish",
+    "creator": "Marco Boschin",
+    "date": "2019-11-21",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Embryo_of_Zebrafish.jpg",
+    "via": "Wikimedia Commons"
+  },
+  {
+    "file": "assets/img/keelung-station-harbour.webp",
+    "title": "基隆車站與基隆港",
+    "creator": "勝山吉作",
+    "date": "2020-04-28",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "page": "https://commons.wikimedia.org/wiki/File:%E5%9F%BA%E9%9A%86%E8%BB%8A%E7%AB%99%E8%88%87%E5%9F%BA%E9%9A%86%E6%B8%AF.jpg",
+    "via": "Wikimedia Commons"
+  },
+  {
+    "file": "assets/img/zebrafish-heartbeat.webm",
+    "title": "ZebraBeat-a-flexible-platform-for-the-analysis-of-the-cardiac-rate-in-zebrafish-embryos-srep04898-s5",
+    "creator": "De Luca E, Zaccaria G, Hadhoud M, Rizzo G, Ponzini R, Morbiducci U, Santoro M",
+    "date": "2014-05-09",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:ZebraBeat-a-flexible-platform-for-the-analysis-of-the-cardiac-rate-in-zebrafish-embryos-srep04898-s5.ogv",
+    "via": "Wikimedia Commons"
+  },
+  {
+    "file": "assets/img/zebrafish-heartbeat.mp4",
+    "title": "ZebraBeat-a-flexible-platform-for-the-analysis-of-the-cardiac-rate-in-zebrafish-embryos-srep04898-s5",
+    "creator": "De Luca E, Zaccaria G, Hadhoud M, Rizzo G, Ponzini R, Morbiducci U, Santoro M",
+    "date": "2014-05-09",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:ZebraBeat-a-flexible-platform-for-the-analysis-of-the-cardiac-rate-in-zebrafish-embryos-srep04898-s5.ogv",
+    "via": "Wikimedia Commons",
+    "note": "re-encoded as H.264"
+  },
+  {
+    "file": "assets/img/myod-somites-wish.webp",
+    "title": "Not all tissues receiving notochord-emitted signals are affected by U0126 treatment",
+    "creator": "Hawkins, T.A., Cavodeassi, F., Erdélyi, F. et al.",
+    "date": "2008-04-17",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Not_all_tissues_receiving_notochord-emitted_signals_are_affected_by_U0126_treatment.jpg",
+    "via": "Wikimedia Commons",
+    "note": "panel E (myoD) only, panel labels removed"
+  }
+]

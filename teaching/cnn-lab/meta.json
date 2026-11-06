@@ -1,0 +1,15 @@
+{
+  "title": "Pixel Editor and CNN",
+  "title_zh": "點陣圖編輯器與卷積教學",
+  "description": "Draw on a pixel grid and let AI models guess what it is, then step through a convolution filter one multiplication at a time.",
+  "description_zh": "在點陣格上作畫讓 AI 模型辨識，再一步步看卷積濾波器如何相乘相加。",
+  "lang": "zh",
+  "order": 2,
+  "pages": [
+    {
+      "title": "Convolution, step by step",
+      "title_zh": "CNN 卷積運算互動教學",
+      "href": "convolution_demo.html"
+    }
+  ]
+}

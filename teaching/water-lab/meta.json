@@ -1,0 +1,10 @@
+{
+  "title": "Water Lab: Read and Predict",
+  "title_zh": "水質實驗室：讀值與預測",
+  "description": "A field lab for groups: connect an ESP32 water sensor over Wi‑Fi and forecast its readings on the phone. Demo data included.",
+  "description_zh": "分組野外實驗：以 Wi‑Fi 連接 ESP32 水質感測器，在手機上預測讀值；附模擬資料。",
+  "needs": "ESP32 kit, or demo data",
+  "needs_zh": "ESP32 套件或模擬資料",
+  "lang": "en",
+  "order": 4
+}

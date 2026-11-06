@@ -1,0 +1,8 @@
+{
+  "title": "Functional Literacy Quiz",
+  "title_zh": "功能性文盲大測驗（Demo）",
+  "description": "Twenty questions against the clock on language, maths, daily life and logic, from a question bank that ships with the page.",
+  "description_zh": "使用本機題庫：語文、數理、生活與邏輯，限時 20 題。",
+  "lang": "zh",
+  "order": 7
+}

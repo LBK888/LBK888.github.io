@@ -1,0 +1,8 @@
+{
+  "title": "Knight's Tour Solver",
+  "title_zh": "騎士漫遊",
+  "description": "Set the board size and the move pattern, pick a starting square, and watch the solver visit every square exactly once.",
+  "description_zh": "設定棋盤大小與走法、選一個起點，看程式如何讓騎士走遍每一格且不重複。",
+  "lang": "en",
+  "order": 6
+}

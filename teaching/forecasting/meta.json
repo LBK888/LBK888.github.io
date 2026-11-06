@@ -1,0 +1,15 @@
+{
+  "title": "Early Warning Forecasting",
+  "title_zh": "數據預警預測演算法",
+  "description": "Compare a Kalman filter, Holt smoothing and an echo state network as they forecast a live time series on a phone.",
+  "description_zh": "在手機上比較卡爾曼濾波、Holt 雙指數平滑與 ESN 對即時數據的預測與預警。",
+  "lang": "zh,en",
+  "order": 3,
+  "pages": [
+    {
+      "title": "Algorithm tutorial",
+      "title_zh": "演算法教學（Kalman｜ESN｜Holt）",
+      "href": "algorithm_demo_V2.html"
+    }
+  ]
+}

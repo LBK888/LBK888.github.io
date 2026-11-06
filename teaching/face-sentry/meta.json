@@ -1,0 +1,10 @@
+{
+  "title": "Face Sentry",
+  "title_zh": "手機 AI 哨兵",
+  "description": "Face recognition and offline alerts that run entirely in the phone browser; the video never leaves the device.",
+  "description_zh": "完全在手機瀏覽器執行的人臉辨識與離線警報，畫面不會上傳伺服器。",
+  "needs": "Needs a camera",
+  "needs_zh": "需要相機",
+  "lang": "zh",
+  "order": 5
+}

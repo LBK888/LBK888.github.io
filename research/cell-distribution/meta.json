@@ -1,0 +1,10 @@
+{
+  "title": "Cell Distribution Analyzer",
+  "title_zh": "細胞分布分析器",
+  "description": "Photograph a hex-grid sample, align the grid, extract the cell colours and test the spatial pattern with Ripley's K and L(r).",
+  "description_zh": "拍攝蜂巢格樣本、對齊格線、提取細胞顏色，以 Ripley's K 與 L(r) 分析空間分布。",
+  "needs": "Camera or a photo",
+  "needs_zh": "相機或照片",
+  "lang": "zh,en",
+  "order": 1
+}

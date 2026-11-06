@@ -1,0 +1,10 @@
+{
+  "title": "NFC Tag Reader",
+  "title_zh": "NFC 標籤讀取測試",
+  "description": "Check whether a phone browser can read an NTAG215 tag's serial number and NDEF text through Web NFC.",
+  "description_zh": "測試手機瀏覽器能否透過 Web NFC 讀取 NTAG215 的序號與 NDEF 內容。",
+  "needs": "Android Chrome with NFC",
+  "needs_zh": "Android Chrome 與 NFC",
+  "lang": "zh",
+  "order": 4
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Neural Network Simulator",
+  "title_zh": "ANN 神經網路模擬器",
+  "description": "Set the hidden layers and activation function, type in inputs, and follow every weight and bias as the signal moves forward.",
+  "description_zh": "設定隱藏層與激活函數、輸入數值，看每個權重與偏差如何把訊號往前傳。",
+  "lang": "zh",
+  "order": 1
+}

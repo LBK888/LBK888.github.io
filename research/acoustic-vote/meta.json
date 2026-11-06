@@ -1,0 +1,10 @@
+{
+  "title": "AcousticVote Lab",
+  "title_zh": "近超音波聲學傳輸",
+  "description": "Send and receive small data packets between phones over near-ultrasound (18–19.6 kHz), with echo and loopback tests.",
+  "description_zh": "以近超音波（18–19.6 kHz）在手機之間收發小型資料封包，含同機 Echo 與 Loopback 測試。",
+  "needs": "Microphone and speaker",
+  "needs_zh": "需要麥克風與喇叭",
+  "lang": "zh",
+  "order": 3
+}

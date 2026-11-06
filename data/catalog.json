@@ -1,0 +1,614 @@
+{
+  "repo": "LBK888/LBK888.github.io",
+  "branch": "main",
+  "categories": [
+    {
+      "id": "tools",
+      "folder": "tools",
+      "name": {
+        "en": "Web Tools",
+        "zh": "網頁工具"
+      },
+      "blurb": {
+        "en": "Calculators and AI utilities that run in the browser, most of them on a phone.",
+        "zh": "在瀏覽器裡執行的計算工具與 AI 工具，大多可直接用手機開啟。"
+      },
+      "items": [
+        {
+          "id": "tools/yolo-detect",
+          "slug": "yolo-detect",
+          "href": "tools/yolo-detect/",
+          "title": {
+            "en": "YOLO Detect",
+            "zh": "YOLO 即時物件偵測"
+          },
+          "description": {
+            "en": "Load a YOLOv8 or YOLOv5 ONNX model and run real-time object detection on your phone's camera, with no server.",
+            "zh": "載入 YOLOv8／v5 ONNX 模型，直接在手機瀏覽器用相機即時偵測物件，不需後端。"
+          },
+          "needs": {
+            "en": "Needs a camera",
+            "zh": "需要相機"
+          },
+          "lang": "zh,en",
+          "cover": "tools/yolo-detect/cover.webp",
+          "thumb": "tools/yolo-detect/thumb.webp",
+          "pages": [],
+          "order": 1,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "tools/heart-rate",
+          "slug": "heart-rate",
+          "href": "tools/heart-rate/",
+          "title": {
+            "en": "Heart Rate Analyzer",
+            "zh": "心跳影像分析器"
+          },
+          "description": {
+            "en": "Upload a video of a beating heart, paint over the heart, and read heart rate, HRV (SDNN) and RMSSD from the pixel changes.",
+            "zh": "上傳心臟跳動影片、塗選心臟區域，從影像變化計算心率、HRV（SDNN）與 RMSSD。"
+          },
+          "needs": {
+            "en": "Needs a video file",
+            "zh": "需要影片檔"
+          },
+          "lang": "zh,en",
+          "cover": "tools/heart-rate/cover.webp",
+          "thumb": "tools/heart-rate/thumb.webp",
+          "pages": [
+            {
+              "title": {
+                "en": "How the algorithm works",
+                "zh": "演算法說明"
+              },
+              "href": "tools/heart-rate/algorithm.html"
+            }
+          ],
+          "order": 2,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "tools/rain-buffer",
+          "slug": "rain-buffer",
+          "href": "tools/rain-buffer/",
+          "title": {
+            "en": "Rain Buffer Calculator",
+            "zh": "降雨緩衝容量估算"
+          },
+          "description": {
+            "en": "Estimate how much rain a mariculture pond can still absorb, from its salinity and pH, before a storm arrives.",
+            "zh": "以鹽度與 pH 估算海水養殖池對降雨的剩餘緩衝能力，在強降雨前做好準備。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh,en",
+          "cover": "tools/rain-buffer/cover.webp",
+          "thumb": "tools/rain-buffer/thumb.webp",
+          "pages": [],
+          "order": 3,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "tools/bingo",
+          "slug": "bingo",
+          "href": "tools/bingo/",
+          "title": {
+            "en": "Bingo Ball Picker",
+            "zh": "賓果抽球機"
+          },
+          "description": {
+            "en": "A physics bingo cage for class draws: the balls tumble and one escapes at a time.",
+            "zh": "課堂抽籤用的物理賓果機：球在籠中翻滾，每次掉出一顆。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "en",
+          "cover": "tools/bingo/cover.webp",
+          "thumb": "tools/bingo/thumb.webp",
+          "pages": [],
+          "order": 4,
+          "added": "",
+          "updated": ""
+        }
+      ]
+    },
+    {
+      "id": "games",
+      "folder": "games",
+      "name": {
+        "en": "Web Games",
+        "zh": "網頁遊戲"
+      },
+      "blurb": {
+        "en": "Games and quizzes for class: physics puzzles, prediction duels and lab vocabulary.",
+        "zh": "課堂用的遊戲與測驗：物理謎題、預測對決與實驗室詞彙。"
+      },
+      "items": [
+        {
+          "id": "games/cell-culture",
+          "slug": "cell-culture",
+          "href": "games/cell-culture/",
+          "title": {
+            "en": "Cell Culture Adventure",
+            "zh": "細胞培養大冒險"
+          },
+          "description": {
+            "en": "Run cell culture experiments, collect results and pick up the vocabulary of the cell lab along the way.",
+            "zh": "動手做細胞培養實驗、收集成果，一邊玩一邊熟悉細胞實驗室的專有名詞。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "en",
+          "cover": "games/cell-culture/cover.webp",
+          "thumb": "games/cell-culture/thumb.webp",
+          "pages": [],
+          "order": 1,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "games/sequence-duel",
+          "slug": "sequence-duel",
+          "href": "games/sequence-duel/",
+          "title": {
+            "en": "Sequence Duel",
+            "zh": "序列對決"
+          },
+          "description": {
+            "en": "Play rock–paper–scissors against prediction models, then inspect what each model knew before your hand appeared.",
+            "zh": "和預測模型玩剪刀石頭布，再逐局檢視每個模型在你出拳前掌握了什麼。"
+          },
+          "needs": {
+            "en": "Needs a camera",
+            "zh": "需要相機"
+          },
+          "lang": "en",
+          "cover": "games/sequence-duel/cover.webp",
+          "thumb": "games/sequence-duel/thumb.webp",
+          "pages": [],
+          "order": 2,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "games/korokoro",
+          "slug": "korokoro",
+          "href": "games/korokoro/",
+          "title": {
+            "en": "Korokoro Maze Jar",
+            "zh": "ころころ迷宮罐"
+          },
+          "description": {
+            "en": "Tilt your phone to pour everything out of a randomly built maze jar. Shake it when the sugar and salt stick.",
+            "zh": "轉動手機，把隨機迷宮罐裡的東西倒出來；卡住時用力搖一搖。"
+          },
+          "needs": {
+            "en": "Best on a phone",
+            "zh": "建議用手機"
+          },
+          "lang": "zh",
+          "cover": "games/korokoro/cover.webp",
+          "thumb": "games/korokoro/thumb.webp",
+          "pages": [],
+          "order": 3,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "games/water-maze",
+          "slug": "water-maze",
+          "href": "games/water-maze/",
+          "title": {
+            "en": "Water Maze",
+            "zh": "水滴迷宮"
+          },
+          "description": {
+            "en": "Rotate the maze to steer water drops onto the scale, and reach the target weight before time runs out.",
+            "zh": "旋轉迷宮讓水滴落到秤盤上，在時間內達到目標重量即過關。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh",
+          "cover": "games/water-maze/cover.webp",
+          "thumb": "games/water-maze/thumb.webp",
+          "pages": [],
+          "order": 4,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "games/qr-nonogram",
+          "slug": "qr-nonogram",
+          "href": "games/qr-nonogram/",
+          "title": {
+            "en": "QR Code Nonogram",
+            "zh": "QR Code 數織謎題"
+          },
+          "description": {
+            "en": "Turn any text into a QR code, then into a nonogram puzzle. Solve the puzzle and the code scans.",
+            "zh": "把文字變成 QR Code，再變成數織謎題；解開謎題，就能掃出答案。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh,en",
+          "cover": "games/qr-nonogram/cover.webp",
+          "thumb": "games/qr-nonogram/thumb.webp",
+          "pages": [],
+          "order": 5,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "games/quiz",
+          "slug": "quiz",
+          "href": "games/quiz/list.html",
+          "title": {
+            "en": "Quiz Challenge",
+            "zh": "QuizGame 實力大挑戰"
+          },
+          "description": {
+            "en": "Timed quizzes, from functional literacy to cell biology vocabulary, each ending in a score report.",
+            "zh": "限時測驗合集：功能性文盲大測驗、細胞生物學詞彙等，作答後產生能力報告。"
+          },
+          "needs": {
+            "en": "Uses the class server",
+            "zh": "需連線課堂伺服器"
+          },
+          "lang": "zh",
+          "cover": "games/quiz/cover.webp",
+          "thumb": "games/quiz/thumb.webp",
+          "pages": [],
+          "order": 6,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "games/quiz-demo",
+          "slug": "quiz-demo",
+          "href": "games/quiz-demo/",
+          "title": {
+            "en": "Functional Literacy Quiz",
+            "zh": "功能性文盲大測驗（Demo）"
+          },
+          "description": {
+            "en": "Twenty questions against the clock on language, maths, daily life and logic, from a question bank that ships with the page.",
+            "zh": "使用本機題庫：語文、數理、生活與邏輯，限時 20 題。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh",
+          "cover": "games/quiz-demo/cover.webp",
+          "thumb": "games/quiz-demo/thumb.webp",
+          "pages": [],
+          "order": 7,
+          "added": "",
+          "updated": ""
+        }
+      ]
+    },
+    {
+      "id": "teaching",
+      "folder": "teaching",
+      "name": {
+        "en": "Teaching",
+        "zh": "教學"
+      },
+      "blurb": {
+        "en": "Interactive lessons from our courses on neural networks, forecasting and edge AI.",
+        "zh": "課程用的互動教材：神經網路、時間序列預測與邊緣 AI。"
+      },
+      "items": [
+        {
+          "id": "teaching/neural-network",
+          "slug": "neural-network",
+          "href": "teaching/neural-network/",
+          "title": {
+            "en": "Neural Network Simulator",
+            "zh": "ANN 神經網路模擬器"
+          },
+          "description": {
+            "en": "Set the hidden layers and activation function, type in inputs, and follow every weight and bias as the signal moves forward.",
+            "zh": "設定隱藏層與激活函數、輸入數值，看每個權重與偏差如何把訊號往前傳。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh",
+          "cover": "teaching/neural-network/cover.webp",
+          "thumb": "teaching/neural-network/thumb.webp",
+          "pages": [],
+          "order": 1,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "teaching/cnn-lab",
+          "slug": "cnn-lab",
+          "href": "teaching/cnn-lab/",
+          "title": {
+            "en": "Pixel Editor and CNN",
+            "zh": "點陣圖編輯器與卷積教學"
+          },
+          "description": {
+            "en": "Draw on a pixel grid and let AI models guess what it is, then step through a convolution filter one multiplication at a time.",
+            "zh": "在點陣格上作畫讓 AI 模型辨識，再一步步看卷積濾波器如何相乘相加。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh",
+          "cover": "teaching/cnn-lab/cover.webp",
+          "thumb": "teaching/cnn-lab/thumb.webp",
+          "pages": [
+            {
+              "title": {
+                "en": "Convolution, step by step",
+                "zh": "CNN 卷積運算互動教學"
+              },
+              "href": "teaching/cnn-lab/convolution_demo.html"
+            }
+          ],
+          "order": 2,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "teaching/forecasting",
+          "slug": "forecasting",
+          "href": "teaching/forecasting/",
+          "title": {
+            "en": "Early Warning Forecasting",
+            "zh": "數據預警預測演算法"
+          },
+          "description": {
+            "en": "Compare a Kalman filter, Holt smoothing and an echo state network as they forecast a live time series on a phone.",
+            "zh": "在手機上比較卡爾曼濾波、Holt 雙指數平滑與 ESN 對即時數據的預測與預警。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh,en",
+          "cover": "teaching/forecasting/cover.webp",
+          "thumb": "teaching/forecasting/thumb.webp",
+          "pages": [
+            {
+              "title": {
+                "en": "Algorithm tutorial",
+                "zh": "演算法教學（Kalman｜ESN｜Holt）"
+              },
+              "href": "teaching/forecasting/algorithm_demo_V2.html"
+            }
+          ],
+          "order": 3,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "teaching/water-lab",
+          "slug": "water-lab",
+          "href": "teaching/water-lab/",
+          "title": {
+            "en": "Water Lab: Read and Predict",
+            "zh": "水質實驗室：讀值與預測"
+          },
+          "description": {
+            "en": "A field lab for groups: connect an ESP32 water sensor over Wi‑Fi and forecast its readings on the phone. Demo data included.",
+            "zh": "分組野外實驗：以 Wi‑Fi 連接 ESP32 水質感測器，在手機上預測讀值；附模擬資料。"
+          },
+          "needs": {
+            "en": "ESP32 kit, or demo data",
+            "zh": "ESP32 套件或模擬資料"
+          },
+          "lang": "en",
+          "cover": "teaching/water-lab/cover.webp",
+          "thumb": "teaching/water-lab/thumb.webp",
+          "pages": [],
+          "order": 4,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "teaching/face-sentry",
+          "slug": "face-sentry",
+          "href": "teaching/face-sentry/",
+          "title": {
+            "en": "Face Sentry",
+            "zh": "手機 AI 哨兵"
+          },
+          "description": {
+            "en": "Face recognition and offline alerts that run entirely in the phone browser; the video never leaves the device.",
+            "zh": "完全在手機瀏覽器執行的人臉辨識與離線警報，畫面不會上傳伺服器。"
+          },
+          "needs": {
+            "en": "Needs a camera",
+            "zh": "需要相機"
+          },
+          "lang": "zh",
+          "cover": "teaching/face-sentry/cover.webp",
+          "thumb": "teaching/face-sentry/thumb.webp",
+          "pages": [],
+          "order": 5,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "teaching/knights-tour",
+          "slug": "knights-tour",
+          "href": "teaching/knights-tour/",
+          "title": {
+            "en": "Knight's Tour Solver",
+            "zh": "騎士漫遊"
+          },
+          "description": {
+            "en": "Set the board size and the move pattern, pick a starting square, and watch the solver visit every square exactly once.",
+            "zh": "設定棋盤大小與走法、選一個起點，看程式如何讓騎士走遍每一格且不重複。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "en",
+          "cover": "teaching/knights-tour/cover.webp",
+          "thumb": "teaching/knights-tour/thumb.webp",
+          "pages": [],
+          "order": 6,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "teaching/multicell-automata",
+          "slug": "multicell-automata",
+          "href": "teaching/multicell-automata/",
+          "title": {
+            "en": "Multicellular Automata",
+            "zh": "多物種細胞自動機"
+          },
+          "description": {
+            "en": "Write the rules for your group's cell species, then let them compete against other groups' cells on a shared arena.",
+            "zh": "設計你這組的細胞物種規則，在競技場上與其他組的細胞一較高下。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh",
+          "cover": "teaching/multicell-automata/cover.webp",
+          "thumb": "teaching/multicell-automata/thumb.webp",
+          "pages": [],
+          "order": 7,
+          "added": "",
+          "updated": ""
+        }
+      ]
+    },
+    {
+      "id": "research",
+      "folder": "research",
+      "name": {
+        "en": "Research",
+        "zh": "研究工具"
+      },
+      "blurb": {
+        "en": "Analysis tools and field prototypes from the lab's own projects.",
+        "zh": "實驗室研究計畫中的分析工具與現場原型。"
+      },
+      "items": [
+        {
+          "id": "research/cell-distribution",
+          "slug": "cell-distribution",
+          "href": "research/cell-distribution/",
+          "title": {
+            "en": "Cell Distribution Analyzer",
+            "zh": "細胞分布分析器"
+          },
+          "description": {
+            "en": "Photograph a hex-grid sample, align the grid, extract the cell colours and test the spatial pattern with Ripley's K and L(r).",
+            "zh": "拍攝蜂巢格樣本、對齊格線、提取細胞顏色，以 Ripley's K 與 L(r) 分析空間分布。"
+          },
+          "needs": {
+            "en": "Camera or a photo",
+            "zh": "相機或照片"
+          },
+          "lang": "zh,en",
+          "cover": "research/cell-distribution/cover.webp",
+          "thumb": "research/cell-distribution/thumb.webp",
+          "pages": [],
+          "order": 1,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "research/panel-ocr",
+          "slug": "panel-ocr",
+          "href": "research/panel-ocr/",
+          "title": {
+            "en": "Panel OCR Lab",
+            "zh": "儀表面板 OCR"
+          },
+          "description": {
+            "en": "Turn a meter's screen into a time series: box the display, find and read the digits, validate them, then forecast.",
+            "zh": "把儀表螢幕變成時間序列：框選、偵測、辨識數字、驗證，再做預測。"
+          },
+          "needs": {
+            "en": "Downloads 13 MB of models once",
+            "zh": "首次下載約 13 MB 模型"
+          },
+          "lang": "en",
+          "cover": "research/panel-ocr/cover.webp",
+          "thumb": "research/panel-ocr/thumb.webp",
+          "pages": [],
+          "order": 2,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "research/acoustic-vote",
+          "slug": "acoustic-vote",
+          "href": "research/acoustic-vote/",
+          "title": {
+            "en": "AcousticVote Lab",
+            "zh": "近超音波聲學傳輸"
+          },
+          "description": {
+            "en": "Send and receive small data packets between phones over near-ultrasound (18–19.6 kHz), with echo and loopback tests.",
+            "zh": "以近超音波（18–19.6 kHz）在手機之間收發小型資料封包，含同機 Echo 與 Loopback 測試。"
+          },
+          "needs": {
+            "en": "Microphone and speaker",
+            "zh": "需要麥克風與喇叭"
+          },
+          "lang": "zh",
+          "cover": "research/acoustic-vote/cover.webp",
+          "thumb": "research/acoustic-vote/thumb.webp",
+          "pages": [],
+          "order": 3,
+          "added": "",
+          "updated": ""
+        },
+        {
+          "id": "research/nfc-tag",
+          "slug": "nfc-tag",
+          "href": "research/nfc-tag/",
+          "title": {
+            "en": "NFC Tag Reader",
+            "zh": "NFC 標籤讀取測試"
+          },
+          "description": {
+            "en": "Check whether a phone browser can read an NTAG215 tag's serial number and NDEF text through Web NFC.",
+            "zh": "測試手機瀏覽器能否透過 Web NFC 讀取 NTAG215 的序號與 NDEF 內容。"
+          },
+          "needs": {
+            "en": "Android Chrome with NFC",
+            "zh": "Android Chrome 與 NFC"
+          },
+          "lang": "zh",
+          "cover": "research/nfc-tag/cover.webp",
+          "thumb": "research/nfc-tag/thumb.webp",
+          "pages": [],
+          "order": 4,
+          "added": "",
+          "updated": ""
+        }
+      ]
+    }
+  ]
+}

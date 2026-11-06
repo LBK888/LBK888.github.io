@@ -1,0 +1,17 @@
+{
+  "title": "Heart Rate Analyzer",
+  "title_zh": "心跳影像分析器",
+  "description": "Upload a video of a beating heart, paint over the heart, and read heart rate, HRV (SDNN) and RMSSD from the pixel changes.",
+  "description_zh": "上傳心臟跳動影片、塗選心臟區域，從影像變化計算心率、HRV（SDNN）與 RMSSD。",
+  "needs": "Needs a video file",
+  "needs_zh": "需要影片檔",
+  "lang": "zh,en",
+  "order": 2,
+  "pages": [
+    {
+      "title": "How the algorithm works",
+      "title_zh": "演算法說明",
+      "href": "algorithm.html"
+    }
+  ]
+}

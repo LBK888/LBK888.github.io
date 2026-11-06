@@ -1,0 +1,10 @@
+{
+  "title": "Korokoro Maze Jar",
+  "title_zh": "ころころ迷宮罐",
+  "description": "Tilt your phone to pour everything out of a randomly built maze jar. Shake it when the sugar and salt stick.",
+  "description_zh": "轉動手機，把隨機迷宮罐裡的東西倒出來；卡住時用力搖一搖。",
+  "needs": "Best on a phone",
+  "needs_zh": "建議用手機",
+  "lang": "zh",
+  "order": 3
+}

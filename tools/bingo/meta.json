@@ -1,0 +1,8 @@
+{
+  "title": "Bingo Ball Picker",
+  "title_zh": "賓果抽球機",
+  "description": "A physics bingo cage for class draws: the balls tumble and one escapes at a time.",
+  "description_zh": "課堂抽籤用的物理賓果機：球在籠中翻滾，每次掉出一顆。",
+  "lang": "en",
+  "order": 4
+}

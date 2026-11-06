@@ -1,0 +1,8 @@
+{
+  "title": "Water Maze",
+  "title_zh": "水滴迷宮",
+  "description": "Rotate the maze to steer water drops onto the scale, and reach the target weight before time runs out.",
+  "description_zh": "旋轉迷宮讓水滴落到秤盤上，在時間內達到目標重量即過關。",
+  "lang": "zh",
+  "order": 4
+}

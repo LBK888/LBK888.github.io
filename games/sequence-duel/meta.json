@@ -1,0 +1,10 @@
+{
+  "title": "Sequence Duel",
+  "title_zh": "序列對決",
+  "description": "Play rock–paper–scissors against prediction models, then inspect what each model knew before your hand appeared.",
+  "description_zh": "和預測模型玩剪刀石頭布，再逐局檢視每個模型在你出拳前掌握了什麼。",
+  "needs": "Needs a camera",
+  "needs_zh": "需要相機",
+  "lang": "en",
+  "order": 2
+}

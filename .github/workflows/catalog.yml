@@ -1,0 +1,51 @@
+# Rebuilds data/catalog.json whenever something changes in a category folder,
+# so a new folder in games/, tools/, teaching/ or research/ shows up on the homepage
+# without editing index.html.
+name: Build tool catalog
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/**'
+      - 'games/**'
+      - 'teaching/**'
+      - 'research/**'
+      - 'data/catalog.config.json'
+      - 'scripts/build-catalog.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalog
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history, for the "added" dates
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build catalog
+        run: node scripts/build-catalog.mjs
+
+      - name: Commit catalog if it changed
+        run: |
+          if git diff --quiet -- data/catalog.json; then
+            echo "Catalog unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/catalog.json
+          git commit -m "Update tool catalog"
+          git pull --rebase origin main
+          git push

@@ -1,0 +1,38 @@
+{
+  "repo": "LBK888/LBK888.github.io",
+  "branch": "main",
+  "categories": [
+    {
+      "id": "tools",
+      "folder": "tools",
+      "name": "Web Tools",
+      "name_zh": "網頁工具",
+      "blurb": "Calculators and AI utilities that run in the browser, most of them on a phone.",
+      "blurb_zh": "在瀏覽器裡執行的計算工具與 AI 工具，大多可直接用手機開啟。"
+    },
+    {
+      "id": "games",
+      "folder": "games",
+      "name": "Web Games",
+      "name_zh": "網頁遊戲",
+      "blurb": "Games and quizzes for class: physics puzzles, prediction duels and lab vocabulary.",
+      "blurb_zh": "課堂用的遊戲與測驗：物理謎題、預測對決與實驗室詞彙。"
+    },
+    {
+      "id": "teaching",
+      "folder": "teaching",
+      "name": "Teaching",
+      "name_zh": "教學",
+      "blurb": "Interactive lessons from our courses on neural networks, forecasting and edge AI.",
+      "blurb_zh": "課程用的互動教材：神經網路、時間序列預測與邊緣 AI。"
+    },
+    {
+      "id": "research",
+      "folder": "research",
+      "name": "Research",
+      "name_zh": "研究工具",
+      "blurb": "Analysis tools and field prototypes from the lab's own projects.",
+      "blurb_zh": "實驗室研究計畫中的分析工具與現場原型。"
+    }
+  ]
+}

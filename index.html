@@ -1,589 +1,390 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>BK Lab - Systems Biology</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Arial, "Noto Sans TC";
-            line-height: 1.6;
-            color: #333;
-            overflow-x: hidden;
-        }
-
-        #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-            touch-action: none;
-        }
-
-        #background-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-            touch-action: none;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 10px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header {
-            text-align: center;
-            padding: 50px 0, 0px;
-        }
-
-        .title {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            color: #cc2f7e;
-            font-weight: 700;
-        }
-
-        .subtitle {
-            font-size: 1.8rem;
-            color: #34495e;
-            margin-bottom: 40px;
-        }
-
-        .intro {
-            max-width: 800px;
-            margin: 0 auto;
-            min-height: 50px;
-            position: relative;
-            padding: 0px;
-        }
-
-        .intro p {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .intro p.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@600&display=swap');
-        .noto-sans-tc-600 {
-            font-family: "Noto Sans TC", "Noto Sans TC";
-            font-optical-sizing: auto;
-            font-weight: 600;
-            font-style: normal;
-            }
-        .g-container {
-            position: relative;
-            font-family: 'Segoe UI', Arial, "Noto Sans TC";
-            
-            font-weight: 600;
-            color: rgb(146, 102, 111);
-            font-size: 20px;
-            
-            filter: contrast(2);
-        }
-        .word {
-            position: absolute;
-            width: 80%;
-            top: 0%;
-            left: 50%;
-            transform: translate(-50%, -20%);
-            animation: change 12s infinite ease-in-out;
-        }
-        .word:nth-child(1) {
-            animation-delay: -12s;
-        }
-        .word:nth-child(2) {
-            animation-delay: -9s;
-        }
-        .word:nth-child(3) {
-            animation-delay: -6s;
-        }
-        .word:nth-child(4) {
-            animation-delay: -3s;
-        }
-        @keyframes change {
-            0% ,
-            5%,
-            100% {
-                filter: blur(0px);
-                opacity: 1;
-            }
-            50%,
-            80% {
-                filter: blur(80px);
-                opacity: 0;
-            }
-        }
-
-
-
-
-        .section {
-            padding: 60px 0;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            text-align: center;
-            margin-bottom: 40px;
-            color: #2c3e50;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            padding: 20px;
-        }
-
-        .card {
-            background: rgba(112, 198, 255, 0.4);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-
-        .card-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .card-title {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
-        .card-description {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(44, 62, 80, 0.9);
-            color: white;
-            padding: 15px;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            font-family: 'Segoe UI', Arial, "Noto Sans TC";
-        }
-
-        .card:hover .card-description {
-            transform: translateY(0);
-        }
-
-        a {
-                        color: white;
-                        font-family: 'Segoe UI', Arial, "Noto Sans TC";
-        }
-        
-        footer {
-            background: rgba(35, 64, 94, 0.5);
-            color: white;
-            padding: 30px 0;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .title {
-                font-size: 2.5rem;
-            }
-            
-            .subtitle {
-                font-size: 1.3rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BK Lab · How cells make patterns · National Taiwan Ocean University</title>
+<meta name="description" content="BK Lab, Department of Aquaculture, National Taiwan Ocean University: zebrafish, AI and image analysis for how tissues pattern themselves, plus free browser tools for teaching and research.">
+<meta property="og:title" content="BK Lab · How cells make patterns">
+<meta property="og:description" content="Zebrafish, AI and image analysis at National Taiwan Ocean University, and free browser tools for class and lab.">
+<meta property="og:image" content="https://lbk888.github.io/assets/img/myod-somites-wish.webp">
+<meta name="theme-color" content="#2a2356">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%232a2356' d='M6 20 34 4l24 14 2 26-22 16L8 50z'/%3E%3Cellipse cx='32' cy='31' rx='9' ry='7' fill='%23a81f2e'/%3E%3C/svg%3E">
+<script>
+  // Pick the language before anything is painted: a saved choice, else the browser's.
+  (function () {
+    var l = (location.search.match(/[?&]lang=(en|zh)\b/) || [])[1] || null;
+    if (!l) { try { l = localStorage.getItem('bklab-lang'); } catch (e) {} }
+    if (!l) l = /^zh/i.test(navigator.language || '') ? 'zh' : 'en';
+    document.documentElement.dataset.lang = l;
+    document.documentElement.lang = l === 'zh' ? 'zh-Hant' : 'en';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..600&family=Noto+Sans+TC:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<script src="assets/vendor/rhill-voronoi-core.min.js" defer></script>
+<script src="assets/js/field.js" defer></script>
+<script src="assets/js/site.js" defer></script>
 </head>
 <body>
-    <div id="canvas-container">
-        <canvas id="background-canvas"></canvas>
+
+<canvas id="tissue" aria-hidden="true"></canvas>
+
+<!-- The page's one picture treatment: every photograph and screenshot is printed like a bright-field in situ, NBT/BCIP purple on white. -->
+<svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <filter id="stain" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0.30 0.59 0.11 0 0  0.30 0.59 0.11 0 0  0.30 0.59 0.11 0 0  0 0 0 1 0"/>
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="0.165 0.596 0.969"/>
+      <feFuncG type="table" tableValues="0.137 0.565 0.969"/>
+      <feFuncB type="table" tableValues="0.337 0.659 0.965"/>
+    </feComponentTransfer>
+  </filter>
+  <mask id="mark-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="1032" height="300">
+    <rect width="1032" height="300" fill="#fff"/>
+    <g class="mark-letters" fill="#000"><text x="22" y="276">B</text><text x="226" y="276">K</text><text x="456" y="276">L</text><text x="636" y="276">A</text><text x="854" y="276">B</text></g>
+  </mask>
+  <filter id="stain-deep" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0.30 0.59 0.11 0 0  0.30 0.59 0.11 0 0  0.30 0.59 0.11 0 0  0 0 0 1 0"/>
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="0.165 0.514 0.878"/>
+      <feFuncG type="table" tableValues="0.137 0.482 0.867"/>
+      <feFuncB type="table" tableValues="0.337 0.600 0.831"/>
+    </feComponentTransfer>
+  </filter>
+  <filter id="stain-dab" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0.30 0.59 0.11 0 0  0.30 0.59 0.11 0 0  0.30 0.59 0.11 0 0  0 0 0 1 0"/>
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="0.231 0.627 0.953"/>
+      <feFuncG type="table" tableValues="0.141 0.518 0.929"/>
+      <feFuncB type="table" tableValues="0.059 0.408 0.894"/>
+    </feComponentTransfer>
+  </filter>
+  <symbol id="mark" viewBox="0 0 1032 300">
+    <g mask="url(#mark-cut)"><path d="M0 300L0 23.5L14 13.5L104.3 6.4L188 15.9L200 27.9L200 300Z"/><path d="M204 300L204 80.9L218 70.9L303.7 69.3L392 78.9L404 90.9L404 300Z"/><path d="M434 300L434 125.9L448 115.9L529 113.8L598 124L610 136L610 300Z"/><path d="M614 300L614 44.2L628 34.2L752.3 31.1L816 43.2L828 55.2L828 300Z"/><path d="M832 300L832 100.1L846 90.1L960.5 87.9L1020 105.2L1032 117.2L1032 300Z"/></g>
+  </symbol>
+</svg>
+
+<a class="skip" href="#main"><span lang="en">Skip to content</span><span lang="zh-Hant">跳到主要內容</span></a>
+
+<header class="nav">
+  <a class="nav-mark" href="#top">BK Lab</a>
+  <nav class="nav-links" aria-label="Sections">
+    <a href="#research"><span lang="en">Research</span><span lang="zh-Hant">研究</span></a>
+    <a href="#tools"><span lang="en">Tools</span><span lang="zh-Hant">工具</span></a>
+    <a href="#publications"><span lang="en">Publications</span><span lang="zh-Hant">論文</span></a>
+    <a href="#people"><span lang="en">People</span><span lang="zh-Hant">成員</span></a>
+  </nav>
+  <button class="lang-toggle" type="button" aria-label="切換為中文">中文</button>
+  <a class="btn btn-ink btn-small" href="#contact"><span lang="en">Contact</span><span lang="zh-Hant">聯絡</span></a>
+</header>
+
+<main id="main">
+
+  <!-- 1. Hero: the printed card beside the live tissue -->
+  <section class="hero" id="top">
+    <div class="hero-card">
+      <svg class="cell-strip" viewBox="0 0 2400 56" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <path d="M1162.9 0L1182.2 35.4L1220.2 12.9L1224 0ZM1506.7 0L1521.3 29.2L1558.8 26.9L1568.4 0ZM268.1 0L284.2 37.5L327.7 14.3L331.2 0ZM467.4 0L504.1 41.8L532.7 0ZM1649.5 0L1650.7 8.2L1691.8 47.1L1711.1 0ZM973.1 0L976.2 14.8L1017 42.6L1031.8 0ZM1442.6 0L1465.9 56L1466 56L1498.4 0ZM2157.6 0L2173 51.8L2212.3 13.2L2213.8 0ZM1975.6 0L1998.1 55.4L2033.5 3.2L2033.7 0ZM121.3 0L141.6 56L152.3 56L170.9 0ZM2033.5 3.2L2061 56L2075.9 56L2088.9 0L2033.7 0ZM1834.6 0L1834.8 6.1L1866.8 56L1878.5 56L1884.6 0ZM2212.3 13.2L2235.2 56L2255.5 56L2257.9 0L2213.8 0ZM1782.8 0L1787.3 56L1810.4 56L1834.8 6.1L1834.6 0ZM1600 0L1605.6 56L1632 56L1650.7 8.2L1649.5 0ZM754.1 0L763.3 56L790.2 56L797 0ZM541.2 0L554.9 56L581.7 56L586.4 0ZM686.6 0L692.7 56L720.1 56L728.4 0ZM2287.9 56L2297 0L2257.9 0L2255.5 56ZM896.7 0L901.2 56L931.8 56L933.9 0ZM1299 0L1301.3 56L1333.1 56L1340 0ZM2323.9 0L2332.3 56L2362.8 56L2366.7 0ZM376.7 0L377.8 56L418.3 56L420.4 0ZM1371.6 0L1376.9 56L1412 56L1418.2 0ZM1914.9 56L1918.6 0L1884.6 0L1878.5 56ZM28 0L31 56L61 56L62.3 0ZM194.5 0L200.4 56L235.1 56L239.4 0ZM618.5 0L620.9 56L653 56L656.8 0ZM961 56L976.2 14.8L973.1 0L933.9 0L931.8 56ZM1099.7 0L1101.6 56L1135.9 56L1141.4 0ZM327.7 14.3L340 56L377.8 56L376.7 0L331.2 0ZM1262.6 0L1263.3 56L1301.3 56L1299 0ZM1739.6 0L1744.1 56L1787.3 56L1782.8 0ZM94.2 56L100.4 0L62.3 0L61 56ZM1220.2 12.9L1232 56L1263.3 56L1262.6 0L1224 0ZM453.5 56L464.7 0L420.4 0L418.3 56ZM828.3 0L830.6 56L864.5 56L865.4 0ZM1061.9 0L1063.1 56L1101.6 56L1099.7 0ZM901.2 56L896.7 0L865.4 0L864.5 56ZM2366.7 0L2362.8 56L2400 56L2400 0ZM31 56L28 0L0 0L0 56ZM620.9 56L618.5 0L586.4 0L581.7 56ZM1558.8 26.9L1568.7 56L1605.6 56L1600 0L1568.4 0ZM1950 56L1953.8 0L1918.6 0L1914.9 56ZM1017 42.6L1019.8 56L1063.1 56L1061.9 0L1031.8 0ZM830.6 56L828.3 0L797 0L790.2 56ZM692.7 56L686.6 0L656.8 0L653 56ZM2123.4 0L2124.1 56L2172.2 56L2173 51.8L2157.6 0ZM2124.1 56L2123.4 0L2088.9 0L2075.9 56ZM280.8 56L284.2 37.5L268.1 0L239.4 0L235.1 56ZM1376.9 56L1371.6 0L1340 0L1333.1 56ZM763.3 56L754.1 0L728.4 0L720.1 56ZM1179.2 56L1182.2 35.4L1162.9 0L1141.4 0L1135.9 56ZM1691.8 47.1L1693.1 56L1744.1 56L1739.6 0L1711.1 0ZM200.4 56L194.5 0L170.9 0L152.3 56ZM1465.9 56L1442.6 0L1418.2 0L1412 56ZM1998.1 56L1998.1 55.4L1975.6 0L1953.8 0L1950 56ZM2332.3 56L2323.9 0L2297 0L2287.9 56ZM141.6 56L121.3 0L100.4 0L94.2 56ZM1515.5 56L1521.3 29.2L1506.7 0L1498.4 0L1466 56ZM504.1 41.8L504.5 56L554.9 56L541.2 0L532.7 0ZM504.5 56L504.1 41.8L467.4 0L464.7 0L453.5 56ZM2061 56L2033.5 3.2L1998.1 55.4L1998.1 56ZM1232 56L1220.2 12.9L1182.2 35.4L1179.2 56ZM1693.1 56L1691.8 47.1L1650.7 8.2L1632 56ZM1866.8 56L1834.8 6.1L1810.4 56ZM340 56L327.7 14.3L284.2 37.5L280.8 56ZM1019.8 56L1017 42.6L976.2 14.8L961 56ZM2235.2 56L2212.3 13.2L2173 51.8L2172.2 56ZM1568.7 56L1558.8 26.9L1521.3 29.2L1515.5 56Z"/>
+      </svg>
+
+      <svg class="mark mark-hero" aria-hidden="true" focusable="false"><use href="#mark"/></svg>
+
+      <h1 class="hero-title">
+        <span lang="en">How cells make patterns</span><span lang="zh-Hant">細胞如何形成圖樣</span>
+      </h1>
+      <p class="hero-sub">
+        <span lang="en">BK Lab is a systems biology lab at National Taiwan Ocean University. We pair zebrafish experiments with AI to study how tissues pattern themselves.</span>
+        <span lang="zh-Hant">BK Lab 是國立臺灣海洋大學水產養殖學系的系統生物學實驗室，結合斑馬魚實驗與 AI，研究組織如何自己長出圖樣。</span>
+      </p>
+      <a class="btn btn-red" href="#tools" data-tool-count><span lang="en">Browse the tools</span><span lang="zh-Hant">瀏覽工具</span></a>
+      <ul class="hero-links">
+        <li><a href="#research"><span lang="en">Research</span><span lang="zh-Hant">研究方向</span></a></li>
+        <li><a href="#publications"><span lang="en">Publications</span><span lang="zh-Hant">論文發表</span></a></li>
+        <li><a href="#people"><span lang="en">Join the lab</span><span lang="zh-Hant">加入我們</span></a></li>
+      </ul>
     </div>
 
-    <div class="container">
-        <header class="header">
-            <h1 class="title">BK Lab</h1>
-            <h2 class="subtitle">AI-Powered Patterning Research in Systems Biology</h2>
-            <div class="intro">
-            <div class="g-container">
-                <div class="word">專注於利用人工智慧技術來研究系統生物學中的圖樣生成<br>
-                    We use AI to study patterning in systems biology</div>
-                <div class="word">跨領域應用於生物影像分析、細胞分化機制及命運決定的研究<br>
-                    Our work focuses on bioimage analysis and cell differentiation</div>
-                <div class="word">這裡還有許多適合學生的研究資源與教學遊戲<br>
-                    Here provides resources and educational tools for students.
-                </div>
-                <div class="word">我們期望能為生命科學研究帶來新的見解和突破<br>
-                    We aim to advance life sciences with new insights and breakthroughs.
-                </div>
-            </div></div>
-        </header>
-
-        <section class="section">
-            <h2 class="section-title" id="ttt">kAI - our open-source AI projects</h2>
-            <div class="grid">
-                <div class="card">
-                    <div class="card-icon">🤖</div>
-                    <h3 class="card-title">zVision</h3>
-                    <div class="card-description"><a href="https://github.com/LBK888/zVision">斑馬魚機器視覺</a></div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🧬</div>
-                    <h3 class="card-title">AqAiot Projects</h3>
-                    <div class="card-description"><a href="https://lbk888.github.io/knight/">智慧物聯網程式範例-騎士漫遊</a></div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">📊</div>
-                    <h3 class="card-title">Zebrafisher</h3>
-                    <div class="card-description"><a href="https://github.com/LBK888/Zebrafisher">斑馬魚實驗室群組AI機器人</a></div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">Research Topics</h2>
-            <div class="grid">
-                <div class="card">
-                    <div class="card-icon">🔬</div>
-                    <h3 class="card-title">Tissue Patterning </h3>
-                    <div class="card-description"><a href="https://github.com/LBK888/spatial_pattern_analyzer">圖樣生成機制-二維點分析工具</a></div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🦠</div>
-                    <h3 class="card-title">Cell Fate</h3>
-                    <div class="card-description"><a href="https://github.com/LBK888/Multicellular-Automata">細胞命運決定機制-多物種細胞自動機</a></div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🧪</div>
-                    <h3 class="card-title">Systems Biology</h3>
-                    <div class="card-description">系統生物學方法論研究</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">Publications</h2>
-            <div class="grid">
-                <div class="card">
-                    <div class="card-icon">📄</div>
-                    <h3 class="card-title">Latest Papers</h3>
-                    <div class="card-description"><a href="https://www.researchgate.net/profile/Bo-Kai-Liao/research">查看我們最新發表的研究論文</a></div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">📚</div>
-                    <h3 class="card-title">Open Courses</h3>
-                    <div class="card-description"><a href="https://github.com/LBK888/ComVis">實體與線上課程的開源資料</a></div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🎓</div>
-                    <h3 class="card-title">Video & Games</h3>
-                    <div class="card-description"><a href="https://lbk888.github.io/cellgame.html">科普影片與教學遊戲作品</a></div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">Members</h2>
-            <div class="grid">
-                <div class="card">
-                    <div class="card-icon">👨‍🔬</div>
-                    <h3 class="card-title">Principal Investigator</h3>
-                    <div class="card-description"><a href="https://www.linkedin.com/in/%E6%9F%8F%E5%87%B1-%E5%BB%96-59076b222/">實驗室主持人：Bo-Kai Liao</a></div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">👩‍🔬</div>
-                    <h3 class="card-title">Research Team</h3>
-                    <div class="card-description">研究團隊成員介紹</div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">👨‍🎓</div>
-                    <h3 class="card-title">Future Students</h3>
-                    <div class="card-description">召募研究人員</div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <footer>
-        <div class="container">
-            <p><b>Contect Info 聯絡資訊：</b></p>
-            <p> Department of Aquaculture,<br> National Ocean Taiwan University<br>
-                Address 地址：202 基隆市中正區北寧路2號 生科館510</p>
-            <p> Email: liaobk@email.ntou.edu.tw
-            <br> Tel 電話：(02) 2462-2192</p>
-            <br>
-            <p>© 2024 BK Lab. All rights reserved.</p>
+    <div class="hero-field" data-field>
+      <div class="readout" data-nofield>
+        <p class="readout-verdict" data-verdict><span lang="en">This tissue is randomly spaced</span><span lang="zh-Hant">此刻組織呈隨機分布</span></p>
+        <p class="readout-stats" data-stats>150 cells · Clark–Evans R 1.00</p>
+        <div class="readout-controls" role="group" aria-label="Reshape the tissue / 改變組織">
+          <button class="btn btn-ink btn-small" type="button" data-act="clump"><span lang="en">Clump</span><span lang="zh-Hant">聚集</span></button>
+          <button class="btn btn-ink btn-small" type="button" data-act="scatter"><span lang="en">Scatter</span><span lang="zh-Hant">打散</span></button>
+          <button class="btn btn-ink btn-small" type="button" data-act="even"><span lang="en">Space evenly</span><span lang="zh-Hant">均勻排列</span></button>
         </div>
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.1/lib/p5.min.js"></script>
-    <script src="rhill-voronoi-core.min.js"></script>
-    <script>
-        let points = [];
-        let mousePos = { x: 0, y: 0 };
-        let lastMouseMoveTime = 0;
-        const MOUSE_IDLE_THRESHOLD = 200; // 0.3秒
-        let lastCheckTime = 0;
-        const CHECK_INTERVAL = 100; // 0.1秒
-        const POINT_COUNT = 150; // 點的數量
-        const BROWNIAN_FACTOR = 0.2; // 布朗運動強度
-        const conti_t_randomWalk = 5; // 記錄前5次的運動方向
-        let pointsDirection = Array(POINT_COUNT).fill().map(() => ({
-            prev_move_dir: Array(conti_t_randomWalk).fill().map(() => ({x: 0, y: 0}))
-        }));
+        <p class="sr-only" aria-live="polite" data-live></p>
+      </div>
+    </div>
+  </section>
 
-        // 添加一個全局變量來存儲背景canvas的context
-        let bgCanvas;
-        let bgCtx;
+  <!-- 2. The statement: what the lab does, with the things it names -->
+  <div class="statement-band" data-field>
+    <p class="statement" data-reveal>
+      <span lang="en" data-step>We film zebrafish <img class="thumb" src="assets/img/zebrafish-embryo-fluorescent.webp" alt="" width="96" height="72"> embryos, read their tissues <img class="thumb" src="assets/img/myod-somites-wish.webp" alt="" width="96" height="72"> cell by cell, and write the software <img class="thumb" src="research/cell-distribution/thumb.webp" alt="" width="72" height="72"> that measures each pattern.</span>
+      <span lang="zh-Hant" data-step>我們拍攝斑馬魚 <img class="thumb" src="assets/img/zebrafish-embryo-fluorescent.webp" alt="" width="96" height="72"> 胚胎，一顆一顆讀懂組織裡的細胞 <img class="thumb" src="assets/img/myod-somites-wish.webp" alt="" width="96" height="72">，再寫出測量每種圖樣的軟體 <img class="thumb" src="research/cell-distribution/thumb.webp" alt="" width="72" height="72">。</span>
+    </p>
+  </div>
 
-        function setup() {
-            // 創建主canvas
-            let canvas = createCanvas(windowWidth, windowHeight);
-            canvas.parent('canvas-container');
-            
-            // 設置p5.js canvas為fixed定位
-            canvas.style('position', 'fixed');
-            canvas.style('top', '0');
-            canvas.style('left', '0');
-            canvas.style('z-index', '-1');
-            canvas.style('pointer-events', 'none');
-            canvas.style('touch-action', 'none');
-            
-            // 初始化背景canvas
-            bgCanvas = document.getElementById('background-canvas');
-            bgCanvas.width = windowWidth;
-            bgCanvas.height = windowHeight;
-            bgCtx = bgCanvas.getContext('2d');
-            
-            // 初始化隨機點
-            for (let i = 0; i < POINT_COUNT; i++) {
-                points.push({
-                    x: random(width),
-                    y: random(height)
-                });
-            }
-            mousePos.x = width / 2;
-            mousePos.y = height / 2;
-        }
+  <!-- 3. Research: five lines of work filed as folders -->
+  <section class="research" id="research" aria-labelledby="research-h">
+    <header class="research-head" data-reveal>
+      <h2 id="research-h" data-step><span lang="en">Research</span><span lang="zh-Hant">研究方向</span></h2>
+      <p data-step><span lang="en">Five lines of work, from the embryo's segmentation clock to sensors on a fish farm. Each one ships as code we share.</span><span lang="zh-Hant">五條研究主線，從胚胎的體節時鐘到養殖場的感測器。每一條都有公開的程式碼。</span></p>
+    </header>
 
-        // 添加設備檢測函數
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
+    <div class="folders">
+      <article class="folder" data-tone="ink" style="--i:0">
+        <div class="folder-tabs"><h3 class="folder-tab"><span lang="en">Segmentation clock</span><span lang="zh-Hant">體節時鐘</span></h3></div>
+        <div class="folder-body">
+          <p class="folder-cat"><span lang="en">Delta–Notch signalling · zebrafish embryos</span><span lang="zh-Hant">Delta–Notch 訊號 · 斑馬魚胚胎</span></p>
+          <figure class="folder-pic">
+            <img class="stained" src="assets/img/myod-somites-wish.webp" width="548" height="430" loading="lazy" decoding="async"
+                 alt="Whole-mount in situ hybridization of myoD in a zebrafish embryo's trunk and tail: purple chevrons mark each somite" data-alt-en="Whole-mount in situ hybridization of myoD in a zebrafish embryo's trunk and tail: purple chevrons mark each somite" data-alt-zh="斑馬魚胚胎軀幹與尾部的 myoD 全胚胎原位雜交：紫色 V 字形標出每一節體節">
+            <figcaption><span lang="en">myoD in situ hybridization: each purple chevron is a somite.</span><span lang="zh-Hant">myoD 原位雜交：每一個紫色 V 字形就是一節體節。</span></figcaption>
+          </figure>
+          <div class="folder-text">
+            <p><span lang="en">A vertebrate body is laid down in segments, one at a time, by a genetic oscillator in the embryo's tail. Raising Delta–Notch signalling speeds that clock up and gives zebrafish more, shorter segments; when the rhythm is disrupted, the pattern repairs itself as neighbouring cells resynchronise and the tissue flows.</span><span lang="zh-Hant">脊椎動物的身體由體節一節一節排出來，背後是胚胎尾端的基因振盪器。提高 Delta–Notch 訊號會讓這個時鐘變快，斑馬魚因而長出更多、更短的體節；節奏被打亂時，相鄰細胞重新同步、組織持續流動，圖樣便會自我修復。</span></p>
+            <ul class="folder-links">
+              <li><a href="https://doi.org/10.1038/ncomms11861">Nature Communications 2016</a></li>
+              <li><a href="https://doi.org/10.7554/eLife.61358">eLife 2021</a></li>
+              <li><a href="https://doi.org/10.1007/s12035-024-04530-9">Molecular Neurobiology 2024</a></li>
+            </ul>
+          </div>
+        </div>
+      </article>
 
-        function draw() {
-            // 清除主canvas
-            clear();
-            // 清除背景canvas
-            bgCtx.clearRect(0, 0, width, height);
-            
-            // 在背景canvas上繪製voronoi
-            try {
-                const voronoi = new Voronoi();
-                const sites = points.map(p => ({ x: p.x, y: p.y }));
-                const bbox = { xl: 0, xr: width, yt: 0, yb: height };
-                const diagram = voronoi.compute(sites, bbox);
-                
-                bgCtx.strokeStyle = 'rgba(180, 180, 180, 0.5)';
-                bgCtx.lineWidth = 1;
-                bgCtx.setLineDash([5, 5]);
-                
-                for (let edge of diagram.edges) {
-                    bgCtx.beginPath();
-                    bgCtx.moveTo(edge.va.x, edge.va.y);
-                    bgCtx.lineTo(edge.vb.x, edge.vb.y);
-                    bgCtx.stroke();
-                }
-                bgCtx.setLineDash([]);
-                
-                voronoi.recycle(diagram);
-            } catch (e) {
-                console.error("Voronoi computation error:", e);
-            }
-            
-            // 在背景canvas上繪製點
-            bgCtx.fillStyle = 'rgba(180, 180, 180, 0.8)';
-            for (let point of points) {
-                bgCtx.beginPath();
-                bgCtx.arc(point.x, point.y, 2, 0, Math.PI * 2);
-                bgCtx.fill();
-            }
-            
-            // 修改布朗運動部分
-            points.forEach((point, index) => {
-                // 計算新的運動方向
-                let newDx = random(-BROWNIAN_FACTOR, BROWNIAN_FACTOR);
-                let newDy = random(-BROWNIAN_FACTOR, BROWNIAN_FACTOR);
-                
-                // 考慮歷史方向的影響
-                let weightedDx = newDx;
-                let weightedDy = newDy;
-                
-                // 計算歷史方向的加權和
-                for (let i = 0; i < conti_t_randomWalk; i++) {
-                    let weight = (conti_t_randomWalk - i) / (conti_t_randomWalk*conti_t_randomWalk); // 權重從1/n遞減到1/n^2
-                    weightedDx += pointsDirection[index].prev_move_dir[i].x * weight;
-                    weightedDy += pointsDirection[index].prev_move_dir[i].y * weight;
-                }
-                
-                // 標準化移動量
-                let magnitude = Math.sqrt(weightedDx * weightedDx + weightedDy * weightedDy);
-                if (magnitude > 0) {
-                    weightedDx = (weightedDx / magnitude) * BROWNIAN_FACTOR;
-                    weightedDy = (weightedDy / magnitude) * BROWNIAN_FACTOR;
-                }
-                
-                // 更新點的位置
-                point.x += weightedDx;
-                point.y += weightedDy;
-                
-                // 確保點不會超出畫布
-                point.x = constrain(point.x, 0, width);
-                point.y = constrain(point.y, 0, height);
-                
-                // 更新方向歷史記錄
-                pointsDirection[index].prev_move_dir.pop(); // 移除最舊的記錄
-                pointsDirection[index].prev_move_dir.unshift({x: weightedDx, y: weightedDy}); // 添加新的記錄
-            });
+      <article class="folder" data-tone="paper" style="--i:1">
+        <div class="folder-tabs"><h3 class="folder-tab"><span lang="en">Tissue patterning</span><span lang="zh-Hant">組織圖樣</span></h3></div>
+        <div class="folder-body">
+          <p class="folder-cat"><span lang="en">Spatial statistics · lateral inhibition</span><span lang="zh-Hant">空間統計 · 側向抑制</span></p>
+          <figure class="folder-pic">
+            <img class="stained" src="research/cell-distribution/cover.webp" width="960" height="600" loading="lazy" decoding="async"
+                 alt="The Cell Distribution Analyzer: a photographed hex-grid sample with the grid aligned over it" data-alt-en="The Cell Distribution Analyzer: a photographed hex-grid sample with the grid aligned over it" data-alt-zh="細胞分布分析器：蜂巢格樣本照片與對齊的格線">
+            <figcaption><span lang="en">The Cell Distribution Analyzer, one of the tools below.</span><span lang="zh-Hant">細胞分布分析器，收錄在下方工具中。</span></figcaption>
+          </figure>
+          <div class="folder-text">
+            <p><span lang="en">Is a scatter of cells clustered, random or evenly spaced? In zebrafish skin, ionocyte progenitors are spaced apart by Delta–Notch lateral inhibition. We build the tools that answer the question with Ripley's K and L(r), and generate reference patterns to test against.</span><span lang="zh-Hant">一群細胞是聚集、隨機，還是均勻分布？斑馬魚皮膚中的離子細胞前驅細胞，靠 Delta–Notch 側向抑制彼此拉開距離。我們開發以 Ripley's K 與 L(r) 回答這個問題的工具，也產生可供比對的參考圖樣。</span></p>
+            <ul class="folder-links">
+              <li><a href="https://doi.org/10.1371/journal.pgen.1008058">PLoS Genetics 2019</a></li>
+              <li><a href="https://github.com/LBK888/spatial_pattern_analyzer">spatial_pattern_analyzer</a></li>
+              <li><a href="https://github.com/LBK888/point_pattern_studio">point_pattern_studio</a></li>
+              <li><a href="research/cell-distribution/"><span lang="en">Cell Distribution Analyzer</span><span lang="zh-Hant">細胞分布分析器</span></a></li>
+            </ul>
+          </div>
+        </div>
+      </article>
 
-            // 修改滑鼠閒置檢查部分
-            const currentTime = Date.now();
-            if (currentTime - lastCheckTime > CHECK_INTERVAL) {
-                // 只在非移動設備上執行點的聚集效果
-                if (!isMobileDevice() && currentTime - lastMouseMoveTime > MOUSE_IDLE_THRESHOLD) {
-                    points.forEach(point => {
-                        const dx = point.x - mousePos.x;
-                        const dy = point.y - mousePos.y;
-                        const d = Math.sqrt(dx * dx + dy * dy);
-                        if (d < 250 && d > 20) {
-                            point.x += (mousePos.x - point.x) * 0.00015 * (250-d);
-                            point.y += (mousePos.y - point.y) * 0.00015 * (250-d);
-                        }
-                    });
-                }
-                lastCheckTime = currentTime;
-            }
-        }
+      <article class="folder" data-tone="dab" style="--i:2">
+        <div class="folder-tabs"><h3 class="folder-tab"><span lang="en">Cell fate</span><span lang="zh-Hant">細胞命運</span></h3></div>
+        <div class="folder-body">
+          <p class="folder-cat"><span lang="en">Cellular automata · cell shape models</span><span lang="zh-Hant">細胞自動機 · 細胞形狀模型</span></p>
+          <figure class="folder-pic">
+            <img class="stained" src="teaching/multicell-automata/cover.webp" width="960" height="600" loading="lazy" decoding="async"
+                 alt="The Multicellular Automata arena, with one group's cells spreading across the grid" data-alt-en="The Multicellular Automata arena, with one group's cells spreading across the grid" data-alt-zh="多物種細胞自動機的競技場，一組細胞在格子上擴散">
+            <figcaption><span lang="en">An arena in Multicellular Automata, built for Computer 101.</span><span lang="zh-Hant">多物種細胞自動機的競技場，為計算機概論課程而做。</span></figcaption>
+          </figure>
+          <div class="folder-text">
+            <p><span lang="en">Simple rules between neighbours can decide what each cell becomes. Our multi-species cellular automata let students write those rules and pit them against each other to see which patterns survive; Voronoi Cell ODE couples cell shapes to small gene circuits.</span><span lang="zh-Hant">相鄰細胞之間的簡單規則，就能決定每顆細胞的命運。多物種細胞自動機讓學生自己寫規則、彼此對戰，看哪種圖樣能存活；Voronoi Cell ODE 則把細胞形狀與小型基因迴路連在一起。</span></p>
+            <ul class="folder-links">
+              <li><a href="https://github.com/LBK888/Multicellular-Automata">Multicellular-Automata</a></li>
+              <li><a href="https://github.com/LBK888/Voronoi_Cell_ODE">Voronoi_Cell_ODE</a></li>
+              <li><a href="teaching/multicell-automata/"><span lang="en">Play the arena</span><span lang="zh-Hant">進入競技場</span></a></li>
+            </ul>
+          </div>
+        </div>
+      </article>
 
-        function mouseMoved() {
-            mousePos.x = mouseX;
-            mousePos.y = mouseY;
-            lastMouseMoveTime = Date.now();
-        }
+      <article class="folder" data-tone="paper" style="--i:3">
+        <div class="folder-tabs"><h3 class="folder-tab"><span lang="en">Machine vision</span><span lang="zh-Hant">機器視覺</span></h3></div>
+        <div class="folder-body">
+          <p class="folder-cat"><span lang="en">YOLO models · zebrafish larvae</span><span lang="zh-Hant">YOLO 模型 · 斑馬魚幼魚</span></p>
+          <figure class="folder-pic">
+            <video class="stained" autoplay muted loop playsinline preload="metadata" width="642" height="480" poster="assets/img/zebrafish-heartbeat-poster.webp" aria-label="A zebrafish larva seen from the side, its heart beating">
+              <source src="assets/img/zebrafish-heartbeat.webm" type="video/webm">
+              <source src="assets/img/zebrafish-heartbeat.mp4" type="video/mp4">
+            </video>
+            <figcaption><span lang="en">A zebrafish larva's heart beating, the kind of clip the Heart Rate Analyzer reads.</span><span lang="zh-Hant">斑馬魚幼魚跳動的心臟，正是心跳影像分析器處理的影片。</span></figcaption>
+          </figure>
+          <div class="folder-text">
+            <p><span lang="en">We train detection models on our own zebrafish images: zVision for the fish room, TrackBox for imaging six- and seven-day-old larvae, and browser tools that read a heart rate from a video. The models are exported to run on a phone, with no server.</span><span lang="zh-Hant">我們用自己的斑馬魚影像訓練偵測模型：zVision 用於魚房，TrackBox 用於拍攝 6～7 天大的幼魚，還有能從影片讀出心率的網頁工具。模型都匯出成可在手機上直接執行的格式，不需要伺服器。</span></p>
+            <ul class="folder-links">
+              <li><a href="https://github.com/LBK888/zVision">zVision</a></li>
+              <li><a href="https://github.com/LBK888/TrackBox">TrackBox</a></li>
+              <li><a href="tools/heart-rate/"><span lang="en">Heart Rate Analyzer</span><span lang="zh-Hant">心跳影像分析器</span></a></li>
+              <li><a href="tools/yolo-detect/">YOLO Detect</a></li>
+            </ul>
+          </div>
+        </div>
+      </article>
 
-        function windowResized() {
-            resizeCanvas(windowWidth, windowHeight);
-            // 調整背景canvas大小
-            bgCanvas.width = windowWidth;
-            bgCanvas.height = windowHeight;
-        }
+      <article class="folder" data-tone="ink" style="--i:4">
+        <div class="folder-tabs"><h3 class="folder-tab"><span lang="en">Aquaculture data</span><span lang="zh-Hant">養殖數據</span></h3></div>
+        <div class="folder-body">
+          <p class="folder-cat"><span lang="en">Sensors · OCR · forecasting</span><span lang="zh-Hant">感測器 · OCR · 預測</span></p>
+          <figure class="folder-pic">
+            <img class="stained" src="research/panel-ocr/cover.webp" width="960" height="600" loading="lazy" decoding="async"
+                 alt="Panel OCR Lab, which reads the digits on a meter's screen and turns them into a time series" data-alt-en="Panel OCR Lab, which reads the digits on a meter's screen and turns them into a time series" data-alt-zh="儀表面板 OCR：讀取儀表螢幕上的數字並轉成時間序列">
+            <figcaption><span lang="en">Panel OCR Lab, reading a meter's screen.</span><span lang="zh-Hant">儀表面板 OCR，讀取儀表螢幕。</span></figcaption>
+          </figure>
+          <div class="folder-text">
+            <p><span lang="en">Ponds need watching. We read meters that only have a screen, stream ESP32 water sensors, forecast with Kalman filters, Holt smoothing and recurrent networks, and estimate how much rain a mariculture pond can take before a storm. Earlier field work measured greenhouse gases from shrimp ponds.</span><span lang="zh-Hant">養殖池需要時時看顧。我們讀取只有螢幕的儀表、串接 ESP32 水質感測器，以卡爾曼濾波、Holt 平滑與遞迴神經網路做預測，也估算海水養殖池在暴雨前還能承受多少雨量。先前的野外研究則量測了白蝦養殖池的溫室氣體。</span></p>
+            <ul class="folder-links">
+              <li><a href="https://doi.org/10.1016/j.marpolbul.2024.117298">Marine Pollution Bulletin 2024</a></li>
+              <li><a href="https://github.com/LBK888/ESP32-AIoT-Python">ESP32-AIoT-Python</a></li>
+              <li><a href="research/panel-ocr/">Panel OCR Lab</a></li>
+              <li><a href="tools/rain-buffer/"><span lang="en">Rain Buffer Calculator</span><span lang="zh-Hant">降雨緩衝容量估算</span></a></li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
 
-        // 修改為雙擊事件
-        function doubleClicked() {
-            resetPoints();
-            return false; // 防止預設的雙擊行為
-        }
+  <!-- 4. Tools: read from data/catalog.json, built from the category folders -->
+  <section class="tools" id="tools" aria-labelledby="tools-h">
+    <header class="tools-head" data-reveal>
+      <h2 id="tools-h" data-step><span lang="en">Tools for class and lab</span><span lang="zh-Hant">教學與研究工具</span></h2>
+      <div class="tools-intro" data-step>
+        <p><span lang="en">Free to use and nothing to install. Every tool runs in the browser, and most of them work on a phone.</span><span lang="zh-Hant">免費使用、不必安裝。每個工具都在瀏覽器裡執行，大多數用手機就能開。</span></p>
+        <nav class="tools-jump" aria-label="Tool categories"></nav>
+      </div>
+    </header>
+    <div id="catalog" class="catalog">
+      <noscript><p class="catalog-fail">The tool list needs JavaScript. The tools live in the <a href="https://github.com/LBK888/LBK888.github.io">tools, games, teaching and research folders</a>.</p></noscript>
+    </div>
+  </section>
 
-        // 修改滑鼠點擊事件
-        function mousePressed() {
-            points.push({
-                x: mouseX,
-                y: mouseY
-            });
-            //console.log(mouseX,mouseY);
-            pointsDirection.push({
-                prev_move_dir: Array(conti_t_randomWalk).fill().map(() => ({x: 0, y: 0}))
-            });
-            
-            return false;
-        }
+  <!-- 5. Publications -->
+  <section class="pubs" id="publications" aria-labelledby="pubs-h">
+    <div class="pub-board" data-reveal>
+      <div class="pub-tile pub-tile-head" data-step>
+        <h2 id="pubs-h"><span lang="en">Publications</span><span lang="zh-Hant">論文發表</span></h2>
+        <p><span lang="en">Twenty papers since 2005 on zebrafish development, fish physiology and aquaculture. Each tile opens the latest paper in that journal.</span><span lang="zh-Hant">自 2005 年以來 20 篇論文，主題涵蓋斑馬魚發育、魚類生理與水產養殖。點選期刊即可開啟最新一篇。</span></p>
+      </div>
+      <div id="pub-tiles" class="pub-tiles"></div>
+    </div>
+    <div class="pub-all" data-reveal>
+      <div class="pub-all-head" data-step>
+        <h3 data-paper-count><span lang="en">All papers</span><span lang="zh-Hant">全部論文</span></h3>
+        <p><a href="https://www.researchgate.net/profile/Bo-Kai-Liao/research">ResearchGate</a></p>
+      </div>
+      <ol id="pub-list" class="pub-list" data-step></ol>
+    </div>
+  </section>
 
-        // 修改觸控事件處理
-        function touchStarted() {
-            if (touches.length === 1) {
-                // 處理雙指觸控
-                let rect = bgCanvas.getBoundingClientRect();
-                let touchX = touches[0].x - rect.left;
-                let touchY = touches[0].y - rect.top;
-                
-                points.push({
-                    x: touchX,
-                    y: touchY
-                });
-                pointsDirection.push({
-                    prev_move_dir: Array(conti_t_randomWalk).fill().map(() => ({x: 0, y: 0}))
-                });
-            }
-            return true; // 改為 return true 允許事件冒泡
-        }
+  <!-- 6. The band: the city the lab works in -->
+  <figure class="city-band">
+    <img class="stained" src="assets/img/keelung-station-harbour.webp" width="1600" height="1056" loading="lazy" decoding="async"
+         alt="Keelung Station and the harbour in the early twentieth century, small boats moored along the quay" data-alt-en="Keelung Station and the harbour in the early twentieth century, small boats moored along the quay" data-alt-zh="二十世紀初的基隆車站與基隆港，碼頭邊停著小船">
+    <figcaption><span lang="en">Keelung Station and harbour, early twentieth century. The lab works on this coast, at National Taiwan Ocean University.</span><span lang="zh-Hant">二十世紀初的基隆車站與基隆港。實驗室就在這片海岸，國立臺灣海洋大學。</span></figcaption>
+  </figure>
 
-        function touchMoved() {
-            return true; // 允許事件冒泡
-        }
+  <!-- 7. People -->
+  <section class="people" id="people" aria-labelledby="people-h">
+    <div class="people-panel">
+      <h2 id="people-h" data-reveal><span lang="en" data-step>From somite clocks to AI</span><span lang="zh-Hant" data-step>從體節時鐘走到 AI</span></h2>
+      <figure class="people-pic" data-crossfade aria-label="Zebrafish, the lab's model organism">
+        <img class="stained is-on" src="assets/img/zebrafish-embryo-fluorescent.webp" width="1280" height="960" loading="lazy" decoding="async" alt="">
+        <img class="stained" src="assets/img/somite-embryo-dark-field.webp" width="954" height="801" loading="lazy" decoding="async" alt="">
+        <img class="stained" src="assets/img/zebrafish-heartbeat-poster.webp" width="1280" height="956" loading="lazy" decoding="async" alt="">
+      </figure>
+      <div class="people-text" data-reveal>
+        <div class="people-block" data-step>
+          <h3><span lang="en">Bo-Kai Liao, principal investigator</span><span lang="zh-Hant">廖柏凱，實驗室主持人</span></h3>
+          <p><span lang="en">Earlier work at Academia Sinica on how fish gills take up calcium and regulate ions, then on the zebrafish segmentation clock with Andrew Oates's group at the Max Planck Institute in Dresden and the Francis Crick Institute in London. Now at the Department of Aquaculture, NTOU.</span><span lang="zh-Hant">早年在中央研究院研究魚鰓如何吸收鈣與調節離子，之後在德國德勒斯登馬克斯普朗克研究所與倫敦 Francis Crick 研究所，於 Andrew Oates 團隊研究斑馬魚體節時鐘。現任職於國立臺灣海洋大學水產養殖學系。</span></p>
+          <p class="people-links"><a href="https://www.linkedin.com/in/%E6%9F%8F%E5%87%B1-%E5%BB%96-59076b222/">LinkedIn</a> <a href="https://www.researchgate.net/profile/Bo-Kai-Liao/research">ResearchGate</a> <a href="https://github.com/LBK888">GitHub</a></p>
+        </div>
+        <div class="people-block" data-step>
+          <h3><span lang="en">Join the lab</span><span lang="zh-Hant">加入我們</span></h3>
+          <p><span lang="en">We welcome undergraduate project students, master's and PhD students, and research assistants. Curiosity about both biology and code matters more than experience; the AI part can be learned here.</span><span lang="zh-Hant">歡迎大學部專題生、碩士生、博士生與研究助理加入。對生物和程式都感興趣，比經驗更重要；AI 的部分可以在這裡學。</span></p>
+        </div>
+        <a class="btn btn-red" href="#contact" data-step><span lang="en">Write to us</span><span lang="zh-Hant">寫信給我們</span></a>
+      </div>
+    </div>
+  </section>
 
-        function touchEnded() {
-            return true; // 允許事件冒泡
-        }
+  <!-- 8. Contact: a coupon that writes an email -->
+  <section class="contact" id="contact" aria-labelledby="contact-h" data-field>
+    <form class="coupon" data-to="liaobk@email.ntou.edu.tw" action="mailto:liaobk@email.ntou.edu.tw" method="get" data-reveal>
+      <div class="coupon-left" data-step>
+        <h2 id="contact-h"><span lang="en">Visit or write to us</span><span lang="zh-Hant">歡迎來訪或來信</span></h2>
+        <address>
+          <span lang="en">Room 510, Life Science Building<br>National Taiwan Ocean University<br>2 Beining Road, Zhongzheng District<br>Keelung 202301, Taiwan</span>
+          <span lang="zh-Hant">202301 基隆市中正區北寧路 2 號<br>國立臺灣海洋大學 生科館 510 室<br>水產養殖學系</span>
+        </address>
+        <p class="coupon-reach"><a href="mailto:liaobk@email.ntou.edu.tw">liaobk@email.ntou.edu.tw</a><br><a href="tel:+886224622192">+886 2 2462 2192</a></p>
+      </div>
+      <div class="coupon-right" data-step>
+        <label class="sr-only" for="f-name"><span lang="en">Your name</span><span lang="zh-Hant">你的名字</span></label>
+        <input id="f-name" name="name" autocomplete="name" placeholder="Your name" data-ph-en="Your name" data-ph-zh="你的名字">
+        <label class="sr-only" for="f-role"><span lang="en">You are</span><span lang="zh-Hant">你的身分</span></label>
+        <select id="f-role" name="role">
+          <option data-en="I'm a prospective student" data-zh="我想加入實驗室">I'm a prospective student</option>
+          <option data-en="I'd like to collaborate" data-zh="我想合作研究">I'd like to collaborate</option>
+          <option data-en="I teach with the tools" data-zh="我在課堂上使用這些工具">I teach with the tools</option>
+          <option data-en="Something else" data-zh="其他">Something else</option>
+        </select>
+        <label class="sr-only" for="f-subject"><span lang="en">Subject</span><span lang="zh-Hant">主旨</span></label>
+        <input id="f-subject" name="subject" placeholder="Subject" data-ph-en="Subject" data-ph-zh="主旨">
+        <label class="sr-only" for="f-body"><span lang="en">Message</span><span lang="zh-Hant">訊息</span></label>
+        <textarea id="f-body" name="body" rows="3" placeholder="Your message" data-ph-en="Your message" data-ph-zh="想說的話"></textarea>
+        <button class="coupon-send" type="submit"><span lang="en">Write the email</span><span lang="zh-Hant">寫成 Email</span></button>
+      </div>
+    </form>
+  </section>
+</main>
 
-        // 新增重置點的函數
-        function resetPoints() {
-            points = [];
-            pointsDirection = [];
-            for (let i = 0; i < POINT_COUNT; i++) {
-                points.push({
-                    x: random(width),
-                    y: random(height)
-                });
-                pointsDirection.push({
-                    prev_move_dir: Array(conti_t_randomWalk).fill().map(() => ({x: 0, y: 0}))
-                });
-            }
-        }
+<footer class="footer">
+  <svg class="mark mark-footer" role="img" aria-label="BK Lab" focusable="false"><use href="#mark"/></svg>
+  <div class="footer-cols">
+    <div>
+      <h2 class="footer-h"><span lang="en">This site</span><span lang="zh-Hant">本站</span></h2>
+      <ul>
+        <li><a href="#research"><span lang="en">Research</span><span lang="zh-Hant">研究方向</span></a></li>
+        <li><a href="#tools"><span lang="en">Tools</span><span lang="zh-Hant">工具</span></a></li>
+        <li><a href="#publications"><span lang="en">Publications</span><span lang="zh-Hant">論文發表</span></a></li>
+        <li><a href="#people"><span lang="en">People</span><span lang="zh-Hant">成員</span></a></li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="footer-h"><span lang="en">Tools</span><span lang="zh-Hant">工具分類</span></h2>
+      <ul data-footer-cats>
+        <li><a href="#tools">Web Tools</a></li><li><a href="#tools">Web Games</a></li><li><a href="#tools">Teaching</a></li><li><a href="#tools">Research</a></li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="footer-h"><span lang="en">Elsewhere</span><span lang="zh-Hant">其他平台</span></h2>
+      <ul>
+        <li><a href="https://github.com/LBK888">GitHub</a></li>
+        <li><a href="https://github.com/LBK888/ComVis"><span lang="en">Open course material</span><span lang="zh-Hant">開放課程教材</span></a></li>
+        <li><a href="https://www.researchgate.net/profile/Bo-Kai-Liao/research">ResearchGate</a></li>
+        <li><a href="https://www.linkedin.com/in/%E6%9F%8F%E5%87%B1-%E5%BB%96-59076b222/">LinkedIn</a></li>
+      </ul>
+    </div>
+    <div class="footer-address">
+      <h2 class="footer-h"><span lang="en">Find us</span><span lang="zh-Hant">地址</span></h2>
+      <p><span lang="en">Department of Aquaculture, National Taiwan Ocean University, 2 Beining Road, Keelung 202301</span><span lang="zh-Hant">國立臺灣海洋大學水產養殖學系，202301 基隆市中正區北寧路 2 號</span></p>
+      <p><a href="mailto:liaobk@email.ntou.edu.tw">liaobk@email.ntou.edu.tw</a></p>
+    </div>
+  </div>
+  <p class="credits">
+    <span lang="en">Pictures:</span><span lang="zh-Hant">圖片來源：</span>
+    somite embryo, Giudicelli F, Özbudak EM, Wright GJ, Lewis J (<a href="https://commons.wikimedia.org/wiki/File:Zebrafish-Embryo-dark-field.jpg">CC BY 2.5</a>, one panel, labels removed);
+    zebrafish embryo, Marco Boschin (<a href="https://commons.wikimedia.org/wiki/File:Embryo_of_Zebrafish.jpg">CC BY 4.0</a>);
+    myoD in situ, Hawkins TA, Cavodeassi F, Erdélyi F et al. (<a href="https://commons.wikimedia.org/wiki/File:Not_all_tissues_receiving_notochord-emitted_signals_are_affected_by_U0126_treatment.jpg">CC BY 2.0</a>, one panel, labels removed);
+    Keelung Station and harbour, 勝山吉作 (<a href="https://commons.wikimedia.org/wiki/File:%E5%9F%BA%E9%9A%86%E8%BB%8A%E7%AB%99%E8%88%87%E5%9F%BA%E9%9A%86%E6%B8%AF.jpg">CC0</a>);
+    zebrafish heartbeat clip, De Luca E et al., ZebraBeat (<a href="https://commons.wikimedia.org/wiki/File:ZebraBeat-a-flexible-platform-for-the-analysis-of-the-cardiac-rate-in-zebrafish-embryos-srep04898-s5.ogv">CC BY 3.0</a>).
+    <span lang="en">All via Wikimedia Commons, printed here in the colours of an in situ stain.</span><span lang="zh-Hant">皆取自 Wikimedia Commons，以原位雜交染色的顏色呈現。</span>
+  </p>
+  <div class="footer-last">
+    <p>© 2026 BK Lab · <span lang="en">Department of Aquaculture, National Taiwan Ocean University</span><span lang="zh-Hant">國立臺灣海洋大學水產養殖學系</span></p>
+    <a class="btn btn-ink btn-small" href="#top"><span lang="en">Back to top</span><span lang="zh-Hant">回到頂端</span></a>
+  </div>
+</footer>
 
-        // 添加 intro 動畫
-        document.addEventListener('DOMContentLoaded', function() {
-            const introText = document.querySelector('.intro p');
-            // 確保元素存在
-            if (introText) {
-                // 延遲一小段時間後顯示文字
-                setTimeout(() => {
-                    introText.classList.add('visible');
-                }, 700);
-            }
-        });
-    </script>
-    </body>
+</body>
 </html>

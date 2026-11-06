@@ -1,0 +1,10 @@
+{
+  "title": "Panel OCR Lab",
+  "title_zh": "儀表面板 OCR",
+  "description": "Turn a meter's screen into a time series: box the display, find and read the digits, validate them, then forecast.",
+  "description_zh": "把儀表螢幕變成時間序列：框選、偵測、辨識數字、驗證，再做預測。",
+  "needs": "Downloads 13 MB of models once",
+  "needs_zh": "首次下載約 13 MB 模型",
+  "lang": "en",
+  "order": 2
+}

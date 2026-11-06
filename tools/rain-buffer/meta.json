@@ -1,0 +1,8 @@
+{
+  "title": "Rain Buffer Calculator",
+  "title_zh": "降雨緩衝容量估算",
+  "description": "Estimate how much rain a mariculture pond can still absorb, from its salinity and pH, before a storm arrives.",
+  "description_zh": "以鹽度與 pH 估算海水養殖池對降雨的剩餘緩衝能力，在強降雨前做好準備。",
+  "lang": "zh,en",
+  "order": 3
+}

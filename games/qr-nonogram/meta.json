@@ -1,0 +1,8 @@
+{
+  "title": "QR Code Nonogram",
+  "title_zh": "QR Code 數織謎題",
+  "description": "Turn any text into a QR code, then into a nonogram puzzle. Solve the puzzle and the code scans.",
+  "description_zh": "把文字變成 QR Code，再變成數織謎題；解開謎題，就能掃出答案。",
+  "lang": "zh,en",
+  "order": 5
+}
