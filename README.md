@@ -12,9 +12,10 @@ games/                Web Games  網頁遊戲
 teaching/             Teaching   教學
 research/             Research   研究工具
 data/
-  catalog.config.json 四個分類的名稱與說明（要新增分類就改這裡）
+  catalog.config.json 四個分類的名稱與說明，以及要從首頁隱藏的工具（hide）
   catalog.json        工具清單，由程式自動產生，不要手動改
   publications.json   論文清單（新論文加在最上面）
+  repos.json          研究方向最後一層「開源專案」的 GitHub 專案清單
 assets/               首頁用的 CSS、JS、圖片
 scripts/
   build-catalog.mjs   掃描四個分類資料夾，產生 data/catalog.json
@@ -59,6 +60,29 @@ scripts/
 ### 選用：封面圖
 
 在資料夾裡放 `thumb.webp`（正方形，約 240×240）或 `cover.webp`（約 960×600），首頁會用它當作清單旁的小圖。沒有圖時會顯示一個細胞形狀的色塊。`.jpg`、`.png` 也可以。
+
+## 從首頁隱藏工具
+
+有些工具需要後端（例如課堂伺服器沒開時無法使用的測驗），可以先從首頁拿掉，網址仍然可以開啟，舊連結與 QR Code 也照常有效。
+
+最簡單的做法：把資料夾路徑加進 `data/catalog.config.json` 的 `hide` 清單，上傳即可（GitHub Action 會自動重建清單）：
+
+```json
+"hide": [
+  "games/quiz",
+  "games/quiz-classic"
+]
+```
+
+要重新顯示，就把那一行刪掉。單一 HTML 檔也可以，例如 `"games/abc.html"`。
+
+另一種做法是在該資料夾的 `meta.json` 裡寫 `"hidden": true`，效果相同。兩種方式都會讓首頁的即時偵測跳過它，不會被當成新工具又列回來。
+
+目前隱藏的：`games/quiz`（Quiz Challenge，需要課堂伺服器）與 `games/quiz-classic`（功能性文盲測驗舊版）。首頁保留不需後端的 `games/quiz-demo`。
+
+## 新增開源專案
+
+研究方向的最後一層資料夾「開源專案」讀取 `data/repos.json`。在對應的群組（研究工具、機器學習工具、教學遊戲、其他工具、線上課程）裡加一筆，欄位為 `name`、`url`、中英文說明 `description` / `description_zh`，以及選填的 `lang`、`license`、`note` / `note_zh`。也可以新增一個群組。
 
 ## 新增分類
 

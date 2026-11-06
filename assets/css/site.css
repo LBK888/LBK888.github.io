@@ -220,6 +220,13 @@ html[data-lang="zh"] .statement { max-width: 27em; letter-spacing: 0; line-heigh
 .research-head p { grid-column: 8 / span 5; max-width: 44ch; }
 
 .folders { position: relative; }
+/* The five research folders stack. The open-source folder is taller than a screen, so it
+   is not sticky: it slides in under the last tab, and from the moment it reaches its place
+   the whole stack scrolls away with it instead of being covered. The spacer gives the last
+   stacked folder room to stay put while the open-source folder slides over its body. */
+.folders-stack { --release: max(0px, calc(100svh - var(--nav-h) - 5 * 64px)); }
+.folders-stack::after { content: ""; display: block; height: var(--release); }
+.folder.folder-repos { position: relative; top: auto; z-index: 2; margin-top: calc(-1 * max(0px, calc(100svh - var(--nav-h) - 5 * 64px))); }
 .folder {
   --top: calc(var(--nav-h) + var(--i) * 64px);
   --band: var(--ink); --band-ink: var(--bg);
@@ -240,7 +247,7 @@ html[data-lang="zh"] .statement { max-width: 27em; letter-spacing: 0; line-heigh
   min-height: calc(100svh - var(--top) - 44px);
   display: grid; grid-template-columns: repeat(12, 1fr); column-gap: var(--gap);
   align-content: start;
-  padding: 14px var(--m) clamp(40px, 5vw, 72px);
+  padding: 14px var(--m) clamp(32px, 3vw, 44px);
 }
 /* The first 64px of a band stay clear but for its category: that strip is all that shows once the next folder stacks on top. */
 .folder-cat { grid-column: 1 / -1; justify-self: end; font-size: var(--step-small); min-height: 58px; }
@@ -248,7 +255,7 @@ html[data-lang="zh"] .statement { max-width: 27em; letter-spacing: 0; line-heigh
 .folder-pic img, .folder-pic video {
   /* the whole picture at its own proportions: nothing is cropped */
   width: auto; height: auto; max-width: 100%;
-  max-height: calc(100svh - var(--top) - 190px);
+  max-height: calc(100svh - var(--top) - 250px);
 }
 .folder-pic figcaption { font-size: var(--step-small); margin-top: 12px; max-width: 52ch; }
 .folder-text { grid-column: 9 / span 4; padding-top: 4px; }
@@ -260,6 +267,28 @@ html[data-lang="zh"] .statement { max-width: 27em; letter-spacing: 0; line-heigh
   background: currentColor; clip-path: var(--cell-bullet); transition: transform 0.25s ease;
 }
 .folder-links a:hover::before { transform: rotate(60deg) scale(1.2); }
+
+/* the last folder: open-source repositories, read from data/repos.json */
+.repos-intro { grid-column: 1 / span 3; padding-top: 4px; position: sticky; top: calc(var(--nav-h) + 28px); align-self: start; }
+.repos-intro p { max-width: 32ch; }
+.repo-groups { grid-column: 5 / span 8; columns: 2; column-gap: clamp(32px, 3.6vw, 64px); }
+.repo-group { break-inside: avoid; padding-bottom: 40px; }
+.repo-group h4 {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  font-size: clamp(1.125rem, 0.9rem + 0.7vw, 1.625rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1;
+  margin-bottom: 18px;
+}
+html[data-lang="zh"] .repo-group h4 { letter-spacing: 0; }
+.repo-group h4 span { font-size: var(--step-small); font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+.repo { break-inside: avoid; margin-bottom: 22px; }
+.repo-name { display: inline-flex; align-items: center; min-height: 32px; font-weight: 600; overflow-wrap: anywhere; }
+.repo-name::before {
+  content: ""; width: 0.62em; height: 0.56em; margin-right: 0.55em; flex: none;
+  background: var(--nbt); clip-path: var(--cell-bullet); transition: transform 0.25s ease;
+}
+.repo-name:hover::before, .repo-name:focus-visible::before { transform: rotate(60deg) scale(1.2); }
+.repo-desc { max-width: 46ch; }
+.repo-meta, .repo-note { font-size: var(--step-small); color: var(--muted); margin-top: 4px; }
 
 /* ---- tools: the catalogue ---------------------------------------------- */
 .tools { position: relative; background: var(--bg); padding: var(--section) var(--m) 0; }
@@ -503,6 +532,8 @@ html[data-lang="zh"] .coupon-left h2 { letter-spacing: 0; }
   .research-head h2, .research-head p, .tools-head h2, .tools-intro, .pub-all-head, .pub-list { grid-column: 1 / -1; }
   .pub-list { columns: 1; }
   .folder { position: relative; top: auto; min-height: 0; }
+  .folders-stack::after { display: none; }
+  .folder.folder-repos { margin-top: 0; }
   .folder-tabs { padding-left: var(--m); height: 40px; }
   .folder-tab { height: 40px; min-width: 0; font-size: var(--step-lead); }
   .folder-body { min-height: 0; padding-top: 18px; }
@@ -510,6 +541,9 @@ html[data-lang="zh"] .coupon-left h2 { letter-spacing: 0; }
   .folder-pic, .folder-text { grid-column: 1 / -1; }
   .folder-pic img, .folder-pic video { width: 100%; max-height: none; }
   .folder-text { margin-top: 24px; }
+  .repos-intro, .repo-groups { grid-column: 1 / -1; }
+  .repos-intro { position: static; }
+  .repo-groups { columns: 1; margin-top: 36px; }
   .cat-items { grid-template-columns: 1fr; }
   .pub-board { grid-template-columns: repeat(2, 1fr); gap: 6px; }
   .pub-tile-head { grid-column: 1 / -1; }

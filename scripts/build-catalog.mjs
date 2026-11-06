@@ -58,8 +58,11 @@ function prettySlug(slug) {
   return slug.replace(/\.html?$/i, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// Folders with "hidden": true in meta.json. The homepage needs their names too, so that
-// its live check on GitHub does not mistake them for new tools.
+// Tools kept off the homepage (their URLs still work): listed in "hide" in
+// data/catalog.config.json, or marked "hidden": true in their own meta.json.
+// The homepage needs their names too, so that its live check on GitHub does not
+// mistake them for new tools.
+const hideList = new Set((config.hide || []).map((p) => p.replace(/^\/+|\/+$/g, '').replace(/\.html?$/i, '')));
 const hidden = [];
 
 let gitOk = true;
@@ -110,7 +113,11 @@ function buildEntry(cat, name) {
     return null;
   }
 
-  if (meta.hidden) { hidden.push(`${cat.id}/${name.replace(/.html?$/i, "")}`); return null; }
+  const plain = name.replace(/\.html?$/i, '');
+  if (meta.hidden || hideList.has(`${cat.folder}/${plain}`) || hideList.has(`${cat.id}/${plain}`)) {
+    hidden.push(`${cat.id}/${plain}`);
+    return null;
+  }
 
   const info = readHtmlInfo(join(ROOT, base, entry));
   const slug = name.replace(/\.html?$/i, '');

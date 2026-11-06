@@ -1,6 +1,10 @@
 {
   "repo": "LBK888/LBK888.github.io",
   "branch": "main",
+  "hide": [
+    "games/quiz",
+    "games/quiz-classic"
+  ],
   "categories": [
     {
       "id": "tools",

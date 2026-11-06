@@ -8,6 +8,7 @@
   var NEW_DAYS = 45;
   var catalog = null;
   var papers = null;
+  var repos = null;
   var extra = [];   // tools found on GitHub that are not in catalog.json yet
 
   var T = {
@@ -25,6 +26,7 @@
       live: function (v) { return v + '.'; },
       catalogFail: 'The tool list could not be loaded here. Open the page through a web server, or browse the folders on GitHub.',
       allPapers: function (n) { return 'All ' + n + ' papers'; },
+      repoCount: function (n) { return n + ' repositories on GitHub'; },
       subject: 'Message from the BK Lab website',
       title: 'BK Lab · How cells make patterns · National Taiwan Ocean University',
       from: 'From', role: 'I am',
@@ -43,6 +45,7 @@
       live: function (v) { return v + '。'; },
       catalogFail: '這裡無法載入工具清單。請透過網頁伺服器開啟，或到 GitHub 瀏覽資料夾。',
       allPapers: function (n) { return '全部 ' + n + ' 篇論文'; },
+      repoCount: function (n) { return 'GitHub 上的 ' + n + ' 個專案'; },
       subject: '來自 BK Lab 網站的訊息',
       title: 'BK Lab · 細胞如何形成圖樣 · 國立臺灣海洋大學',
       from: '寄件人', role: '身分',
@@ -77,6 +80,7 @@
     });
     renderCatalog();
     renderPapers();
+    renderRepos();
     if (lastStats) showStats(lastStats);
   }
 
@@ -265,6 +269,38 @@
       .catch(function () {});
   }
 
+  // ---- open-source repositories ------------------------------------------
+
+  function renderRepos() {
+    var host = document.getElementById('repo-groups');
+    if (!host || !repos) return;
+    var total = 0;
+    host.innerHTML = (repos.groups || []).map(function (g, gi) {
+      total += g.repos.length;
+      return '<div class="repo-group" data-step style="--d:' + gi * 80 + 'ms">' +
+        '<h4>' + esc(pick({ en: g.name, zh: g.name_zh })) + ' <span>' + g.repos.length + '</span></h4>' +
+        '<ul>' + g.repos.map(function (r) {
+          var meta = [pick({ en: r.lang, zh: r.lang_zh }), r.license].filter(Boolean).join(' · ');
+          var note = pick({ en: r.note, zh: r.note_zh });
+          return '<li class="repo">' +
+            '<a class="repo-name" href="' + esc(r.url) + '">' + esc(r.name) + '</a>' +
+            '<p class="repo-desc">' + esc(pick({ en: r.description, zh: r.description_zh })) + '</p>' +
+            (meta ? '<p class="repo-meta">' + esc(meta) + '</p>' : '') +
+            (note ? '<p class="repo-note">' + esc(note) + '</p>' : '') +
+          '</li>';
+        }).join('') + '</ul>' +
+      '</div>';
+    }).join('');
+    document.querySelectorAll('[data-repo-count]').forEach(function (el) { el.textContent = t('repoCount')(total); });
+  }
+
+  function loadRepos() {
+    return fetch('data/repos.json', { cache: 'no-cache' })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (data) { repos = data; renderRepos(); })
+      .catch(function () {});
+  }
+
   // ---- tissue readout ----------------------------------------------------
 
   var lastStats = null, lastVerdict = '';
@@ -372,5 +408,6 @@
     wireCoupon();
     loadCatalog();
     loadPapers();
+    loadRepos();
   });
 })();

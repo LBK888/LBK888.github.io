@@ -1,0 +1,155 @@
+{
+  "note": "Open-source repositories shown in the last research folder on the homepage. Add a repo to a group, or add a group. Descriptions are one sentence each.",
+  "profile": "https://github.com/LBK888?tab=repositories",
+  "groups": [
+    {
+      "id": "research",
+      "name": "Research tools",
+      "name_zh": "研究工具",
+      "repos": [
+        {
+          "name": "point_pattern_studio",
+          "url": "https://github.com/LBK888/point_pattern_studio",
+          "description": "Generate random, clustered and regular dot patterns, score each from −1 to +1 with Ripley's L(r), and pointillize line drawings to a target score.",
+          "description_zh": "產生隨機、聚集與規則點圖，以 Ripley's L(r) 為每張圖打出 −1 到 +1 的分數，並把線稿點描到指定分數。",
+          "lang": "Python",
+          "license": "AGPL-3.0"
+        },
+        {
+          "name": "de-Dimension",
+          "url": "https://github.com/LBK888/de-Dimension",
+          "description": "SOMTrack: locomotion metrics from tracking data, SOM and other projections, and the statistics that say whether groups really differ.",
+          "description_zh": "SOMTrack：從追蹤資料計算運動指標，以 SOM 等方法投影分群，並用 PERMANOVA 與置換檢定判斷組間差異是否真的存在。",
+          "lang": "Python",
+          "license": "AGPL-3.0"
+        },
+        {
+          "name": "Voronoi_Cell_ODE",
+          "url": "https://github.com/LBK888/Voronoi_Cell_ODE",
+          "description": "Simulate Notch signalling on Voronoi cell layouts (honeycomb, random or imported) and export the results as videos and figures.",
+          "description_zh": "在 Voronoi 細胞排列（蜂巢、隨機或匯入）上模擬 Notch 訊號，並輸出成影片與圖表。",
+          "note": "Runs the code you type into it: use it on your own computer only.",
+          "note_zh": "會執行輸入的程式碼，請只在自己的電腦上使用。",
+          "lang": "Python"
+        },
+        {
+          "name": "MSS",
+          "url": "https://github.com/LBK888/MSS",
+          "description": "Search for the best model, scaler and augmentation on small regression datasets, plus AutoEncoders that convert multispectral spectra.",
+          "description_zh": "為小樣本回歸資料找出最佳的模型、資料縮放與增強方法，以及轉換多光譜光譜的 AutoEncoder。",
+          "lang": "Python",
+          "license": "Apache-2.0"
+        },
+        {
+          "name": "TrackBox",
+          "url": "https://github.com/LBK888/TrackBox",
+          "description": "A foldable imaging box for 6–7 dpf zebrafish larvae in 6- or 24-well plates, built for under 5,000 TWD, with capture software and temperature logging.",
+          "description_zh": "拍攝 6–7 dpf 斑馬魚幼魚的可折疊攝影箱，適用 6 孔與 24 孔盤，材料費不到 5,000 元，附拍攝軟體與溫濕度記錄。",
+          "lang": "Python"
+        },
+        {
+          "name": "spatial_pattern_analyzer",
+          "url": "https://github.com/LBK888/spatial_pattern_analyzer",
+          "description": "A desktop tool that tests 2D cell coordinates from CSV or Excel with Ripley's K and L functions, for several cell types at once.",
+          "description_zh": "以 Ripley's K 與 L 函數分析 CSV／Excel 二維細胞座標的桌面工具，可同時處理多種細胞類型。",
+          "lang": "Python",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "ml",
+      "name": "ML tools",
+      "name_zh": "機器學習工具",
+      "repos": [
+        {
+          "name": "zVision",
+          "url": "https://github.com/LBK888/zVision",
+          "description": "YOLO models for the zebrafish lab (larvae on a wide camera or a stereomicroscope, adult keypoints) and UVC Lab for multi-camera capture and tracking.",
+          "description_zh": "斑馬魚實驗室的 YOLO 模型（廣角或解剖顯微鏡下的幼魚、成魚關鍵點），以及多相機拍攝與追蹤的 UVC Lab。",
+          "lang": "Python"
+        },
+        {
+          "name": "FOMA_lite",
+          "url": "https://github.com/LBK888/FOMA_lite",
+          "description": "A Streamlit app that compares FOMA data augmentation variants for regression, adapted from Kaufman et al. (ICML 2024).",
+          "description_zh": "比較 FOMA 回歸資料增強方法的 Streamlit 介面，改寫自 Kaufman 等人（ICML 2024）。",
+          "lang": "Python",
+          "license": "MIT"
+        },
+        {
+          "name": "regression_models",
+          "url": "https://github.com/LBK888/regression_models",
+          "description": "A desktop app that trains, compares and deploys regression models on small scientific datasets, from a spreadsheet to predictions.",
+          "description_zh": "針對小型科學資料集訓練、比較與部署回歸模型的桌面程式，從試算表一路到預測。",
+          "lang": "Python",
+          "license": "AGPL-3.0"
+        }
+      ]
+    },
+    {
+      "id": "games",
+      "name": "Teaching games",
+      "name_zh": "教學遊戲",
+      "repos": [
+        {
+          "name": "scrum-game",
+          "url": "https://github.com/LBK888/scrum-game",
+          "description": "敏捷團隊蓋房子: printable cards for a classroom game in which an agile team builds a house, sprint by sprint.",
+          "description_zh": "敏捷團隊蓋房子：課堂用的 Scrum 教學卡牌，讓團隊一個衝刺接一個衝刺地把房子蓋起來，可直接列印。",
+          "lang": "PowerPoint cards",
+          "lang_zh": "PowerPoint 卡牌",
+          "license": "MIT"
+        },
+        {
+          "name": "endless_plan",
+          "url": "https://github.com/LBK888/endless_plan",
+          "description": "Ocean Probe Challenge: write one strategy function that steers a probe through endless seeded levels. A Colab assignment for intro Python, with a Windows build.",
+          "description_zh": "海洋探勘 AI 挑戰：寫一個策略函數，操控探測船闖過無限生成的關卡。適合 Python 入門課的 Colab 作業，附 Windows 版。",
+          "lang": "Python",
+          "license": "GPL-3.0"
+        }
+      ]
+    },
+    {
+      "id": "other",
+      "name": "Other tools",
+      "name_zh": "其他工具",
+      "repos": [
+        {
+          "name": "subtitle-cut",
+          "url": "https://github.com/LBK888/subtitle-cut",
+          "description": "Local subtitle editing and speech recognition with Qwen3 ASR: word-level video cutting, live transcription and speaker separation.",
+          "description_zh": "以 Qwen3 ASR 在本機做字幕剪輯與語音辨識：逐字剪片、即時轉錄與說話者分離。",
+          "note": "Modified from foxmooner2021/subtitle-cut.",
+          "note_zh": "改寫自 foxmooner2021/subtitle-cut。",
+          "lang": "Python",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "courses",
+      "name": "Online courses",
+      "name_zh": "線上課程",
+      "repos": [
+        {
+          "name": "ESP32-AIoT-Python",
+          "url": "https://github.com/LBK888/ESP32-AIoT-Python",
+          "description": "ESP32 + MicroPython smart aquarium: the code for a 16-chapter AIoT course, and a web dashboard that connects all its devices.",
+          "description_zh": "ESP32 + MicroPython 智慧 AIoT 魚缸：16 章課程的程式碼，以及串接所有裝置的網頁資訊面板。",
+          "lang": "Python",
+          "license": "MIT"
+        },
+        {
+          "name": "ComVis",
+          "url": "https://github.com/LBK888/ComVis",
+          "description": "AI image recognition course: video lessons with Jupyter notebooks, from Python and OpenCV basics to applications.",
+          "description_zh": "AI 影像辨識線上課程：教學影片搭配 Jupyter 筆記本，從 Python、OpenCV 基礎到應用。",
+          "lang": "Jupyter Notebook",
+          "license": "MIT"
+        }
+      ]
+    }
+  ]
+}

@@ -253,30 +253,6 @@
           "updated": "2026-11-07"
         },
         {
-          "id": "games/quiz",
-          "slug": "quiz",
-          "href": "games/quiz/list.html",
-          "title": {
-            "en": "Quiz Challenge",
-            "zh": "QuizGame 實力大挑戰"
-          },
-          "description": {
-            "en": "Timed quizzes, from functional literacy to cell biology vocabulary, each ending in a score report.",
-            "zh": "限時測驗合集：功能性文盲大測驗、細胞生物學詞彙等，作答後產生能力報告。"
-          },
-          "needs": {
-            "en": "Uses the class server",
-            "zh": "需連線課堂伺服器"
-          },
-          "lang": "zh",
-          "cover": "games/quiz/cover.webp",
-          "thumb": "games/quiz/thumb.webp",
-          "pages": [],
-          "order": 6,
-          "added": "2026-03-11",
-          "updated": "2026-11-07"
-        },
-        {
           "id": "games/quiz-demo",
           "slug": "quiz-demo",
           "href": "games/quiz-demo/",
@@ -612,6 +588,7 @@
     }
   ],
   "hidden": [
+    "games/quiz",
     "games/quiz-classic"
   ]
 }
