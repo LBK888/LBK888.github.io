@@ -253,6 +253,30 @@
           "updated": "2026-11-07"
         },
         {
+          "id": "games/bomber",
+          "slug": "bomber",
+          "href": "games/bomber/",
+          "title": {
+            "en": "Sakura Garden",
+            "zh": "櫻庭大作戰"
+          },
+          "description": {
+            "en": "Set off fireworks, clear bamboo crates, and collect upgrades as you face up to three AI rabbits in a watercolor spring garden.",
+            "zh": "在日式水彩庭園放花火、炸開竹箱、拾取寶物，與最多三名電腦兔子對戰。"
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh",
+          "cover": "games/bomber/cover.webp",
+          "thumb": "games/bomber/thumb.webp",
+          "pages": [],
+          "order": 6,
+          "added": "2026-11-16",
+          "updated": "2026-11-16"
+        },
+        {
           "id": "games/quiz-demo",
           "slug": "quiz-demo",
           "href": "games/quiz-demo/",
@@ -275,30 +299,6 @@
           "order": 7,
           "added": "2025-12-06",
           "updated": "2026-11-07"
-        },
-        {
-          "id": "games/bomber",
-          "slug": "bomber",
-          "href": "games/bomber/",
-          "title": {
-            "en": "櫻庭大作戰 · Sakura Garden",
-            "zh": "櫻庭大作戰 · Sakura Garden"
-          },
-          "description": {
-            "en": "",
-            "zh": ""
-          },
-          "needs": {
-            "en": "",
-            "zh": ""
-          },
-          "lang": "zh",
-          "cover": "",
-          "thumb": "",
-          "pages": [],
-          "order": 999,
-          "added": "2026-11-16",
-          "updated": "2026-11-16"
         }
       ]
     },
