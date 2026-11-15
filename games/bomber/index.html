@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf6e9">
+  <link rel="icon" href="data:,">
+  <title>櫻庭大作戰 · Sakura Garden</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="game">
+    <header class="heading">
+      <div class="title-group">
+        <div class="seal" aria-hidden="true">✿</div>
+        <div>
+          <p class="roman-title" lang="en">SAKURA GARDEN</p>
+          <h1>櫻庭大作戰</h1>
+        </div>
+      </div>
+      <div class="scoreboard" aria-label="對戰狀態">
+        <div class="score"><div><small>場次</small><strong id="round">—</strong></div></div>
+        <div class="score"><div><small>積分</small><strong id="points">0</strong></div></div>
+        <button id="record" class="score score-button" type="button" title="查看對戰紀錄">
+          <span class="score-icon spirits" aria-hidden="true">✿</span>
+          <span><small>勝率</small><strong id="win-rate">—</strong></span>
+        </button>
+        <button id="mute" class="reset" type="button" aria-label="靜音" aria-pressed="false">♪</button>
+        <button id="restart" class="reset" type="button" title="返回選單（R）" aria-label="返回選單">↻</button>
+      </div>
+    </header>
+    <div class="game-view">
+      <section class="stage" aria-label="櫻花庭園遊戲區">
+        <div class="landscape" aria-hidden="true"></div>
+        <canvas id="arena" aria-label="3D 庭園棋盤，11 列 15 欄"></canvas>
+        <div class="petals" aria-hidden="true"></div>
+        <div class="arena-labels" aria-hidden="true">
+          <span id="opponents"></span>
+          <span id="round-time"></span>
+          <span id="spirit-count"></span>
+        </div>
+        <div class="message" id="message" role="status">
+          <p id="message-title">庭園準備中</p>
+          <small id="message-detail"></small>
+        </div>
+        <div id="spectator-controls" hidden>
+          <p id="spectator-status" role="status">庭園預覽</p>
+          <div class="camera-toolbar" aria-label="觀戰視角">
+            <span id="camera-help">拖曳轉動 · 滾輪或按鈕縮放</span>
+            <div class="camera-buttons">
+              <button id="zoom-out" type="button" aria-label="縮小視角">−</button>
+              <button id="zoom-in" type="button" aria-label="放大視角">+</button>
+              <button id="reset-camera" type="button" title="重設視角" aria-label="重設視角">↻</button>
+            </div>
+          </div>
+        </div>
+        <dialog class="panel results" id="results" aria-labelledby="results-title">
+          <h2 id="results-title">對戰紀錄</h2>
+          <p id="results-detail"></p>
+          <dl class="results-grid">
+            <div><dt>已完成</dt><dd id="result-games">0</dd></div>
+            <div><dt>勝場</dt><dd id="result-wins">0</dd></div>
+            <div><dt>勝率</dt><dd id="result-rate">—</dd></div>
+            <div><dt>生涯積分</dt><dd id="result-points">0</dd></div>
+            <div><dt>最佳連勝</dt><dd id="result-streak">0</dd></div>
+          </dl>
+          <div class="panel-actions">
+            <button id="results-back" class="primary" type="button">返回</button>
+            <button id="results-menu" class="text-button" type="button" hidden>返回選單</button>
+          </div>
+        </dialog>
+        <div class="touch-controls" aria-label="觸控操作">
+          <div class="dpad">
+            <button type="button" data-move="up" aria-label="向上">↑</button>
+            <button type="button" data-move="left" aria-label="向左">←</button>
+            <button type="button" data-move="down" aria-label="向下">↓</button>
+            <button type="button" data-move="right" aria-label="向右">→</button>
+          </div>
+          <button id="touch-bomb" type="button" aria-label="放花火">✦</button>
+        </div>
+      </section>
+      <section class="panel" id="setup" aria-labelledby="setup-title" hidden>
+        <form id="settings-form">
+          <div class="panel-mark" aria-hidden="true">✿</div>
+          <h2 id="setup-title">春日花火會</h2>
+          <p>善用竹箱裡的寶物，成為最後留在庭園的兔子。</p>
+          <fieldset>
+            <legend>電腦對手</legend>
+            <div class="options">
+              <label><input type="radio" name="opponent-count" value="1"><span>1 名</span></label>
+              <label><input type="radio" name="opponent-count" value="2" checked><span>2 名</span></label>
+              <label><input type="radio" name="opponent-count" value="3"><span>3 名</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>難度</legend>
+            <div class="options">
+              <label><input type="radio" name="difficulty" value="easy"><span>易</span></label>
+              <label><input type="radio" name="difficulty" value="normal" checked><span>中</span></label>
+              <label><input type="radio" name="difficulty" value="hard"><span>難</span></label>
+            </div>
+          </fieldset>
+          <div class="panel-actions">
+            <button id="start" class="primary" type="submit">開始對戰</button>
+            <button id="setup-record" class="text-button" type="button">對戰紀錄</button>
+          </div>
+        </form>
+        <div class="treasure-legend">
+          <h3>庭園寶物</h3>
+          <ul id="treasure-legend"></ul>
+        </div>
+      </section>
+    </div>
+    <footer class="guide">
+      <div class="upgrades" id="upgrades" aria-label="寶物與目前能力"></div>
+      <div class="keyboard" aria-label="鍵盤操作">
+        <span><kbd>↑↓←→</kbd> <span class="alternate">或</span> <kbd>WASD</kbd> 移動</span>
+        <span><kbd>Space</kbd> 放花火</span>
+      </div>
+    </footer>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
