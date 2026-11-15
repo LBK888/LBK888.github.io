@@ -89,12 +89,41 @@ kbd { background: #fffcf4; border: 1px solid #ddd3bb; border-bottom-width: 2px; 
 }
 @media (pointer: coarse) {
   .keyboard { display: none; }
-  .touch-controls { position: absolute; display: flex; justify-content: space-between; align-items: end; pointer-events: none; inset: auto 12px 12px; }
-  .dpad { display: grid; gap: 4px; grid-template-columns: repeat(3, 40px); }
-  [data-move="up"] { grid-column: 2; }
-  [data-move="left"] { grid-column: 1; }
-  .touch-controls button { pointer-events: auto; touch-action: none; border: 1px solid #c3baa0; color: #384834; background: #fff9e9ed; border-radius: 9px; width: 40px; height: 38px; font-weight: 700; }
-  #touch-bomb { width: 52px; height: 52px; border-radius: 50%; color: #fff7e9; background: #9d5366; font-size: 21px; }
+  .touch-controls {
+    position: absolute; display: flex; justify-content: space-between; align-items: end;
+    pointer-events: none; inset: auto 14px 12px; z-index: 2;
+  }
+  #touch-bomb, #touch-joystick {
+    pointer-events: auto; touch-action: none; user-select: none; -webkit-touch-callout: none;
+    border: 1px solid #fff5dcaa; border-radius: 50%;
+    box-shadow: inset 0 0 0 2px #fff5dc21, 0 3px 12px #333d3926;
+  }
+  #touch-bomb {
+    display: grid; place-content: center; gap: 1px; padding: 0; width: 78px; height: 78px;
+    color: #fff6e7; background: #854154b0; line-height: 1.05;
+    text-shadow: 0 1px 4px #4d2735;
+  }
+  #touch-bomb span { font-size: 28px; }
+  #touch-bomb small { font-size: 11px; font-weight: 700; }
+  #touch-bomb:active { background: #a54c65dc; }
+  #touch-joystick { position: relative; width: 110px; height: 110px; color: #fff9e6; background: #33473580; }
+  #touch-joystick.is-held { background: #334735a8; }
+  .stick-arrow {
+    position: absolute; font-size: 15px; line-height: 1; font-weight: 700;
+    text-shadow: 0 1px 3px #1c3025; pointer-events: none;
+  }
+  .stick-arrow.up, .stick-arrow.down { left: 50%; transform: translateX(-50%); }
+  .stick-arrow.up { top: 6px; }
+  .stick-arrow.down { bottom: 6px; }
+  .stick-arrow.left, .stick-arrow.right { top: 50%; transform: translateY(-50%); }
+  .stick-arrow.left { left: 7px; }
+  .stick-arrow.right { right: 7px; }
+  .stick-knob {
+    position: absolute; top: 50%; left: 50%; width: 40%; height: 40%; pointer-events: none;
+    transform: translate(calc(-50% + var(--stick-x, 0px)), calc(-50% + var(--stick-y, 0px)));
+    border-radius: 50%; border: 1px solid #fff8debe; background: #ffebc99c;
+    box-shadow: 0 2px 7px #22372c65;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .petals { display: none; }
@@ -217,4 +246,73 @@ kbd { background: #fffcf4; border: 1px solid #ddd3bb; border-bottom-width: 2px; 
 @media (max-width: 410px) {
   .title-group h1 { font-size: 25px; }
   .roman-title { font-size: 8px; }
+}
+
+#setup #install-help {
+  margin: 7px 0 0; padding: 6px 9px; border: 1px solid #e6d6c5; border-radius: 6px;
+  color: #654f49; background: #f7ecdc; font-size: 11px; text-align: left;
+}
+
+.phone-layout body { width: 100%; height: 100dvh; min-height: 0; overflow: hidden; overscroll-behavior: none; }
+.phone-layout .game {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  display: flex; flex-direction: column; max-width: none; width: 100dvw; height: 100dvh; margin: 0;
+  padding: max(4px, var(--safe-top)) max(6px, var(--safe-right)) max(4px, var(--safe-bottom)) max(6px, var(--safe-left));
+}
+.rotated-phone .game {
+  --safe-top: env(safe-area-inset-right, 0px);
+  --safe-right: env(safe-area-inset-bottom, 0px);
+  --safe-bottom: env(safe-area-inset-left, 0px);
+  --safe-left: env(safe-area-inset-top, 0px);
+  position: fixed; top: 0; left: 0; width: 100dvh; height: 100dvw;
+  transform-origin: top left; transform: translateX(100dvw) rotate(90deg);
+}
+.phone-layout .heading { flex: none; flex-wrap: nowrap; align-items: center; gap: 8px; margin: 0 0 4px; }
+.phone-layout .seal, .phone-layout .roman-title, .phone-layout .score-icon { display: none; }
+.phone-layout h1 { font-size: 19px; letter-spacing: .08em; white-space: nowrap; }
+.phone-layout .scoreboard { gap: 5px; }
+.phone-layout .score { min-width: 0; padding: 2px 6px; }
+.phone-layout .score strong { font-size: 12px; }
+.phone-layout .reset { width: 28px; height: 28px; font-size: 17px; }
+.phone-layout .game-view { flex: 1; min-height: 0; --menu-inset: clamp(224px, 39%, 310px); }
+.phone-layout .stage { height: 100%; border-radius: 10px; }
+.phone-layout .landscape { background-size: cover; }
+.phone-layout .arena-labels { padding: 6px 8px; }
+.phone-layout .arena-labels span { padding: 2px 7px; font-size: 10px; }
+.phone-layout .guide { flex: none; gap: 4px; padding: 4px 0 0; }
+.phone-layout .upgrades { gap: 4px; }
+.phone-layout .upgrade { min-height: 20px; padding: 2px 4px; gap: 3px; }
+.phone-layout .upgrade small, .phone-layout .upgrade strong, .phone-layout .upgrade-icon { font-size: 10px; }
+.phone-layout #setup {
+  position: absolute; inset: 7px auto 7px 7px; width: calc(var(--menu-inset) - 12px);
+  margin: 0; transform: none; max-height: none; padding: 10px 11px;
+  overscroll-behavior: contain; scrollbar-width: thin; border-radius: 10px;
+}
+.phone-layout #setup .panel-mark { display: none; }
+.phone-layout #setup h2, .phone-layout #results h2 { font-size: 21px; }
+.phone-layout #setup p { margin: 5px 0; font-size: 11px; }
+.phone-layout #setup fieldset { margin-bottom: 5px; }
+.phone-layout #setup legend { padding-bottom: 3px; font-size: 10px; }
+.phone-layout #setup .options { gap: 4px; }
+.phone-layout #setup .options span { padding: 3px; font-size: 12px; }
+.phone-layout #setup .panel-actions { gap: 1px 6px; margin-top: 6px; justify-content: flex-start; }
+.phone-layout #setup .primary { padding: 5px 8px; font-size: 12px; }
+.phone-layout #setup .text-button { padding: 5px 2px; font-size: 10px; }
+.phone-layout .treasure-legend { margin-top: 7px; padding-top: 5px; }
+.phone-layout .treasure-legend h3 { margin-bottom: 4px; font-size: 11px; }
+.phone-layout .treasure-legend ul { gap: 4px; }
+.phone-layout .treasure-legend li { padding: 2px; }
+.phone-layout .treasure-legend canvas { width: 29px; height: 29px; }
+.phone-layout .treasure-legend strong, .phone-layout .treasure-legend small { font-size: 9px; }
+.phone-layout #spectator-controls { padding: 6px; }
+.phone-layout #spectator-status, .phone-layout .camera-toolbar { font-size: 10px; }
+.phone-layout .camera-buttons button { width: 31px; height: 31px; }
+.phone-layout #results { padding: 14px 16px; max-height: calc(100dvh - 14px); }
+.rotated-phone #results {
+  position: fixed; inset: 50% auto auto 50%; margin: 0;
+  width: min(394px, calc(100dvh - 30px)); max-height: calc(100dvw - 14px);
+  transform: translate(-50%, -50%) rotate(90deg);
 }

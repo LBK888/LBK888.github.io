@@ -2,11 +2,14 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#fbf6e9">
-  <link rel="icon" href="data:,">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./assets/icon-192.png">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">
   <title>櫻庭大作戰 · Sakura Garden</title>
   <link rel="stylesheet" href="./style.css">
+  <meta name="pwa-build" content="ready">
 </head>
 <body>
   <main class="game">
@@ -70,13 +73,16 @@
           </div>
         </dialog>
         <div class="touch-controls" aria-label="觸控操作">
-          <div class="dpad">
-            <button type="button" data-move="up" aria-label="向上">↑</button>
-            <button type="button" data-move="left" aria-label="向左">←</button>
-            <button type="button" data-move="down" aria-label="向下">↓</button>
-            <button type="button" data-move="right" aria-label="向右">→</button>
+          <button id="touch-bomb" type="button" aria-label="放花火">
+            <span aria-hidden="true">✦</span><small>放花火</small>
+          </button>
+          <div id="touch-joystick" aria-label="拖曳移動方向">
+            <span class="stick-arrow up" aria-hidden="true">↑</span>
+            <span class="stick-arrow left" aria-hidden="true">←</span>
+            <span class="stick-arrow right" aria-hidden="true">→</span>
+            <span class="stick-arrow down" aria-hidden="true">↓</span>
+            <span class="stick-knob" aria-hidden="true"></span>
           </div>
-          <button id="touch-bomb" type="button" aria-label="放花火">✦</button>
         </div>
       </section>
       <section class="panel" id="setup" aria-labelledby="setup-title" hidden>
@@ -103,7 +109,9 @@
           <div class="panel-actions">
             <button id="start" class="primary" type="submit">開始對戰</button>
             <button id="setup-record" class="text-button" type="button">對戰紀錄</button>
+            <button id="install-app" class="text-button" type="button" aria-describedby="install-help" hidden>安裝到主畫面</button>
           </div>
+          <p id="install-help" role="status" hidden></p>
         </form>
         <div class="treasure-legend">
           <h3>庭園寶物</h3>

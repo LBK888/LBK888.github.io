@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "櫻庭大作戰",
+  "short_name": "櫻庭",
+  "description": "用花火炸開竹箱、撿寶物，在櫻花庭園與電腦兔子對戰。",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "theme_color": "#fbf6e9",
+  "background_color": "#fbf6e9",
+  "icons": [
+    { "src": "./assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
