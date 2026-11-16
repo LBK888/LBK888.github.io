@@ -1,6 +1,6 @@
 const scope = self.registration.scope
 const cachePrefix = 'sakura-garden:' + scope + ':'
-const cacheName = cachePrefix + 'b2b0ce2503d4ae5b'
+const cacheName = cachePrefix + 'cc09a4f5ef1decf1'
 const urlFor = file => new URL(file, scope).href
 const index = urlFor('index.html')
 const files = ["index.html","style.css","manifest.webmanifest","src/main.js","src/ai-worker.js","assets/spring-garden.png","assets/icon-192.png","assets/icon-512.png"]
