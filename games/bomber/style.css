@@ -266,7 +266,8 @@ kbd { background: #fffcf4; border: 1px solid #ddd3bb; border-bottom-width: 2px; 
   color: #654f49; background: #f7ecdc; font-size: 11px; text-align: left;
 }
 
-.phone-layout body { width: 100%; height: 100dvh; min-height: 0; overflow: hidden; overscroll-behavior: none; }
+.phone-layout, .phone-layout body { touch-action: none; overscroll-behavior: none; }
+.phone-layout body { width: 100%; height: 100dvh; min-height: 0; overflow: hidden; }
 .phone-layout .game {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
