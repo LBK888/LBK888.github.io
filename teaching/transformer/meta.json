@@ -1,0 +1,16 @@
+{
+  "title": "Transformer Math Lab",
+  "title_zh": "Transformer 數字運算台",
+  "description": "Click through the matrices of a tiny Transformer to see how it computes self-attention and predicts the next token.",
+  "description_zh": "從「小明吃蘋果」出發，點選矩陣中的數字，逐步看懂自注意力如何運算，以及模型如何預測下一個詞元（Token）。",
+  "lang": "zh",
+  "order": 8,
+  "entry": "Transformer.html",
+  "pages": [
+    {
+      "title": "Transformer handout (PDF)",
+      "title_zh": "Transformer 課堂講義（PDF）",
+      "href": "Transformer_HO.pdf"
+    }
+  ]
+}
