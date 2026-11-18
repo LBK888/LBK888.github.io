@@ -497,6 +497,30 @@
           "order": 7,
           "added": "2024-11-28",
           "updated": "2026-11-07"
+        },
+        {
+          "id": "teaching/Transformer",
+          "slug": "Transformer",
+          "href": "teaching/Transformer.html",
+          "title": {
+            "en": "Transformer 數字運算台",
+            "zh": "Transformer 數字運算台"
+          },
+          "description": {
+            "en": "",
+            "zh": ""
+          },
+          "needs": {
+            "en": "",
+            "zh": ""
+          },
+          "lang": "zh",
+          "cover": "",
+          "thumb": "",
+          "pages": [],
+          "order": 999,
+          "added": "2026-11-18",
+          "updated": "2026-11-18"
         }
       ]
     },
