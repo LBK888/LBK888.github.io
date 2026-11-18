@@ -503,22 +503,30 @@
           "slug": "transformer",
           "href": "teaching/transformer/Transformer.html",
           "title": {
-            "en": "Transformer 數字運算台",
+            "en": "Transformer Math Lab",
             "zh": "Transformer 數字運算台"
           },
           "description": {
-            "en": "",
-            "zh": ""
+            "en": "Click through the matrices of a tiny Transformer to see how it computes self-attention and predicts the next token.",
+            "zh": "從「小明吃蘋果」出發，點選矩陣中的數字，逐步看懂自注意力如何運算，以及模型如何預測下一個詞元（Token）。"
           },
           "needs": {
             "en": "",
             "zh": ""
           },
           "lang": "zh",
-          "cover": "",
-          "thumb": "",
-          "pages": [],
-          "order": 999,
+          "cover": "teaching/transformer/cover.webp",
+          "thumb": "teaching/transformer/thumb.webp",
+          "pages": [
+            {
+              "title": {
+                "en": "Transformer handout (PDF)",
+                "zh": "Transformer 課堂講義（PDF）"
+              },
+              "href": "teaching/transformer/Transformer_HO.pdf"
+            }
+          ],
+          "order": 8,
           "added": "2026-11-18",
           "updated": "2026-11-18"
         }
