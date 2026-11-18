@@ -113,6 +113,17 @@ h1,h2,h3,p,figure{margin:0}button,input,select{font:inherit}button{cursor:pointe
 .map-cell.is-blocked.is-chosen .cell-face{stroke:var(--tone)}
 #map-causal{margin-inline-start:auto}
 #map-causal[aria-pressed=true]{background:var(--attn-face);color:var(--attn);border-color:var(--attn)}
+/* Fixed model parameters shown before starting calculations */
+.parameter-reference{border:1px solid var(--border);border-top:0;background:var(--surface);padding:0 14px;color:var(--ink)}
+.parameter-reference summary{cursor:pointer;padding:7px 3px;font-size:12px;font-weight:760;color:var(--accent)}
+.parameter-grid{display:grid;grid-template-columns:1.3fr 1.1fr .65fr;gap:9px;margin:2px 0 11px}
+.parameter-group{border:1px solid var(--border);border-radius:5px;padding:7px 8px;min-width:0;background:#f4f7f2}
+.parameter-group strong{display:block;font-size:12px;color:var(--accent);margin-bottom:3px}
+.parameter-line{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:4px 7px;padding:2px 0;font-size:11px}
+.parameter-line code{font-size:11px;font-weight:700}
+.parameter-line .matrix-notation{font-size:11px}
+.ffn-parameter-table .matrix-notation{font-size:13px}
+@media(max-width:790px){.parameter-grid{grid-template-columns:1fr}.parameter-group{padding:5px 8px}}
 </style>
 </head>
 <body>
@@ -139,6 +150,10 @@ h1,h2,h3,p,figure{margin:0}button,input,select{font:inherit}button{cursor:pointe
           <div id="query" class="segments" role="group" aria-labelledby="query-label"></div>
         </div>
       </div>
+      <details class="parameter-reference" open>
+        <summary>本例固定模型權重（先看數字，再開始手算；點此可收合）</summary>
+        <div id="weight-table" class="parameter-grid" aria-label="模型固定權重表"></div>
+      </details>
       <figure class="diagram" id="rig" data-theme="light">
         <div class="iso-plate" id="plate">
           <div class="map-header"><h2>Transformer 計算全景圖</h2><span class="map-size mono">1 層 · 1 頭 · 2 維</span><button class="outline-btn" id="theme" type="button" aria-pressed="false">深色圖紙</button></div>
@@ -218,6 +233,7 @@ const W = {
   FF1: [[1, 0], [0, 1]], FF2: [[1, 0], [0, 2]], LM: [[0, 1, 0], [1, 0, 0]],
 };
 const VOCAB = ["。", "了", "跑"];
+const B = { FF1: [-2, -2], FF2: [0, 0] };  // FFN 的偏置，與下方權重表共用
 const dot = (a, b) => a.reduce((sum, value, i) => sum + value * b[i], 0);
 const project = (row, weights) => weights[0].map((_, col) => dot(row, weights.map(values => values[col])));
 const add = (a, b) => a.map((v, i) => v + b[i]);
@@ -248,9 +264,9 @@ function model(verb, causal = true) {
   const hidden = H.at(-1);
   const rms = Math.sqrt(dot(hidden, hidden) / hidden.length);
   const norm = hidden.map(v => v / rms);
-  const linear = add(project(hidden, W.FF1), [-2, -2]);
+  const linear = add(project(hidden, W.FF1), B.FF1);
   const relu = linear.map(v => Math.max(0, v));
-  const ff = project(relu, W.FF2);
+  const ff = add(project(relu, W.FF2), B.FF2);
   const final = add(hidden, ff);
   const logits = project(final, W.LM);
   const probabilities = softmax(logits);
@@ -666,10 +682,16 @@ const lessons = [
       f("z = AV = "+vec(r.z,fixed))+result("殘差輸出 h = x + z",vec(m.H[i],fixed))+
       (i===2?note("切換成「"+other.names[1]+"」後，蘋果仍用 "+vec(m.X[i])+"，殘差輸出變成 "+vec(other.H[i],fixed)+"。"):note("選取「蘋果」並切換吃／種，可觀察同一個 Embedding 如何得到不同的殘差輸出。"));
   },
-  m => p("最後一個位置的殘差輸出送進 FFN。FFN 在每個位置內各自轉換特徵。")+
-    f("h = "+vec(m.hidden,fixed))+
-    f("hW₁ + b₁ = "+vec(m.linear,fixed),"W₁ = I，b₁ = [−2, −2]")+
-    f("ReLU → "+vec(m.relu,fixed)+"　→ 乘 W₂ → "+vec(m.ff,fixed),"W₂ 的對角線為 [1, 2]，b₂ = [0, 0]")+
+  m => p("FFN（Feed-Forward Network，前饋神經網路）在每個 Token 位置各自轉換特徵。<b>先讀取下表的完整權重與偏置，再做乘法。</b>")+
+    table(["FFN 層","完整 2 × 2 權重矩陣","偏置"],[
+      ["W₁（第一層）",matrixNotation(W.FF1),number(vec(B.FF1))],
+      ["W₂（第二層）",matrixNotation(W.FF2),number(vec(B.FF2))],
+    ])+
+    f("h = x₃ + z₃ = "+vec(m.hidden,fixed))+
+    f("t = ReLU(hW₁ + b₁)；FFN(h) = tW₂ + b₂；h′ = h + FFN(h)")+
+    f("第一維："+fixed(m.hidden[0])+"×1 + "+fixed(m.hidden[1])+"×0 − 2 = "+fixed(m.linear[0])+" → ReLU = "+fixed(m.relu[0]))+
+    f("第二維："+fixed(m.hidden[0])+"×0 + "+fixed(m.hidden[1])+"×1 − 2 = "+fixed(m.linear[1])+" → ReLU = "+fixed(m.relu[1]))+
+    f("t = "+vec(m.relu,fixed)+"；乘上 W₂ 再加 b₂ → "+vec(m.ff,fixed))+
     result("加回殘差 h + FFN(h)",vec(m.final,fixed))+
     '<details><summary>用同一個 h 試算 RMSNorm</summary>'+f("RMS(h) = √(Σhᵢ² ÷ 2) = "+fixed(m.rms))+f("h ÷ RMS(h) = "+vec(m.norm,fixed),"γ = [1, 1]，手算時省略 ε")+
     note("本例的 FFN 直接使用 h。常見的 Pre-Norm 區塊會先正規化，再送進 Attention 或 FFN。")+"</details>",
@@ -902,6 +924,16 @@ render();
 
 const exampleKeys = model("吃").K;
 const transposedKeys = exampleKeys[0].map((_,col)=>exampleKeys.map(row=>row[col]));
+$("weight-table").innerHTML =
+  '<div class="parameter-group"><strong>Attention：Q / K / V</strong>'+
+  [["WQ",W.Q],["WK",W.K],["WV",W.V]].map(([name,matrix]) =>
+    '<div class="parameter-line"><code>'+name+'</code>'+matrixNotation(matrix)+'</div>').join("")+'</div>'+
+  '<div class="parameter-group"><strong>FFN：W₁、W₂ 與偏置（必看）</strong>'+
+  '<div class="parameter-line"><code>W₁</code>'+matrixNotation(W.FF1)+'<code>b₁ = '+vec(B.FF1)+'</code></div>'+
+  '<div class="parameter-line"><code>W₂</code>'+matrixNotation(W.FF2)+'<code>b₂ = '+vec(B.FF2)+'</code></div>'+
+  '</div>'+
+  '<div class="parameter-group"><strong>LM Head</strong>'+
+  '<div class="parameter-line"><code>WLM</code>'+matrixNotation(W.LM)+'</div></div>';
 $("basic-wk").innerHTML = matrixNotation(W.K);
 $("basic-k").innerHTML = matrixNotation(exampleKeys);
 $("basic-kt").innerHTML = matrixNotation(transposedKeys);
